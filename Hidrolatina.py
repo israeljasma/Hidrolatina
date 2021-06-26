@@ -6,18 +6,36 @@ import sqlite3
 import os
 import platform
 
-
-if platform.system() == "Darwin" or platform.system() == "darwin":
+##Path
+if platform.system() == "Darwin":
     print("MacOS")
-elif platform.system() == "linux" or platform.platform() == "linux2" or platform.system() == "Linux" or platform.platform() or platform.system() == "Linux2":
+elif platform.system() == "Linux":
     print("Linux")
-elif platform == "Win32" or platform.system() == "win2":
+elif platform.system() == "Windows":
     print("Windows")
-    DATA_DIR = os.path.join('c:/Hidrolatina', 'data')
+    DATA_DIR = os.path.join('c:/hidrolatina', 'data')
     MODELS_DIR = os.path.join(DATA_DIR, 'models')
+    dir = [DATA_DIR, MODELS_DIR]
     for dir in [DATA_DIR, MODELS_DIR]:
         if not os.path.exists(dir):
-            os.mkdir(dir)
+            os.makedirs(dir)
+
+
+# if platform.system() == "Darwin":
+#     print("MacOS")
+# elif platform.system() == "Linux":
+#     print("Linux")
+# elif platform.system() == "Windows":
+#     print("Windows")
+#     DATA_DIR = os.path.join('c:\hidrolatina', 'data')
+#     DATA_DIR = DATA_DIR.replace("\\","/")
+#     print(DATA_DIR)
+#     MODELS_DIR = os.path.join(DATA_DIR, 'models')
+#     MODELS_DIR = MODELS_DIR.replace("\\","/")
+#     print(MODELS_DIR)
+#     for dir in [DATA_DIR, MODELS_DIR]:
+#         if not os.path.exists(dir):
+#             os.makedirs(dir)
 
 ##Data Base
 #Crate conecction
