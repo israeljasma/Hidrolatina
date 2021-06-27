@@ -9,6 +9,14 @@ import platform
 ##Path
 if platform.system() == "Darwin":
     print("MacOS")
+    import getpass
+    username = getpass.getuser()
+    DATA_DIR = os.path.join("/Users/" + username + "/Documents/hidrolatina")
+    MODELS_DIR = os.path.join(DATA_DIR, "models")
+    dir = [DATA_DIR, MODELS_DIR]
+    for dir in [DATA_DIR, MODELS_DIR]:
+        if not os.path.exists(dir):
+            os.makedirs(dir)
 elif platform.system() == "Linux":
     print("Linux")
 elif platform.system() == "Windows":
