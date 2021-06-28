@@ -11,6 +11,8 @@ import platform
 import tarfile
 import urllib.request
 
+import torch
+
 ##Path
 if platform.system() == "Darwin":
     print("MacOS")
@@ -78,11 +80,15 @@ def importMDETER():
     torch.set_grad_enabled(False);
     temp = pathlib.PosixPath
     pathlib.PosixPath = pathlib.WindowsPath
-    pathlib.PosixPath = pathlib
     model_qa = torch.hub.load('ashkamath/mdetr:main', 'mdetr_efficientnetB5_gqa', pretrained=True, return_postprocessor=False)
     model_qa = model_qa.cuda()
     model_qa.eval();
+    model, postprocessor = torch.hub.load('ashkamath/mdetr:main', 'mdetr_efficientnetB5', pretrained=True, return_postprocessor=True)
+    model = model.cuda()
+    model.eval();
 
+def clearCacheMDETR():
+    torch.cuda.empty_cache()
 
 # if platform.system() == "Darwin":
 #     print("MacOS")
@@ -305,6 +311,7 @@ downloadModels = Button(root, text="Modelos", command=openDownloadModelsTk).pack
 messagebuton = Button(root, text="Popup", command=popup).pack()
 
 importLibraryButton = Button(root, text='Cargar liberias', command=importMDETER).pack()
+clearMDETRyButton = Button(root, text='Limipiar MDETR', command=clearCacheMDETR).pack()
 
 exitButton = Button(root, text="Salir", command=root.quit)
 exitButton.pack()
