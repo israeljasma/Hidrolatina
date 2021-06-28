@@ -62,19 +62,26 @@ def efficientDETModels(MODELS_DIR, selected):
         urllib.request.urlretrieve(LABELS_DOWNLOAD_BASE + LABEL_FILENAME, PATH_TO_LABELS)
         print('Done')
 
-#def loadMDETER():
-#    import torch
-#    from PIL import Image
-#    import requests
-#    import torchvision.transforms as T
-#    import matplotlib.pyplot as plt
-#    from collections import defaultdict
-#    import torch.nn.functional as F
-#    import numpy as np
-#    from skimage.measure import find_contours
-
-#    from matplotlib import patches,  lines
-#    from matplotlib.patches import Polygon
+def importMDETER():
+    import torch
+    from PIL import Image
+    import requests
+    import torchvision.transforms as T
+    import matplotlib.pyplot as plt
+    from collections import defaultdict
+    import torch.nn.functional as F
+    import numpy as np
+    from skimage.measure import find_contours
+    from matplotlib import patches,  lines
+    from matplotlib.patches import Polygon
+    import pathlib
+    torch.set_grad_enabled(False);
+    temp = pathlib.PosixPath
+    pathlib.PosixPath = pathlib.WindowsPath
+    pathlib.PosixPath = pathlib
+    model_qa = torch.hub.load('ashkamath/mdetr:main', 'mdetr_efficientnetB5_gqa', pretrained=True, return_postprocessor=False)
+    model_qa = model_qa.cuda()
+    model_qa.eval();
 
 
 # if platform.system() == "Darwin":
@@ -296,6 +303,8 @@ configButton = Button(root, text="Configuraciones", command=openConfigurationTk,
 downloadModels = Button(root, text="Modelos", command=openDownloadModelsTk).pack()
 
 messagebuton = Button(root, text="Popup", command=popup).pack()
+
+importLibraryButton = Button(root, text='Cargar liberias', command=importMDETER).pack()
 
 exitButton = Button(root, text="Salir", command=root.quit)
 exitButton.pack()
