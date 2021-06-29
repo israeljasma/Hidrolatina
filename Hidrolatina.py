@@ -69,7 +69,6 @@ def efficientDETModels(MODELS_DIR, selected):
         print('Done')
 
 def importMDETER():
-    import torch
     from PIL import Image
     import requests
     import torchvision.transforms as T
@@ -132,6 +131,120 @@ def loadODAPI():
 
         return detections, prediction_dict, tf.reshape(shapes, [-1])
 
+
+def loadEfficient():
+    ### Arreglar directorio
+    import sys
+    sys.path.append("C:/Users/Doravan/Desktop/Hidrolatina/torchtest/Yet-Another-EfficientDet-Pytorch")
+    # os.chdir('C:/Users/Doravan/Desktop/Hidrolatina/torchtest/Yet-Another-EfficientDet-Pytorch')
+    from torch.backends import cudnn
+    from backbone import EfficientDetBackbone
+    import cv2
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from efficientdet.utils import BBoxTransform, ClipBoxes
+    from utils.utils import preprocess, invert_affine, postprocess
+
+    ##################Arreglar global##################
+    global preprocess, invert_affine, postprocess, BBoxTransform, ClipBoxes
+
+
+    compound_coef = 2
+    force_input_size = None  # set None to use default size
+
+    ##################Arreglar global##################
+    global use_cuda, use_float16
+    use_cuda = True
+    use_float16 = False
+    cudnn.fastest = True
+    cudnn.benchmark = True
+
+    obj_list = ['person']
+
+    ##################Arreglar global##################
+    global input_size
+    input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536]
+    input_size = input_sizes[compound_coef] if force_input_size is None else force_input_size
+
+    ##################Arreglar global##################
+    global model
+    model = EfficientDetBackbone(compound_coef=compound_coef, num_classes=len(obj_list),
+
+                                # replace this part with your project's anchor config
+                                ratios=[(1.0, 1.0), (1.4, 0.7), (0.7, 1.4)],
+                                scales=[2 * 0, 2 * (1.0 / 3.0), 2 ** (2.0 / 3.0)])
+
+    # model.load_state_dict(torch.load('logs/person - copia/efficientdet-d1_95_2200.pth'))
+    model.load_state_dict(torch.load('C:/Users/Doravan/Desktop/Hidrolatina/torchtest/Yet-Another-EfficientDet-Pytorch/efficientdet-d2_58_8260_best.pth'))
+    model.requires_grad_(False)
+    model.eval()
+
+    if use_cuda:
+        model = model.cuda()
+    if use_float16:
+        model = model.half()
+
+def pytorchCamera():
+    import cv2
+
+    cap = cv2.VideoCapture(0)
+    import numpy as np
+
+    obj_list = ['person']
+
+    while True:
+        # Read frame from camera
+        cap.set(cv2.CAP_PROP_FPS,16)
+        ret, image_np = cap.read()
+        image_path=[image_np]
+
+        
+        threshold = 0.5
+        iou_threshold = 0.1
+
+        # # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
+        # image_np_expanded = np.expand_dims(image_np, axis=0)
+        ori_imgs, framed_imgs, framed_metas = preprocess(image_path, max_size=input_size)
+
+        if use_cuda:
+            x = torch.stack([torch.from_numpy(fi).cuda() for fi in framed_imgs], 0)
+        else:
+            x = torch.stack([torch.from_numpy(fi) for fi in framed_imgs], 0)
+
+        x = x.to(torch.float32 if not use_float16 else torch.float16).permute(0, 3, 1, 2)
+
+        with torch.no_grad():
+            features, regression, classification, anchors = model(x)
+
+            regressBoxes = BBoxTransform()
+            clipBoxes = ClipBoxes()
+
+            out = postprocess(x,
+                            anchors, regression, classification,
+                            regressBoxes, clipBoxes,
+                            threshold, iou_threshold)
+
+        out = invert_affine(framed_metas, out)
+
+
+        # if len(out[0]['rois']) == 0:
+
+        ori_img = ori_imgs[0].copy()
+        for j in range(len(out[0]['rois'])):
+            (x1, y1, x2, y2) = out[0]['rois'][j].astype(np.int)
+            cv2.rectangle(ori_img, (x1, y1), (x2, y2), (255, 255, 0), 2)
+            obj = obj_list[out[0]['class_ids'][j]]
+            score = float(out[0]['scores'][j])
+
+            cv2.putText(ori_img, '{}, {:.3f}'.format(obj, score),
+                        (x1, y1 + 10), cv2.FONT_HERSHEY_SIMPLEX, .5,
+                        (255, 255, 0), 2)
+
+        cv2.imshow('object_detection', cv2.resize(ori_img, (800, 600)))
+        if cv2.waitKey(25) & 0xFF == ord('q'):
+            cap.release()
+            cv2.destroyAllWindows()
+            break
 
 # if platform.system() == "Darwin":
 #     print("MacOS")
@@ -356,6 +469,9 @@ messagebuton = Button(root, text="Popup", command=popup).pack()
 importLibraryButton = Button(root, text='Cargar librerias', command=importMDETER).pack()
 clearMDETRyButton = Button(root, text='Limpiar MDETR', command=clearCacheMDETR).pack()
 loadODAPIButton = Button(root, text='Cargar OD API', command=loadODAPI).pack()
+loadEfficientIButton = Button(root, text='Efficient Pytorch', command=loadEfficient).pack()
+pytorchCameraButton = Button(root, text='Pytorch Camara', command=pytorchCamera).pack()
+
 
 exitButton = Button(root, text="Salir", command=root.quit)
 exitButton.pack()
