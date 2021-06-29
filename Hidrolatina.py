@@ -1,3 +1,4 @@
+from sys import path
 from tkinter import *
 from tkinter import ttk
 from PIL import Image, ImageTk
@@ -35,7 +36,6 @@ elif platform.system() == "Windows":
         if not os.path.exists(dir):
             os.makedirs(dir)
 
-
 def efficientDETModels(MODELS_DIR, selected):
     MODEL_DATE = '20200711'
     MODEL_NAME = 'efficientdet_'+selected+'_coco17_tpu-32'
@@ -43,7 +43,11 @@ def efficientDETModels(MODELS_DIR, selected):
     MODELS_DOWNLOAD_BASE = 'http://download.tensorflow.org/models/object_detection/tf2/'
     MODEL_DOWNLOAD_LINK = MODELS_DOWNLOAD_BASE + MODEL_DATE + '/' + MODEL_TAR_FILENAME
     PATH_TO_MODEL_TAR = os.path.join(MODELS_DIR, MODEL_TAR_FILENAME)
+    ##################Arreglar PATH_TO_CKPT##################
+    global PATH_TO_CKPT
     PATH_TO_CKPT = os.path.join(MODELS_DIR, os.path.join(MODEL_NAME, 'checkpoint/'))
+    ##################Arreglar PATH_TO_CFG##################
+    global PATH_TO_CFG
     PATH_TO_CFG = os.path.join(MODELS_DIR, os.path.join(MODEL_NAME, 'pipeline.config'))
     if not os.path.exists(PATH_TO_CKPT):
         print('Downloading model. This may take a while... ', end='')
@@ -90,7 +94,7 @@ def importMDETER():
 def clearCacheMDETR():
     torch.cuda.empty_cache()
 
-def loadODAPI(PATH_TO_CFG, PATH_TO_CKPT):
+def loadODAPI():
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'    # Suppress TensorFlow logging
     import tensorflow as tf
     from object_detection.utils import label_map_util
@@ -109,6 +113,7 @@ def loadODAPI(PATH_TO_CFG, PATH_TO_CKPT):
     tf.config.set_visible_devices([], 'GPU')
 
     # Load pipeline config and build a detection model
+    print(PATH_TO_CFG)
     configs = config_util.get_configs_from_pipeline_file(PATH_TO_CFG)
     model_config = configs['model']
     detection_model = model_builder.build(model_config=model_config, is_training=False)
@@ -126,6 +131,8 @@ def loadODAPI(PATH_TO_CFG, PATH_TO_CKPT):
         detections = detection_model.postprocess(prediction_dict, shapes)
 
         return detections, prediction_dict, tf.reshape(shapes, [-1])
+
+
 # if platform.system() == "Darwin":
 #     print("MacOS")
 # elif platform.system() == "Linux":
@@ -348,7 +355,7 @@ messagebuton = Button(root, text="Popup", command=popup).pack()
 
 importLibraryButton = Button(root, text='Cargar librerias', command=importMDETER).pack()
 clearMDETRyButton = Button(root, text='Limpiar MDETR', command=clearCacheMDETR).pack()
-# loadODAPIButton = Button(root, text='Cargar OD API', command=loadODAPI(PATH_TO_CFG, PATH_TO_CKPT)).pack()
+loadODAPIButton = Button(root, text='Cargar OD API', command=loadODAPI).pack()
 
 exitButton = Button(root, text="Salir", command=root.quit)
 exitButton.pack()
