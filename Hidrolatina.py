@@ -251,7 +251,7 @@ def openDownloadModelsTk():
             print('No implementado')
             message = 'No implementado, elija otra opción'
             popup(message)
-            return efficient
+            # return efficient
         else:
             print('Seleccione opcion')
             message = 'Seleccione una opcion valida'
