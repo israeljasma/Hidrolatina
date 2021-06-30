@@ -186,6 +186,9 @@ def loadEfficient():
 
 def pytorchCamera():
     import cv2
+    import matplotlib.pyplot as plt
+    import datetime
+    det=0
 
     cap = cv2.VideoCapture(0)
     import numpy as np
@@ -200,7 +203,7 @@ def pytorchCamera():
 
         
         threshold = 0.5
-        iou_threshold = 0.1
+        iou_threshold = 0.5
 
         # # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
         # image_np_expanded = np.expand_dims(image_np, axis=0)
@@ -245,6 +248,106 @@ def pytorchCamera():
             cap.release()
             cv2.destroyAllWindows()
             break
+
+        if len(out[0]['scores']) > 0:
+            det += 1
+            if det==5:     #break in det-1
+
+                now = datetime.datetime.now()
+                date_hour='%d/%d/%d-%d:%d:%d'%( now.day, now.month, now.year, now.hour, now.minute, now.second )
+                print(date_hour)
+                cap.release()
+                cv2.destroyAllWindows()
+                break
+
+        if len(out[0]['scores'])==0:
+            det=0
+
+
+        
+        # Print objects detected's labels
+        # score_index= np.where(score > score_thresh)[0]
+        # class_index= classes[score_index]
+
+        for i in range((out[0]['scores']).size):
+            detected_boxes= out[0]['rois'][i]
+            # detected_labels= category_index[class_index[i-1]]['name']
+                
+
+
+        # Crop and save detedtec bounding box image
+            # (frame_height, frame_width) = ori_img.shape[:2]
+            # ymin = int((detected_boxes[0]*frame_height))
+            # xmin = int((detected_boxes[1]*frame_width))
+            # ymax = int((detected_boxes[2]*frame_height))
+            # xmax = int((detected_boxes[3]*frame_width))
+            xmin = int((detected_boxes[0]))
+            ymin = int((detected_boxes[1]))
+            xmax = int((detected_boxes[2]))
+            ymax = int((detected_boxes[3]))
+            cropped_img = image_np[ymin:ymax,xmin:xmax]
+            global imagencamera
+            imagencamera = cropped_img
+            # imgplot = plt.imshow(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
+            # plt.show()
+            # print(imgplot)
+            # print('ymin',ymin)
+            # print('fdsfssdfdsf')
+            # print('detected_boxes',detected_boxes)
+            # print('cropped_img',cropped_img)
+            if cropped_img.size == 0:
+                continue
+            else:
+                cv2.imwrite('cropped_image_{}.jpg'.format(i), cropped_img)
+                print(cropped_img)
+            
+
+def prefunctionclip():
+    class_names=['mask and headphones', 'mask and goggles ','mask, headphones and goggles','mask', 'goggles', 'no_mask']
+    class_names
+    im = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
+    plot_inference(im, "a hand")
+    im_hand=im.crop((bboxes[len(bboxes)-1]))
+    plot_inference(im, "a tiny head")
+    im_head=im.crop((bboxes[len(bboxes)-1]))
+    im_head.save('clip/cropped_head.jpg')
+    plot_inference_qa(im_hand, "what color are the fingers?")
+
+def clip():
+    import clip
+    import glob
+
+    def argmax(iterable):
+        return max(enumerate(iterable), key=lambda x: x[1])[0]
+
+    ##################Arreglar global##################
+    global device
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    # device = "cpu"
+
+    ##################Arreglar global##################
+    global modelc, transform
+    modelc, transform = clip.load("ViT-B/32", device=device)
+
+    ##################Arreglar global##################
+    global text
+    text = clip.tokenize(candidate_captions).to(device)
+
+def algunafuncion():
+    head=Image.open('cropped_head.jpg')
+    image = transform(head).unsqueeze(0).to(device)
+
+    with torch.no_grad():
+        image_features = modelc.encode_image(image)
+        text_features = modelc.encode_text(text)
+        
+        logits_per_image, logits_per_text = modelc(image, text)
+        probs = logits_per_image.softmax(dim=-1).cpu().numpy()
+
+        pred = class_names[argmax(list(probs)[0])]
+        print(pred)
+        np_image = np.array(head)
+    plt.imshow(np_image)
 
 # if platform.system() == "Darwin":
 #     print("MacOS")
@@ -428,7 +531,14 @@ def openDownloadModelsTk():
     closeWindow = Button(downloadModelsTk, text="Cerrar Ventana", command=closeTk)
     closeWindow.pack()
 
-    
+def clipImageTk():
+    clipImageTk = Toplevel()
+    # clipImageTk.resizable(False,False)
+    clipImageTk.title("Imagen Clip")
+
+    # imagen = ImageTk.PhotoImage(Image.open('c:/Users/Doravan/Desktop/unnamed.jpg'))
+    # labelimage = Label(image=imagencamera)
+    # labelimage.pack()
 
 def openConfigurationTk():
     global imagen
@@ -471,6 +581,7 @@ clearMDETRyButton = Button(root, text='Limpiar MDETR', command=clearCacheMDETR).
 loadODAPIButton = Button(root, text='Cargar OD API', command=loadODAPI).pack()
 loadEfficientIButton = Button(root, text='Efficient Pytorch', command=loadEfficient).pack()
 pytorchCameraButton = Button(root, text='Pytorch Camara', command=pytorchCamera).pack()
+imagenClipButton = Button(root, text='Imagen Clip', command=clipImageTk).pack()
 
 
 exitButton = Button(root, text="Salir", command=root.quit)
