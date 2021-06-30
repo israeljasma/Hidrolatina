@@ -287,7 +287,8 @@ def pytorchCamera():
             ymax = int((detected_boxes[3]))
             cropped_img = image_np[ymin:ymax,xmin:xmax]
             global imagencamera
-            imagencamera = cropped_img
+            if not cropped_img.size == 0:
+                imagencamera = cropped_img
             # imgplot = plt.imshow(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
             # plt.show()
             # print(imgplot)
@@ -298,8 +299,9 @@ def pytorchCamera():
             if cropped_img.size == 0:
                 continue
             else:
-                cv2.imwrite('cropped_image_{}.jpg'.format(i), cropped_img)
+                #cv2.imwrite('cropped_image_{}.jpg'.format(i), cropped_img)
                 print(cropped_img)
+            # imagencamera = Image.fromarray(cropped_img, 'RGB')
             
 
 def prefunctionclip():
@@ -532,24 +534,39 @@ def openDownloadModelsTk():
     closeWindow.pack()
 
 def clipImageTk():
-    clipImageTk = Toplevel()
-    # clipImageTk.resizable(False,False)
-    clipImageTk.title("Imagen Clip")
+    global imagenn
+    clipImageTkinter = Toplevel()
+    # clipImageTkinter.resizable(False,False)
+    clipImageTkinter.title("Imagen Clip")
+    im = Image.fromarray(imagencamera)
 
-    # imagen = ImageTk.PhotoImage(Image.open('c:/Users/Doravan/Desktop/unnamed.jpg'))
-    # labelimage = Label(image=imagencamera)
-    # labelimage.pack()
+    # width = im.width()
+    # height = (im.height() + 100)
+    # screen_width = root.winfo_screenwidth()
+    # screen_height = root.winfo_screenheight()
+
+    # x = (screen_width/2) - (app_width/2)
+    # y = (screen_height/2) - (app_height/2)
+
+    # clipImageTkinter.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
+
+
+    imagenn = ImageTk.PhotoImage(im)
+    labelimage = Label(clipImageTkinter, image=imagenn)
+    labelimage.pack()
+    exitButton = Button(clipImageTkinter, text="Salir", command=lambda:clipImageTkinter.destroy())
+    exitButton.pack()
 
 def openConfigurationTk():
     global imagen
-    #Config tk
+    # Config tk
     configurationTk = Toplevel()
     configurationTk.resizable(False,False)
     configurationTk.protocol("WM_DELETE_WINDOW", exit)
     configurationTk.title("Configuraciones")
     configurationTk.overrideredirect(True)
 
-    imagen = ImageTk.PhotoImage(Image.open("valorant.jpg"))
+    imagen = ImageTk.PhotoImage(Image.open("E:/Softmaking/Proyectos/Hidrolatina/valorant.jpg"))
 
     width = imagen.width()
     height = (imagen.height() + 100)
@@ -566,7 +583,7 @@ def openConfigurationTk():
     buton = Button(configurationTk, text="Cambiar directorio", command=folderSelect)
     buton.pack()
 
-    closeWindow = Button(configurationTk, text="Cerrar Ventana", command=configurationTk.destroy())
+    closeWindow = Button(configurationTk, text="Cerrar Ventana", command=lambda:configurationTk.destroy())
     closeWindow.pack()
 
 #Buttons
