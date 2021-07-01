@@ -569,6 +569,12 @@ def showImageClipTk():
     #Config Tk
     imageClipTk = Toplevel()
     imageClipTk.title('Imagenes')
+    imageClipTk.resizable(False,False)
+    imageClipTk.protocol("WM_DELETE_WINDOW", exit)
+    imageClipTk.overrideredirect(True)
+    x = root.winfo_x()
+    y = root.winfo_y()
+    imageClipTk.geometry("+%d+%d" % (x, y))
 
     #Global Declarations
     global imagenlist0
@@ -577,42 +583,12 @@ def showImageClipTk():
     global buttonBack
     global buttonForward
 
-    #Path Images
-    imgpath1 = Image.open('c:/Users/Doravan/Desktop/unnamed.jpg')
-    imgpath2 = Image.open('c:/Users/Doravan/Desktop/600x400.jpg')
-    imgpath3 = Image.open('c:/Users/Doravan/Desktop/descarga.jpg')
-    imgpath4 = Image.open('c:/Users/Doravan/Desktop/lzN5Fa.jpg')
-    imgpath5 = Image.open('e:/Softmaking/Proyectos/Hidrolatina/valorant.jpg')
-    imagenn = ImageTk.PhotoImage(imgpath2)
-
-    #Images
-    imagenlist0 = ImageTk.PhotoImage(imgpath1)
-    imagenlist1 = ImageTk.PhotoImage(imgpath2)
-    imagenlist2 = ImageTk.PhotoImage(imgpath3)
-    imagenlist3 = ImageTk.PhotoImage(imgpath4)
-    imagenlist4 = ImageTk.PhotoImage(imgpath5)
-
-    #List Images
-    imagenList = [imagenlist0, imagenlist1, imagenlist2, imagenlist3, imagenlist4]
-
-    #Test imagenList
-    print(len(imagenList))
-
-    #Label Tk
-    labelimage = Label(imageClipTk, image=imagenList[0])
-    labelimage.grid(row=0, column=0, columnspan=3)
-
-    #Buttons Tk
-    buttonBack = Button(imageClipTk, text='<<', command=lambda:back, state=DISABLED)
-    buttonBack.grid(row=1, column=0)
-
-    exitButton = Button(imageClipTk, text="Cerrar ventana", command=lambda:imageClipTk.destroy())
-    exitButton.grid(row=1, column=1)
-
-    buttonForward = Button(imageClipTk, text='>>', command=lambda:forward(1))
-    buttonForward.grid(row=1, column=2)
-
     #Def into tk
+
+    def closeTk():
+        imageClipTk.destroy()
+        root.deiconify()
+
     def forward(imageNumber):
         #Global Declarations into Def tk
         global labelimage
@@ -652,6 +628,45 @@ def showImageClipTk():
         buttonBack.grid(row=1, column=0)
         buttonForward.grid(row=1, column=2)
         return
+
+    #Hide Root Window
+    root.withdraw()
+
+    #Path Images
+    imgpath1 = Image.open('c:/Users/Doravan/Desktop/unnamed.jpg')
+    imgpath2 = Image.open('c:/Users/Doravan/Desktop/600x400.jpg')
+    imgpath3 = Image.open('c:/Users/Doravan/Desktop/descarga.jpg')
+    imgpath4 = Image.open('c:/Users/Doravan/Desktop/lzN5Fa.jpg')
+    imgpath5 = Image.open('e:/Softmaking/Proyectos/Hidrolatina/valorant.jpg')
+    imagenn = ImageTk.PhotoImage(imgpath2)
+
+    #Images
+    imagenlist0 = ImageTk.PhotoImage(imgpath1)
+    imagenlist1 = ImageTk.PhotoImage(imgpath2)
+    imagenlist2 = ImageTk.PhotoImage(imgpath3)
+    imagenlist3 = ImageTk.PhotoImage(imgpath4)
+    imagenlist4 = ImageTk.PhotoImage(imgpath5)
+
+    #List Images
+    imagenList = [imagenlist0, imagenlist1, imagenlist2, imagenlist3, imagenlist4]
+
+    #Test imagenList
+    # print(len(imagenList))
+
+    #Label Tk
+    labelimage = Label(imageClipTk, image=imagenList[0])
+    labelimage.grid(row=0, column=0, columnspan=3)
+
+    #Buttons Tk
+    buttonBack = Button(imageClipTk, text='<<', command=lambda:back, state=DISABLED)
+    buttonBack.grid(row=1, column=0)
+
+    exitButton = Button(imageClipTk, text="Cerrar ventana", command=closeTk)
+    exitButton.grid(row=1, column=1)
+
+    buttonForward = Button(imageClipTk, text='>>', command=lambda:forward(1))
+    buttonForward.grid(row=1, column=2)
+
 
 def openConfigurationTk():
     global imagen
