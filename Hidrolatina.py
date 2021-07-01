@@ -417,7 +417,7 @@ def folderSelect():
     folder_selected = filedialog.askdirectory()
     print(folder_selected)
 
-#Def Windows's
+###################Def Windows's###################
 
 def openDownloadModelsTk():
     #Configurations of windows
@@ -538,7 +538,8 @@ def clipImageTk():
     clipImageTkinter = Toplevel()
     # clipImageTkinter.resizable(False,False)
     clipImageTkinter.title("Imagen Clip")
-    im = Image.fromarray(imagencamera)
+    # im = Image.fromarray(imagencamera)
+
 
     # width = im.width()
     # height = (im.height() + 100)
@@ -550,12 +551,107 @@ def clipImageTk():
 
     # clipImageTkinter.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
 
+    path1 = Image.open('c:/Users/Doravan/Desktop/unnamed.jpg')
+    path2 = Image.open('c:/Users/Doravan/Desktop/pngwingcom.png')
+    imagenn = ImageTk.PhotoImage(path1)
+    iyyey = ImageTk.PhotoImage(path1)
 
-    imagenn = ImageTk.PhotoImage(im)
-    labelimage = Label(clipImageTkinter, image=imagenn)
+    imagenList=[imagenn]
+    labelimage = Label(clipImageTkinter, image=imagenList)
     labelimage.pack()
+
+    # buttonBack = Button(clipImageTkinter, text='<<', command=lambda:back).pack()
+    # buttonForward = Button(clipImageTkinter, text='>>', command=lambda:forward).pack()
     exitButton = Button(clipImageTkinter, text="Salir", command=lambda:clipImageTkinter.destroy())
     exitButton.pack()
+
+def showImageClipTk():
+    #Config Tk
+    imageClipTk = Toplevel()
+    imageClipTk.title('Imagenes')
+
+    #Global Declarations
+    global imagenlist0
+    global imagenList
+    global labelimage
+    global buttonBack
+    global buttonForward
+
+    #Path Images
+    imgpath1 = Image.open('c:/Users/Doravan/Desktop/unnamed.jpg')
+    imgpath2 = Image.open('c:/Users/Doravan/Desktop/600x400.jpg')
+    imgpath3 = Image.open('c:/Users/Doravan/Desktop/descarga.jpg')
+    imgpath4 = Image.open('c:/Users/Doravan/Desktop/lzN5Fa.jpg')
+    imgpath5 = Image.open('e:/Softmaking/Proyectos/Hidrolatina/valorant.jpg')
+    imagenn = ImageTk.PhotoImage(imgpath2)
+
+    #Images
+    imagenlist0 = ImageTk.PhotoImage(imgpath1)
+    imagenlist1 = ImageTk.PhotoImage(imgpath2)
+    imagenlist2 = ImageTk.PhotoImage(imgpath3)
+    imagenlist3 = ImageTk.PhotoImage(imgpath4)
+    imagenlist4 = ImageTk.PhotoImage(imgpath5)
+
+    #List Images
+    imagenList = [imagenlist0, imagenlist1, imagenlist2, imagenlist3, imagenlist4]
+
+    #Test imagenList
+    print(len(imagenList))
+
+    #Label Tk
+    labelimage = Label(imageClipTk, image=imagenList[0])
+    labelimage.grid(row=0, column=0, columnspan=3)
+
+    #Buttons Tk
+    buttonBack = Button(imageClipTk, text='<<', command=lambda:back, state=DISABLED)
+    buttonBack.grid(row=1, column=0)
+
+    exitButton = Button(imageClipTk, text="Cerrar ventana", command=lambda:imageClipTk.destroy())
+    exitButton.grid(row=1, column=1)
+
+    buttonForward = Button(imageClipTk, text='>>', command=lambda:forward(1))
+    buttonForward.grid(row=1, column=2)
+
+    #Def into tk
+    def forward(imageNumber):
+        #Global Declarations into Def tk
+        global labelimage
+        global buttonBack
+        global buttonForward
+
+        labelimage.grid_forget()
+        labelimage = Label(imageClipTk, image=imagenList[imageNumber])
+        buttonForward = Button(imageClipTk, text='>>', command=lambda:forward(imageNumber+1))
+        buttonBack = Button(imageClipTk, text='<<', command=lambda:back(imageNumber-1))
+
+        print(imageNumber)
+        if imageNumber == len(imagenList)-1:
+            buttonForward = Button(imageClipTk, text='>>', state=DISABLED)
+        
+        labelimage.grid(row=0, column=0, columnspan=3)
+        buttonBack.grid(row=1, column=0)
+        buttonForward.grid(row=1, column=2)
+
+        return
+
+    def back(imageNumber):
+        global labelimage
+        global buttonBack
+        global buttonForward
+
+        labelimage.grid_forget()
+        labelimage = Label(imageClipTk, image=imagenList[imageNumber])
+        buttonForward = Button(imageClipTk, text='>>', command=lambda:forward(imageNumber+1))
+        buttonBack = Button(imageClipTk, text='<<', command=lambda:back(imageNumber-1))
+
+        print(imageNumber)
+        if imageNumber == 0:
+            buttonBack = Button(imageClipTk, text='<<', state=DISABLED)
+        
+        labelimage.grid(row=0, column=0, columnspan=3)
+        buttonBack.grid(row=1, column=0)
+        buttonForward.grid(row=1, column=2)
+        return
 
 def openConfigurationTk():
     global imagen
@@ -599,6 +695,7 @@ loadODAPIButton = Button(root, text='Cargar OD API', command=loadODAPI).pack()
 loadEfficientIButton = Button(root, text='Efficient Pytorch', command=loadEfficient).pack()
 pytorchCameraButton = Button(root, text='Pytorch Camara', command=pytorchCamera).pack()
 imagenClipButton = Button(root, text='Imagen Clip', command=clipImageTk).pack()
+showImageClipButton = Button(root, text='Imagen Clip', command=showImageClipTk).pack()
 
 
 exitButton = Button(root, text="Salir", command=root.quit)
