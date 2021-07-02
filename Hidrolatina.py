@@ -315,10 +315,20 @@ def prefunctionclip():
     im_head.save('clip/cropped_head.jpg')
     plot_inference_qa(im_hand, "what color are the fingers?")
 
-def clip():
+def loadClip():
     import clip
     import glob
 
+    global class_names, candidate_captions
+    class_names=['mask and headphones', 'mask and goggles ','mask, headphones and goggles','mask', 'goggles', 'no_mask']
+    candidate_captions=['A head with a medical mask and headphones',
+    'A head with goggles and medical mask',
+    'A head with a mask and goggles and headphones',
+    'A face with medical mask',
+    'A face with goggles',
+    'Just a face']
+
+    global argmax
     def argmax(iterable):
         return max(enumerate(iterable), key=lambda x: x[1])[0]
 
@@ -328,16 +338,16 @@ def clip():
     # device = "cpu"
 
     ##################Arreglar global##################
-    global modelc, transform
-    modelc, transform = clip.load("ViT-B/32", device=device)
+    global modelc, process
+    modelc, process = clip.load("ViT-B/32", device=device)
 
     ##################Arreglar global##################
     global text
     text = clip.tokenize(candidate_captions).to(device)
 
-def algunafuncion():
-    head=Image.open('cropped_head.jpg')
-    image = transform(head).unsqueeze(0).to(device)
+def clip():
+    head=Image.open('E:/Softmaking/Proyectos/Hidrolatina/valorant.jpg')
+    image = process(head).unsqueeze(0).to(device)
 
     with torch.no_grad():
         image_features = modelc.encode_image(image)
@@ -348,8 +358,8 @@ def algunafuncion():
 
         pred = class_names[argmax(list(probs)[0])]
         print(pred)
-        np_image = np.array(head)
-    plt.imshow(np_image)
+    #     np_image = np.array(head)
+    # plt.imshow(np_image)
 
 # if platform.system() == "Darwin":
 #     print("MacOS")
@@ -711,6 +721,8 @@ loadEfficientIButton = Button(root, text='Efficient Pytorch', command=loadEffici
 pytorchCameraButton = Button(root, text='Pytorch Camara', command=pytorchCamera).pack()
 imagenClipButton = Button(root, text='Imagen Clip', command=clipImageTk).pack()
 showImageClipButton = Button(root, text='Imagen Clip', command=showImageClipTk).pack()
+loadClipButton = Button(root, text='Cargar Clip', command=loadClip).pack()
+clipButton = Button(root, text='Clip', command=clip).pack()
 
 
 exitButton = Button(root, text="Salir", command=root.quit)
