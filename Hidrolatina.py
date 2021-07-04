@@ -309,7 +309,7 @@ def pytorchCamera():
 
         
         threshold = 0.9
-        iou_threshold = 0.8
+        iou_threshold = 0.5
 
         # # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
         # image_np_expanded = np.expand_dims(image_np, axis=0)
@@ -695,7 +695,6 @@ def showImageClipTk():
         labelText.grid_forget()
         labelText = Label(imageClipTk, text=listImagenClip[imageNumber].getAnswer())
 
-        print(len(listImagenClip))
         if imageNumber == len(listImagenClip)-1:
             buttonForward = Button(imageClipTk, text='>>', state=DISABLED)
         
