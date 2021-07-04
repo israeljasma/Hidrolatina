@@ -40,21 +40,6 @@ elif platform.system() == "Windows":
         if not os.path.exists(dir):
             os.makedirs(dir)
 
-def testImageClass():
-    # ImageTk.PhotoImage(Image.open("E:/Softmaking/Proyectos/Hidrolatina/valorant.jpg"), "fgdgfd")
-    ggg = 'fsdf'
-    imagen = ImageTk.PhotoImage(Image.open("E:/Softmaking/Proyectos/Hidrolatina/valorant.jpg"))
-    p1 = imageClip(imagen,ggg)
-    p2 = imageClip(imagen,ggg)
-    # p1 = imageClip("dfds", "esfdsf")
-
-    listImagenClip = [p1, p2]
-    
-    print(p1.getImage())
-    print(p1.getAnswer())
-    print(listImagenClip[1].getAnswer())
-
-
 def efficientDETModels(MODELS_DIR, selected):
     MODEL_DATE = '20200711'
     MODEL_NAME = 'efficientdet_'+selected+'_coco17_tpu-32'
@@ -844,7 +829,6 @@ def openConfigurationTk():
     closeWindow.pack()
 
 #Buttons
-buttonFlase = Button(root, text="yeeey", command=printLabel).pack()
 configButton = Button(root, text="Configuraciones", command=openConfigurationTk, fg="blue").pack()
 downloadModels = Button(root, text="Modelos", command=openDownloadModelsTk).pack()
 
@@ -859,8 +843,6 @@ showImageClipButton = Button(root, text='Imagen Clip', command=showImageClipTk).
 loadClipButton = Button(root, text='Cargar Clip', command=loadClip).pack()
 clipButton = Button(root, text='Clip', command=clip).pack()
 MDETRButton = Button(root, text='MDETR', command=MDETR).pack()
-
-testButtonClass = Button(root, text='TEst class', command=testImageClass).pack()
 
 
 exitButton = Button(root, text="Salir", command=root.quit)
