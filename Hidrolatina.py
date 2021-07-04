@@ -238,45 +238,6 @@ def importMDETER():
 def clearCacheMDETR():
     torch.cuda.empty_cache()
 
-def loadODAPI():
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'    # Suppress TensorFlow logging
-    import tensorflow as tf
-    from object_detection.utils import label_map_util
-    from object_detection.utils import config_util
-    from object_detection.utils import visualization_utils as viz_utils
-    from object_detection.builders import model_builder
-
-    tf.get_logger().setLevel('ERROR')           # Suppress TensorFlow logging (2)
-
-    # # Enable GPU dynamic memory allocation
-    # gpus = tf.config.experimental.list_physical_devices('GPU')
-    # for gpu in gpus:
-    #     tf.config.experimental.set_memory_growth(gpu, True)
-
-    #Set CPU
-    tf.config.set_visible_devices([], 'GPU')
-
-    # Load pipeline config and build a detection model
-    print(PATH_TO_CFG)
-    configs = config_util.get_configs_from_pipeline_file(PATH_TO_CFG)
-    model_config = configs['model']
-    detection_model = model_builder.build(model_config=model_config, is_training=False)
-
-    # Restore checkpoint
-    ckpt = tf.train.Checkpoint(model=detection_model)
-    ckpt.restore(os.path.join(PATH_TO_CKPT, 'ckpt-0')).expect_partial()
-
-    @tf.function
-    def detect_fn(image):
-        """Detect objects in image."""
-
-        image, shapes = detection_model.preprocess(image)
-        prediction_dict = detection_model.predict(image, shapes)
-        detections = detection_model.postprocess(prediction_dict, shapes)
-
-        return detections, prediction_dict, tf.reshape(shapes, [-1])
-
-
 def loadEfficient():
     ### Arreglar directorio
     import sys
@@ -566,8 +527,8 @@ root.resizable(False,False)
 #root.iconbitmap("logo-sm.ico")
 
 #Center windows
-app_width = 600
-app_height = 500
+app_width = 300
+app_height = 250
 
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
@@ -829,20 +790,17 @@ def openConfigurationTk():
     closeWindow.pack()
 
 #Buttons
-configButton = Button(root, text="Configuraciones", command=openConfigurationTk, fg="blue").pack()
-downloadModels = Button(root, text="Modelos", command=openDownloadModelsTk).pack()
+# downloadModels = Button(root, text="Modelos", command=openDownloadModelsTk).pack()
 
-messagebuton = Button(root, text="Popup", command=popup).pack()
-
-importLibraryButton = Button(root, text='Cargar librerias', command=importMDETER).pack()
-clearMDETRyButton = Button(root, text='Limpiar MDETR', command=clearCacheMDETR).pack()
-loadODAPIButton = Button(root, text='Cargar OD API', command=loadODAPI).pack()
-loadEfficientIButton = Button(root, text='Efficient Pytorch', command=loadEfficient).pack()
-pytorchCameraButton = Button(root, text='Pytorch Camara', command=pytorchCamera).pack()
-showImageClipButton = Button(root, text='Imagen Clip', command=showImageClipTk).pack()
+clearMDETRyButton = Button(root, text='Limpiar Cache', command=clearCacheMDETR).pack()
+importLibraryButton = Button(root, text='Cargar MDETR', command=importMDETER).pack()
 loadClipButton = Button(root, text='Cargar Clip', command=loadClip).pack()
-clipButton = Button(root, text='Clip', command=clip).pack()
+loadEfficientIButton = Button(root, text='Cargar EfficientDet', command=loadEfficient).pack()
+pytorchCameraButton = Button(root, text='Evaluación de Camara', command=pytorchCamera).pack()
 MDETRButton = Button(root, text='MDETR', command=MDETR).pack()
+clipButton = Button(root, text='Clip', command=clip).pack()
+showImageClipButton = Button(root, text='Resultados', command=showImageClipTk).pack()
+# configButton = Button(root, text="Configuraciones", command=openConfigurationTk, fg="blue").pack()
 
 
 exitButton = Button(root, text="Salir", command=root.quit)
