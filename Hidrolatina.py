@@ -595,10 +595,6 @@ root.geometry(f'{app_width}x{app_height}+{int(x)}+{int(y)}')
 
 
 #Def
-def printLabel():
-    label = Label(root, text="Yeeey " + fakeInput.get())
-    label.pack()
-
 def popup(message):
     messagebox.showinfo(message=message)
 
@@ -695,19 +691,6 @@ def openDownloadModelsTk():
         'EfficientDET D7',
         'Todos'
     ]
-    option3 = ['yeeey']
-
-    option2 = {'yeeey': 'd0',
-        'EfficientDET D1': 'd1',
-        'EfficientDET D2' : 'd2',
-        'EfficientDET D3' : 'd3',
-        'EfficientDET D4' : 'd4',
-        'EfficientDET D5' : 'd5',
-        'EfficientDET D6' : 'd6',
-        'EfficientDET D7' : 'd7',
-        'EfficientDET D8' : 'd8'}
-    
-    op = list(option2.keys())
 
     clicked = StringVar()
     clicked.set(option[0])
@@ -721,41 +704,6 @@ def openDownloadModelsTk():
 
     closeWindow = Button(downloadModelsTk, text="Cerrar Ventana", command=closeTk)
     closeWindow.pack()
-
-def clipImageTk():
-    global imagenn
-    clipImageTkinter = Toplevel()
-    # clipImageTkinter.resizable(False,False)
-    clipImageTkinter.title("Imagen Clip")
-    # im = Image.fromarray(imagencamera)
-
-
-    # width = im.width()
-    # height = (im.height() + 100)
-    # screen_width = root.winfo_screenwidth()
-    # screen_height = root.winfo_screenheight()
-
-    # x = (screen_width/2) - (app_width/2)
-    # y = (screen_height/2) - (app_height/2)
-
-    # clipImageTkinter.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
-
-    path1 = Image.open('c:/Users/Doravan/Desktop/unnamed.jpg')
-    path2 = Image.open('c:/Users/Doravan/Desktop/pngwingcom.png')
-    imagenn = ImageTk.PhotoImage(path1)
-    iyyey = ImageTk.PhotoImage(path1)
-
-    global printImage
-    printImage = ImageTk.PhotoImage(objectListMDETR)
-
-    imagenList=[imagenn]
-    labelimage = Label(clipImageTkinter, image=printImage)
-    labelimage.pack()
-
-    # buttonBack = Button(clipImageTkinter, text='<<', command=lambda:back).pack()
-    # buttonForward = Button(clipImageTkinter, text='>>', command=lambda:forward).pack()
-    exitButton = Button(clipImageTkinter, text="Salir", command=lambda:clipImageTkinter.destroy())
-    exitButton.pack()
 
 def showImageClipTk():
     #Config Tk
@@ -776,9 +724,6 @@ def showImageClipTk():
     global buttonForward
     global labelText
     global listImagenClip
-
-    #Test print text BORRAR
-    textTest = 'Esto no es una mano >.>'
 
     #Def into tk
     def closeTk():
@@ -834,7 +779,6 @@ def showImageClipTk():
         labelText.grid_forget()
         labelText = Label(imageClipTk, text=listImagenClip[imageNumber].getAnswer())
 
-        print(imageNumber)
         if imageNumber == 0:
             buttonBack = Button(imageClipTk, text='<<', state=DISABLED)
         
@@ -848,38 +792,6 @@ def showImageClipTk():
 
     #Hide Root Window
     root.withdraw()
-
-    #Path Images
-    imgpath1 = Image.open('c:/Users/Doravan/Desktop/unnamed.jpg')
-    imgpath2 = Image.open('c:/Users/Doravan/Desktop/600x400.jpg')
-    imgpath3 = Image.open('c:/Users/Doravan/Desktop/descarga.jpg')
-    imgpath4 = Image.open('c:/Users/Doravan/Desktop/lzN5Fa.jpg')
-    imgpath5 = Image.open('e:/Softmaking/Proyectos/Hidrolatina/valorant.jpg')
-    imagenn = ImageTk.PhotoImage(imgpath2)
-
-    #path Text
-    textPath1 = "imagen1"
-    textPath2 = "imagen2"
-    textPath3 = "imagen3"
-    textPath4 = "imagen4"
-    textPath5 = "imagen5"
-
-    #Images
-    imagenlist0 = ImageTk.PhotoImage(imgpath1)
-    imagenlist1 = ImageTk.PhotoImage(imgpath2)
-    imagenlist2 = ImageTk.PhotoImage(imgpath3)
-    imagenlist3 = ImageTk.PhotoImage(imgpath4)
-    imagenlist4 = ImageTk.PhotoImage(imgpath5)
-
-    #List Images
-    imagenList = [imagenlist0, imagenlist1, imagenlist2, imagenlist3, imagenlist4]
-
-    #List texts
-    textList = [textPath1, textPath2, textPath3, textPath4, textPath5]
-    print(textList[0])
-
-    #Test imagenList
-    # print(len(imagenList))
 
     #Label Tk
     labelimage = Label(imageClipTk, image=listImagenClip[0].getImage())
@@ -943,7 +855,6 @@ clearMDETRyButton = Button(root, text='Limpiar MDETR', command=clearCacheMDETR).
 loadODAPIButton = Button(root, text='Cargar OD API', command=loadODAPI).pack()
 loadEfficientIButton = Button(root, text='Efficient Pytorch', command=loadEfficient).pack()
 pytorchCameraButton = Button(root, text='Pytorch Camara', command=pytorchCamera).pack()
-imagenClipButton = Button(root, text='Imagen Clip', command=clipImageTk).pack()
 showImageClipButton = Button(root, text='Imagen Clip', command=showImageClipTk).pack()
 loadClipButton = Button(root, text='Cargar Clip', command=loadClip).pack()
 clipButton = Button(root, text='Clip', command=clip).pack()
@@ -954,20 +865,5 @@ testButtonClass = Button(root, text='TEst class', command=testImageClass).pack()
 
 exitButton = Button(root, text="Salir", command=root.quit)
 exitButton.pack()
-#Inputs
-fakeInput = Entry(root)
-fakeInput.pack()
-fakeInput.insert(0, "Escribe algoo1!!")
-
-#Images
-#imagen = ImageTk.PhotoImage(Image.open("valorant.jpg"))
-#labelimagen = Label(image=imagen)
-#labelimagen.pack()
-
-#Frames
-frame = LabelFrame(root, text="yeeey frame!!")
-frame.pack()
-b = Button(frame, text="Este es un frame :o")
-b.pack()
 
 root.mainloop()
