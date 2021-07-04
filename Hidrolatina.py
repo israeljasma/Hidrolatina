@@ -8,12 +8,15 @@ from tkinter import filedialog
 import sqlite3
 import os
 import platform
+from imagenClipClass import imageClip
 
 ##Download EfficientDET import's
 import tarfile
 import urllib.request
 
 import torch
+
+listImagenClip = []
 
 ##Path
 if platform.system() == "Darwin":
@@ -36,6 +39,21 @@ elif platform.system() == "Windows":
     for dir in [DATA_DIR, MODELS_DIR]:
         if not os.path.exists(dir):
             os.makedirs(dir)
+
+def testImageClass():
+    # ImageTk.PhotoImage(Image.open("E:/Softmaking/Proyectos/Hidrolatina/valorant.jpg"), "fgdgfd")
+    ggg = 'fsdf'
+    imagen = ImageTk.PhotoImage(Image.open("E:/Softmaking/Proyectos/Hidrolatina/valorant.jpg"))
+    p1 = imageClip(imagen,ggg)
+    p2 = imageClip(imagen,ggg)
+    # p1 = imageClip("dfds", "esfdsf")
+
+    listImagenClip = [p1, p2]
+    
+    print(p1.getImage())
+    print(p1.getAnswer())
+    print(listImagenClip[1].getAnswer())
+
 
 def efficientDETModels(MODELS_DIR, selected):
     MODEL_DATE = '20200711'
@@ -317,7 +335,7 @@ def loadEfficient():
                                 scales=[2 * 0, 2 * (1.0 / 3.0), 2 ** (2.0 / 3.0)])
 
     # model.load_state_dict(torch.load('logs/person - copia/efficientdet-d1_95_2200.pth'))
-    model.load_state_dict(torch.load('C:/Users/Doravan/Desktop/Hidrolatina/torchtest/Yet-Another-EfficientDet-Pytorch/efficientdet-d2_58_8260_best.pth'))
+    model.load_state_dict(torch.load('C:/Users/Doravan/Desktop/Hidrolatina/torchtest/Yet-Another-EfficientDet-Pytorch/efficientdet-d2_65_9200.pth'))
     model.requires_grad_(False)
     model.eval()
 
@@ -344,8 +362,8 @@ def pytorchCamera():
         image_path=[image_np]
 
         
-        threshold = 0.8
-        iou_threshold = 0.5
+        threshold = 0.9
+        iou_threshold = 0.8
 
         # # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
         # image_np_expanded = np.expand_dims(image_np, axis=0)
@@ -394,7 +412,7 @@ def pytorchCamera():
         if len(out[0]['scores']) > 0:
             det += 1
             if det==5:     #break in det-1
-
+                global date_hour
                 now = datetime.datetime.now()
                 date_hour='%d/%d/%d-%d:%d:%d'%( now.day, now.month, now.year, now.hour, now.minute, now.second )
                 print(date_hour)
@@ -427,11 +445,13 @@ def pytorchCamera():
             ymin = int((detected_boxes[1]))
             xmax = int((detected_boxes[2]))
             ymax = int((detected_boxes[3]))
-            global cropped_img
             cropped_img = image_np[ymin:ymax,xmin:xmax]
-            global imagencamera
-            if not cropped_img.size == 0:
+
+            if cropped_img.size != 0:
                 imagencamera = cropped_img
+                global im
+                im = Image.fromarray(cv2.cvtColor(imagencamera, cv2.COLOR_BGR2RGB))
+                print(im)
             # imgplot = plt.imshow(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
             # plt.show()
             # print(imgplot)
@@ -439,24 +459,34 @@ def pytorchCamera():
             # print('fdsfssdfdsf')
             # print('detected_boxes',detected_boxes)
             # print('cropped_img',cropped_img)
-            if cropped_img.size == 0:
-                continue
-            else:
-                #cv2.imwrite('cropped_image_{}.jpg'.format(i), cropped_img)
-                print(cropped_img)
+            # if cropped_img.size == 0:
+            #     continue
+            # else:
+            #     #cv2.imwrite('cropped_image_{}.jpg'.format(i), cropped_img)
+            #     print('cropped_img')
             # imagencamera = Image.fromarray(cropped_img, 'RGB')
-            
+    ################################Borrar###########################################
+    cropPerson =  imageClip(ImageTk.PhotoImage(im), 'Person detected on '+date_hour)
+    listImagenClip.append(cropPerson)
+
 
 def MDETR():
     import cv2
     # im = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
-    im = Image.fromarray(imagencamera)
+    # im = Image.fromarray(imagencamera)
     plot_inference(im, "a hand")
     im_hand=im.crop((bboxes[len(bboxes)-1]))
     plot_inference(im, "a tiny head")
+    global im_head
     im_head=im.crop((bboxes[len(bboxes)-1]))
+    # cropPersonHead = imageClip(im_head, "")
+    # listImagenClip.append(cropPersonHead)
     # im_head.save('clip/cropped_head.jpg')
     plot_inference_qa(im_hand, "what color are the fingers?")
+    cropPersonHand = imageClip(ImageTk.PhotoImage(im_hand), 'Gloves: '+answer)
+    listImagenClip.append(cropPersonHand)
+    # print(listImagenClip[2])
+
     global objectListMDETR
     objectListMDETR= im_head
     objectListMDETR2= []
@@ -492,8 +522,8 @@ def loadClip():
     text = clip.tokenize(candidate_captions).to(device)
 
 def clip():
-    head=Image.open('E:/Softmaking/Proyectos/Hidrolatina/valorant.jpg')
-    image = process(head).unsqueeze(0).to(device)
+    # head=Image.open('E:/Softmaking/Proyectos/Hidrolatina/valorant.jpg')
+    image = process(im_head).unsqueeze(0).to(device)
 
     with torch.no_grad():
         image_features = modelc.encode_image(image)
@@ -504,6 +534,9 @@ def clip():
 
         pred = class_names[argmax(list(probs)[0])]
         print(pred)
+        
+    cropPerson = imageClip(ImageTk.PhotoImage(im_head), 'PPE in head: '+pred)
+    listImagenClip.append(cropPerson)
     #     np_image = np.array(head)
     # plt.imshow(np_image)
 
@@ -741,10 +774,15 @@ def showImageClipTk():
     global labelimage
     global buttonBack
     global buttonForward
+    global labelText
+    global listImagenClip
+
+    #Test print text BORRAR
+    textTest = 'Esto no es una mano >.>'
 
     #Def into tk
-
     def closeTk():
+        #Destroy window
         imageClipTk.destroy()
         root.deiconify()
 
@@ -753,39 +791,59 @@ def showImageClipTk():
         global labelimage
         global buttonBack
         global buttonForward
+        global labelText
+        global listImagenClip
 
+        #Image
         labelimage.grid_forget()
-        labelimage = Label(imageClipTk, image=imagenList[imageNumber])
+        labelimage = Label(imageClipTk, image=listImagenClip[imageNumber].getImage())
         buttonForward = Button(imageClipTk, text='>>', command=lambda:forward(imageNumber+1))
         buttonBack = Button(imageClipTk, text='<<', command=lambda:back(imageNumber-1))
 
-        print(imageNumber)
-        if imageNumber == len(imagenList)-1:
+        #Text
+        labelText.grid_forget()
+        labelText = Label(imageClipTk, text=listImagenClip[imageNumber].getAnswer())
+
+        print(len(listImagenClip))
+        if imageNumber == len(listImagenClip)-1:
             buttonForward = Button(imageClipTk, text='>>', state=DISABLED)
         
         labelimage.grid(row=0, column=0, columnspan=3)
-        buttonBack.grid(row=1, column=0)
-        buttonForward.grid(row=1, column=2)
+        buttonBack.grid(row=2, column=0)
+        buttonForward.grid(row=2, column=2)
+
+        labelText.grid(row=1, column=1)
 
         return
 
     def back(imageNumber):
+        #Global Declarations into Def tk
         global labelimage
         global buttonBack
         global buttonForward
+        global labelText
+        global listImagenClip
 
+        #Image
         labelimage.grid_forget()
-        labelimage = Label(imageClipTk, image=imagenList[imageNumber])
+        labelimage = Label(imageClipTk, image=listImagenClip[imageNumber].getImage())
         buttonForward = Button(imageClipTk, text='>>', command=lambda:forward(imageNumber+1))
         buttonBack = Button(imageClipTk, text='<<', command=lambda:back(imageNumber-1))
+
+        #Text
+        labelText.grid_forget()
+        labelText = Label(imageClipTk, text=listImagenClip[imageNumber].getAnswer())
 
         print(imageNumber)
         if imageNumber == 0:
             buttonBack = Button(imageClipTk, text='<<', state=DISABLED)
         
         labelimage.grid(row=0, column=0, columnspan=3)
-        buttonBack.grid(row=1, column=0)
-        buttonForward.grid(row=1, column=2)
+        buttonBack.grid(row=2, column=0)
+        buttonForward.grid(row=2, column=2)
+
+        labelText.grid(row=1, column=1)
+        
         return
 
     #Hide Root Window
@@ -799,6 +857,13 @@ def showImageClipTk():
     imgpath5 = Image.open('e:/Softmaking/Proyectos/Hidrolatina/valorant.jpg')
     imagenn = ImageTk.PhotoImage(imgpath2)
 
+    #path Text
+    textPath1 = "imagen1"
+    textPath2 = "imagen2"
+    textPath3 = "imagen3"
+    textPath4 = "imagen4"
+    textPath5 = "imagen5"
+
     #Images
     imagenlist0 = ImageTk.PhotoImage(imgpath1)
     imagenlist1 = ImageTk.PhotoImage(imgpath2)
@@ -809,22 +874,32 @@ def showImageClipTk():
     #List Images
     imagenList = [imagenlist0, imagenlist1, imagenlist2, imagenlist3, imagenlist4]
 
+    #List texts
+    textList = [textPath1, textPath2, textPath3, textPath4, textPath5]
+    print(textList[0])
+
     #Test imagenList
     # print(len(imagenList))
 
     #Label Tk
-    labelimage = Label(imageClipTk, image=imagenList[0])
+    labelimage = Label(imageClipTk, image=listImagenClip[0].getImage())
     labelimage.grid(row=0, column=0, columnspan=3)
+    labelText = Label(imageClipTk, text=listImagenClip[0].getAnswer())
+    labelText.grid(row=1, column=1)
 
     #Buttons Tk
     buttonBack = Button(imageClipTk, text='<<', command=lambda:back, state=DISABLED)
-    buttonBack.grid(row=1, column=0)
+    buttonBack.grid(row=2, column=0)
 
     exitButton = Button(imageClipTk, text="Cerrar ventana", command=closeTk)
-    exitButton.grid(row=1, column=1)
+    exitButton.grid(row=2, column=1)
 
-    buttonForward = Button(imageClipTk, text='>>', command=lambda:forward(1))
-    buttonForward.grid(row=1, column=2)
+    if len(listImagenClip) == 1:
+        buttonForward = Button(imageClipTk, text='>>', command=lambda:forward(1), state=DISABLED)
+        buttonForward.grid(row=2, column=2)
+    else:
+        buttonForward = Button(imageClipTk, text='>>', command=lambda:forward(1))
+        buttonForward.grid(row=2, column=2)
 
 
 def openConfigurationTk():
@@ -834,7 +909,7 @@ def openConfigurationTk():
     configurationTk.resizable(False,False)
     configurationTk.protocol("WM_DELETE_WINDOW", exit)
     configurationTk.title("Configuraciones")
-    configurationTk.overrideredirect(True)
+    # configurationTk.overrideredirect(True)
 
     imagen = ImageTk.PhotoImage(Image.open("E:/Softmaking/Proyectos/Hidrolatina/valorant.jpg"))
 
@@ -873,6 +948,8 @@ showImageClipButton = Button(root, text='Imagen Clip', command=showImageClipTk).
 loadClipButton = Button(root, text='Cargar Clip', command=loadClip).pack()
 clipButton = Button(root, text='Clip', command=clip).pack()
 MDETRButton = Button(root, text='MDETR', command=MDETR).pack()
+
+testButtonClass = Button(root, text='TEst class', command=testImageClass).pack()
 
 
 exitButton = Button(root, text="Salir", command=root.quit)
