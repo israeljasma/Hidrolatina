@@ -548,6 +548,13 @@ def folderSelect():
     folder_selected = filedialog.askdirectory()
     print(folder_selected)
 
+def checkListImagenClip():
+    if len(listImagenClip) == 0 :
+        popup('No hay datos que mostrar')
+    else:
+        showImageClipTk
+
+
 ###################Def Windows's###################
 
 def openDownloadModelsTk():
@@ -670,6 +677,8 @@ def showImageClipTk():
     global buttonForward
     global labelText
     global listImagenClip
+
+    
 
     #Def into tk
     def closeTk():
@@ -798,7 +807,7 @@ loadEfficientIButton = Button(root, text='Cargar EfficientDet', command=loadEffi
 pytorchCameraButton = Button(root, text='Evaluación de Camara', command=pytorchCamera).pack()
 MDETRButton = Button(root, text='MDETR', command=MDETR).pack()
 clipButton = Button(root, text='Clip', command=clip).pack()
-showImageClipButton = Button(root, text='Resultados', command=showImageClipTk).pack()
+showImageClipButton = Button(root, text='Resultados', command=checkListImagenClip).pack()
 # configButton = Button(root, text="Configuraciones", command=openConfigurationTk, fg="blue").pack()
 
 
