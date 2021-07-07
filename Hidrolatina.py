@@ -335,8 +335,15 @@ def pytorchCamera():
 
         out = invert_affine(framed_metas, out)
 
-
-        # if len(out[0]['rois']) == 0:
+        ##FILTER EMPTY DETECTIONS
+        bads=[]
+        for i in range((out[0]['scores']).size):
+            detected_boxes= out[0]['rois'][i]
+            if detected_boxes[0]==detected_boxes[2]:
+                bads.append(i)
+        out[0]['rois']=np.delete(out[0]['rois'],bads,axis=0)
+        out[0]['scores']=np.delete(out[0]['scores'],bads,axis=0)
+        out[0]['class_ids']=np.delete(out[0]['class_ids'],bads,axis=0)
 
         ori_img = ori_imgs[0].copy()
         for j in range(len(out[0]['rois'])):
@@ -393,11 +400,9 @@ def pytorchCamera():
             ymax = int((detected_boxes[3]))
             cropped_img = image_np[ymin:ymax,xmin:xmax]
 
-            if cropped_img.size != 0:
-                imagencamera = cropped_img
-                global im
-                im = Image.fromarray(cv2.cvtColor(imagencamera, cv2.COLOR_BGR2RGB))
-                print(im)
+            global im
+            im = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
+            print(im)
             # imgplot = plt.imshow(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
             # plt.show()
             # print(imgplot)
@@ -429,13 +434,16 @@ def MDETR():
     # listImagenClip.append(cropPersonHead)
     # im_head.save('clip/cropped_head.jpg')
     plot_inference_qa(im_hand, "what color are the fingers?")
-    cropPersonHand = imageClip(ImageTk.PhotoImage(im_hand), 'Gloves: '+answer)
+    if answer =='purple' or answer =='blue':
+        gloves= 'Yes'
+
+    else:
+        gloves= 'No'
+    cropPersonHand = imageClip(ImageTk.PhotoImage(im_hand), 'Gloves: '+gloves)
     listImagenClip.append(cropPersonHand)
-    # print(listImagenClip[2])
 
     global objectListMDETR
     objectListMDETR= im_head
-    objectListMDETR2= []
 
 def loadClip():
     import clip
