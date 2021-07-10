@@ -309,7 +309,7 @@ def pytorchCamera():
 
         
         threshold = 0.9
-        iou_threshold = 0.5
+        iou_threshold = 0.4
 
         # # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
         # image_np_expanded = np.expand_dims(image_np, axis=0)
@@ -787,8 +787,8 @@ def openConfigurationTk():
 
     imagen = ImageTk.PhotoImage(Image.open("E:/Softmaking/Proyectos/Hidrolatina/valorant.jpg"))
 
-    width = imagen.width()
-    height = (imagen.height() + 100)
+    width = 200
+    height = 300
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
 
@@ -796,11 +796,29 @@ def openConfigurationTk():
     y = (screen_height/2) - (app_height/2)
 
     configurationTk.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
-    labelimagen = Label(configurationTk, image=imagen)
-    labelimagen.pack()
 
-    buton = Button(configurationTk, text="Cambiar directorio", command=folderSelect)
-    buton.pack()
+    #Labels Tk
+    # labelimagen = Label(configurationTk, image=imagen)
+    # labelimagen.pack()
+
+    labelTest = Label(configurationTk, text='fdgdf')
+    labelTest.pack()
+
+    #Buttons Tk
+    buttonDirectory = Button(configurationTk, text="Cambiar directorio", command=folderSelect)
+    buttonDirectory.pack()
+
+    buttonThreshold = Button(configurationTk, text="Cambiar Threshold")
+    buttonThreshold.pack()
+
+    buttonIou_threshold = Button(configurationTk, text="Cambiar Iou Threshold")
+    buttonIou_threshold.pack()
+
+    buttonDetLimit = Button(configurationTk, text="Cambiar limite de capturas")
+    buttonDetLimit.pack()
+
+    buttonClass = Button(configurationTk, text="Cambiar clases")
+    buttonClass.pack()
 
     closeWindow = Button(configurationTk, text="Cerrar Ventana", command=lambda:configurationTk.destroy())
     closeWindow.pack()
@@ -816,7 +834,7 @@ pytorchCameraButton = Button(root, text='Evaluación de Camara', command=pytorch
 MDETRButton = Button(root, text='MDETR', command=MDETR).pack()
 clipButton = Button(root, text='Clip', command=clip).pack()
 showImageClipButton = Button(root, text='Resultados', command=checkListImagenClip).pack()
-# configButton = Button(root, text="Configuraciones", command=openConfigurationTk, fg="blue").pack()
+configButton = Button(root, text="Configuraciones", command=openConfigurationTk, fg="blue").pack()
 
 
 exitButton = Button(root, text="Salir", command=root.quit)
