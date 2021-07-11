@@ -536,7 +536,7 @@ root.resizable(False,False)
 
 #Center windows
 app_width = 300
-app_height = 250
+app_height = 300
 
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
@@ -785,7 +785,7 @@ def openConfigurationTk():
     configurationTk.title("Configuraciones")
     # configurationTk.overrideredirect(True)
 
-    imagen = ImageTk.PhotoImage(Image.open("E:/Softmaking/Proyectos/Hidrolatina/valorant.jpg"))
+    #imagen = ImageTk.PhotoImage(Image.open("E:/Softmaking/Proyectos/Hidrolatina/valorant.jpg"))
 
     width = 200
     height = 300
