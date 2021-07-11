@@ -797,6 +797,14 @@ def openConfigurationTk():
 
     configurationTk.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
 
+    #Def
+    def closeTk():
+        configurationTk.destroy()
+        root.deiconify()
+
+    #Hide Root Window
+    root.withdraw()
+
     #Labels Tk
     # labelimagen = Label(configurationTk, image=imagen)
     # labelimagen.pack()
@@ -820,7 +828,7 @@ def openConfigurationTk():
     buttonClass = Button(configurationTk, text="Cambiar clases")
     buttonClass.pack()
 
-    closeWindow = Button(configurationTk, text="Cerrar Ventana", command=lambda:configurationTk.destroy())
+    closeWindow = Button(configurationTk, text="Cerrar Ventana", command=lambda:closeTk())
     closeWindow.pack()
 
 #Buttons
