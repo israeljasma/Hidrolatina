@@ -802,24 +802,24 @@ def openConfigurationTk():
 
     def changeThreshold():
         while True:
-            varThreshol = simpledialog.askstring(title="Iou Threshol", prompt="Ingrese Threshol:")
+            varThreshold = simpledialog.askstring(title="Iou Threshold", prompt="Ingrese Threshold:")
             try:
-                varThreshol = float(varThreshol)
-                if varThreshol >=0 and varThreshol <= 1:
-                    print (varThreshol)
+                varThreshold = float(varThreshold)
+                if varThreshold >=0 and varThreshold <= 1:
+                    print (varThreshold)
                     return True
                 else:
                     print('Ingrese un numero valido entre 0 y 1 \n Ejemplo: 0.9')
                     messagebox.showinfo(title='Numero no valido', message='Ingrese un numero entre 0 y 1\nEjemplo: 0.9')
             except ValueError:
-                if not varThreshol == '':
+                if not varThreshold == '':
                     messagebox.showerror(title='Caracter invalido', message='Solo admite numeros')
             except:
                 break
 
     def changeIouThreshold():
-        varIouThreshol = simpledialog.askstring(title="Iou Threshol", prompt="Ingrese Iou Threshol:")
-        print(varIouThreshol)
+        varIouThreshold = simpledialog.askstring(title="Iou Threshold", prompt="Ingrese Iou Threshold:")
+        print(varIouThreshold)
 
     def changeDetLimit():
         varDetLimit = simpledialog.askstring(title="Limite de capturas", prompt="Ingrese limite de captura:")
