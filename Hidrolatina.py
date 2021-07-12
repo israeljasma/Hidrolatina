@@ -5,6 +5,7 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 from tkinter import messagebox
 from tkinter import filedialog
+from tkinter import simpledialog
 import sqlite3
 import os
 import platform
@@ -777,15 +778,12 @@ def showImageClipTk():
 
 
 def openConfigurationTk():
-    global imagen
     # Config tk
     configurationTk = Toplevel()
     configurationTk.resizable(False,False)
     configurationTk.protocol("WM_DELETE_WINDOW", exit)
     configurationTk.title("Configuraciones")
     # configurationTk.overrideredirect(True)
-
-    #imagen = ImageTk.PhotoImage(Image.open("E:/Softmaking/Proyectos/Hidrolatina/valorant.jpg"))
 
     width = 200
     height = 300
@@ -802,6 +800,31 @@ def openConfigurationTk():
         configurationTk.destroy()
         root.deiconify()
 
+    def changeThreshold():
+        while True:
+            varThreshol = simpledialog.askstring(title="Iou Threshol", prompt="Ingrese Threshol:")
+            try:
+                varThreshol = float(varThreshol)
+                if varThreshol >=0 and varThreshol <= 1:
+                    print (varThreshol)
+                    return True
+                else:
+                    print('Ingrese un numero valido entre 0 y 1 \n Ejemplo: 0.9')
+                    messagebox.showinfo(title='Numero no valido', message='Ingrese un numero entre 0 y 1\nEjemplo: 0.9')
+            except ValueError:
+                if not varThreshol == '':
+                    messagebox.showerror(title='Caracter invalido', message='Solo admite numeros')
+            except:
+                break
+
+    def changeIouThreshold():
+        varIouThreshol = simpledialog.askstring(title="Iou Threshol", prompt="Ingrese Iou Threshol:")
+        print(varIouThreshol)
+
+    def changeDetLimit():
+        varDetLimit = simpledialog.askstring(title="Limite de capturas", prompt="Ingrese limite de captura:")
+        print(varDetLimit)
+
     #Hide Root Window
     root.withdraw()
 
@@ -812,17 +835,26 @@ def openConfigurationTk():
     labelTest = Label(configurationTk, text='fdgdf')
     labelTest.pack()
 
+    labelThreshold = Label(configurationTk, text='Threshold : 5')
+    labelThreshold.pack()
+
+    labelIou_threshold = Label(configurationTk, text='Iou Threshold : 5')
+    labelIou_threshold.pack()
+
+    labelDetLimit = Label(configurationTk, text='Det limit : 5')
+    labelDetLimit.pack()
+
     #Buttons Tk
     buttonDirectory = Button(configurationTk, text="Cambiar directorio", command=folderSelect)
     buttonDirectory.pack()
 
-    buttonThreshold = Button(configurationTk, text="Cambiar Threshold")
+    buttonThreshold = Button(configurationTk, text="Cambiar Threshold", command=lambda:changeThreshold())
     buttonThreshold.pack()
 
-    buttonIou_threshold = Button(configurationTk, text="Cambiar Iou Threshold")
+    buttonIou_threshold = Button(configurationTk, text="Cambiar Iou Threshold", command=lambda:changeIouThreshold())
     buttonIou_threshold.pack()
 
-    buttonDetLimit = Button(configurationTk, text="Cambiar limite de capturas")
+    buttonDetLimit = Button(configurationTk, text="Cambiar limite de capturas", command=lambda:changeDetLimit())
     buttonDetLimit.pack()
 
     buttonClass = Button(configurationTk, text="Cambiar clases")
