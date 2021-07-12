@@ -802,7 +802,7 @@ def openConfigurationTk():
 
     def changeThreshold():
         while True:
-            varThreshold = simpledialog.askstring(title="Iou Threshold", prompt="Ingrese Threshold:")
+            varThreshold = simpledialog.askstring(title="Threshold", prompt="Ingrese Threshold:")
             try:
                 varThreshold = float(varThreshold)
                 if varThreshold >=0 and varThreshold <= 1:
@@ -818,12 +818,38 @@ def openConfigurationTk():
                 break
 
     def changeIouThreshold():
-        varIouThreshold = simpledialog.askstring(title="Iou Threshold", prompt="Ingrese Iou Threshold:")
-        print(varIouThreshold)
+        while True:
+            varIouThreshold = simpledialog.askstring(title="Iou Threshold", prompt="Ingrese Iou Threshold:")
+            try:
+                varIouThreshold = float(varIouThreshold)
+                if varIouThreshold > 0 and varIouThreshold <= 1:
+                    print(varIouThreshold)
+                    return True
+                else:
+                    print('Ingrese un numero valido entre 0 y 1 \n Ejemplo: 0.9')
+                    messagebox.showinfo(title='Numero no valido', message='Ingrese un numero entre 0 y 1\nEjemplo: 0.9')
+            except ValueError:
+                if not varIouThreshold == '':
+                    messagebox.showerror(title='Caracter invalido', message='Solo admite numeros')
+            except:
+                break
 
     def changeDetLimit():
-        varDetLimit = simpledialog.askstring(title="Limite de capturas", prompt="Ingrese limite de captura:")
-        print(varDetLimit)
+        while True:
+            varDetLimit = simpledialog.askstring(title="Limite de capturas", prompt="Ingrese limite de captura:")
+            try:
+                varDetLimit = int(varDetLimit)
+                if varDetLimit >= 0 and varDetLimit <= 100:
+                    print(varDetLimit)
+                    return True
+                else:
+                    print('Ingrese un numero valido entre 0 y 100 \n Ejemplo: 10')
+                    messagebox.showinfo(title='Numero no valido', message='Ingrese un numero valido entre 0 y 100 \n Ejemplo: 10')
+            except ValueError:
+                if not varDetLimit == '':
+                    messagebox.showerror(title='Caracter invalido', message='Solo admite numeros')
+            except:
+                break
 
     #Hide Root Window
     root.withdraw()
