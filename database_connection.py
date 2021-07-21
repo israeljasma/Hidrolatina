@@ -6,16 +6,16 @@ conn = sqlite3.connect('HidrolatinaDataBase.db')
 c = conn.cursor()
 
 ##Create tables
-sql = 'create table if not exists ' + 'det_limit' + ' ([id] INTEGER PRIMARY KEY AUTOINCREMENT, [number] INTEGER NOT NULL, [created_at] DATETIME, [update_at] DATETIME)'
+sql = 'create table if not exists ' + 'det_limit' + ' ([id] INTEGER PRIMARY KEY AUTOINCREMENT, [number] INTEGER NOT NULL, [created_at] DATETIME NOT NULL, [update_at] DATETIME NOT NULL)'
 c.execute(sql)
 
-sql = 'create table if not exists ' + 'threshold' + ' ([id] INTEGER PRIMARY KEY AUTOINCREMENT, [number] INTEGER NOT NULL, [created_at] DATETIME, [update_at] DATETIME)'
+sql = 'create table if not exists ' + 'threshold' + ' ([id] INTEGER PRIMARY KEY AUTOINCREMENT, [number] INTEGER NOT NULL, [created_at] DATETIME NOT NULL, [update_at] DATETIME NOT NULL)'
 c.execute(sql)
 
-sql = 'create table if not exists ' + 'iou_threshold' + ' ([id] INTEGER PRIMARY KEY AUTOINCREMENT, [number] INTEGER NOT NULL, [created_at] DATETIME, [update_at] DATETIME)'
+sql = 'create table if not exists ' + 'iou_threshold' + ' ([id] INTEGER PRIMARY KEY AUTOINCREMENT, [number] INTEGER NOT NULL, [created_at] DATETIME NOT NULL, [update_at] DATETIME NOT NULL)'
 c.execute(sql)
 
-sql = 'create table if not exists ' + 'testdate' + ' ([date] DATETIME)'
+sql = 'create table if not exists ' + 'user' + ' ([id] INTEGER PRIMARY KEY AUTOINCREMENT, [first_name] TEXT NOT NULL, [last_name] TEXT NOT NULL, [identification] TEXT, [created_at] DATETIME NOT NULL, [update_at] DATETIME NOT NULL)'
 c.execute(sql)
 
 ##Insert into tables
@@ -32,6 +32,8 @@ c.execute('INSERT INTO threshold(number,created_at,update_at) VALUES(?,?,?)',[1,
 c.execute('INSERT INTO iou_threshold(number,created_at,update_at) VALUES(?,?,?)',[1,datetime.now(),datetime.now()])
 # sql = 'insert into ' + 'iou_threshold' + ' (number) values (%d)' % (1)
 # c.execute(sql)
+
+c.execute('INSERT INTO user(first_name,last_name,identification,created_at,update_at) VALUES(?,?,?,?,?)',['nombre','apellido','db7bXdv2vd',datetime.now(),datetime.now()])
 
 ##Saves changes
 conn.commit()
