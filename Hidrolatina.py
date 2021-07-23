@@ -6,7 +6,7 @@ from PIL import Image, ImageTk
 from tkinter import messagebox
 from tkinter import filedialog
 from tkinter import simpledialog
-import sqlite3
+import cv2
 import os
 import platform
 from imagenClipClass import imageClip
@@ -246,7 +246,7 @@ def loadEfficient():
     # os.chdir('C:/Users/Doravan/Desktop/Hidrolatina/torchtest/Yet-Another-EfficientDet-Pytorch')
     from torch.backends import cudnn
     from backbone import EfficientDetBackbone
-    import cv2
+    # import cv2
     import matplotlib.pyplot as plt
     import numpy as np
     from efficientdet.utils import BBoxTransform, ClipBoxes
@@ -292,7 +292,7 @@ def loadEfficient():
         model = model.half()
 
 def pytorchCamera():
-    import cv2
+    # import cv2
     import matplotlib.pyplot as plt
     import datetime
     det=0
@@ -667,6 +667,119 @@ def openDownloadModelsTk():
     closeWindow = Button(downloadModelsTk, text="Cerrar Ventana", command=closeTk)
     closeWindow.pack()
 
+def showPytorchCameraTk():
+    pytorchCameraTk = Toplevel()
+    pytorchCameraTk.title('Camara')
+    pytorchCameraTk.resizable(False,False)
+    pytorchCameraTk.config(background="#FFFFFF")
+    # pytorchCameraTk.overrideredirect(True)
+    # x = root.winfo_x()
+    # y = root.winfo_y()
+    # pytorchCameraTk.geometry("+%d+%d" % (x, y))
+
+    #Graphics window
+    cameraFrame = Frame(pytorchCameraTk, width=600, height=500)
+    cameraFrame.grid(row=0, column=0, padx=10, pady=2)
+
+    frame2 = Frame(pytorchCameraTk, bg="red")
+    frame2.grid(row=0, column=1)
+
+    #Capture video frames
+    labelVideo = Label(cameraFrame)
+    labelVideo.grid(row=0, column=0)
+    cap = cv2.VideoCapture(0)
+
+    #Def into tk
+    def closeTk():
+        #Destroy window
+        cap.release()
+        pytorchCameraTk.destroy()
+        # root.deiconify()
+
+    def show_frame():
+        _, frame = cap.read()
+        frame = cv2.flip(frame, 1)
+        cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+        img = Image.fromarray(cv2image)
+        imgtk = ImageTk.PhotoImage(image=img)
+        labelVideo.imgtk = imgtk
+        labelVideo.configure(image=imgtk)
+        labelVideo.after(10, show_frame) 
+
+    #Slider window (slider controls stage position)
+    # sliderFrame = Frame(pytorchCameraTk, width=600, height=100)
+    # sliderFrame.grid(row = 600, column=0, padx=10, pady=2)
+
+
+    show_frame()  #Display 2
+    # window.mainloop()  #Starts GUI
+
+    exitButton = Button(pytorchCameraTk, text='Cerrar ventana', command=closeTk)
+    exitButton.grid(row=1, column=0)
+
+    # import cv2
+    # import imutils
+    # #Config Tk
+    # pytorchCameraTk = Toplevel()
+    # pytorchCameraTk.title('Camara')
+    # pytorchCameraTk.resizable(False,False)
+    # # pytorchCameraTk.overrideredirect(True)
+    # x = root.winfo_x()
+    # y = root.winfo_y()
+    # pytorchCameraTk.geometry("+%d+%d" % (x, y))
+
+    # #Def into tk
+    # def closeTk():
+    #     #Destroy window
+    #     pytorchCameraTk.destroy()
+    #     root.deiconify()
+
+    # def visualizar():
+    #     global cap
+    #     print('visualizar')
+    #     if cap is not None:
+    #         print('cap?')
+    #         ret, frame = cap.read()
+    #         if ret == True:
+    #             print('ret?')
+    #             frame = imutils.resize(frame, width=640)
+    #             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+    #             im = Image.fromarray(frame)
+    #             img = ImageTk.PhotoImage(image=im)
+
+    #             labelVideo.configure(image=img)
+    #             # labelVideo.image = img
+    #             labelVideo.after(10, visualizar)
+    #         else:
+    #             # labelVideo.image = ''
+    #             cap.release()
+
+    # def iniciar():
+    #     print('llega?')
+    #     global cap
+    #     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    #     visualizar()
+    
+    # #Hide Root Window
+    # root.withdraw()
+
+    # #Label Tk
+    # labelVideo = Label(pytorchCameraTk)
+    # labelVideo.grid(row=1, column=0, columnspan=2)
+
+    # #Buttons Tk
+    # testButton = Button(pytorchCameraTk, text='test camara')
+    # testButton.grid(row=3, column=1)
+
+    # iniciarButton = Button(pytorchCameraTk, text='Iniciar', width=45, command=iniciar)
+    # iniciarButton.grid(column=0, row=0, padx=5, pady=5)
+    # finalizarButton = Button(pytorchCameraTk, text='Finalizar', width=45)
+    # finalizarButton.grid(column=1, row=0, padx=5, pady=5)
+
+    # exitButton = Button(pytorchCameraTk, text='Cerrar ventana', command=closeTk)
+    # exitButton.grid(row=2, column=1)
+
 def showImageClipTk():
     #Config Tk
     imageClipTk = Toplevel()
@@ -900,7 +1013,9 @@ pytorchCameraButton = Button(root, text='Evaluación de Camara', command=pytorch
 MDETRButton = Button(root, text='MDETR', command=MDETR).pack()
 clipButton = Button(root, text='Clip', command=clip).pack()
 showImageClipButton = Button(root, text='Resultados', command=checkListImagenClip).pack()
-configButton = Button(root, text="Configuraciones", command=openConfigurationTk, fg="blue").pack()
+configButton = Button(root, text='Configuraciones', command=openConfigurationTk, fg='blue').pack()
+
+testButton = Button(root, text='Test Camara',command=showPytorchCameraTk, fg='red').pack()
 
 
 exitButton = Button(root, text="Salir", command=root.quit)
