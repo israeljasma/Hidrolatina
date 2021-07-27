@@ -668,6 +668,8 @@ def openDownloadModelsTk():
     closeWindow.pack()
 
 def showPytorchCameraTk():
+    global image
+    global original_image
     pytorchCameraTk = Toplevel()
     pytorchCameraTk.title('Camara')
     pytorchCameraTk.resizable(False,False)
@@ -677,12 +679,71 @@ def showPytorchCameraTk():
     # y = root.winfo_y()
     # pytorchCameraTk.geometry("+%d+%d" % (x, y))
 
-    #Graphics window
+    image = PhotoImage(file="logo-sm.png") # edit the file name to use a different image
+    original_image = image.subsample(1,1)
+
+    #Frame Camera
     cameraFrame = Frame(pytorchCameraTk, width=600, height=500)
     cameraFrame.grid(row=0, column=0, padx=10, pady=2)
 
-    frame2 = Frame(pytorchCameraTk, bg="red")
-    frame2.grid(row=0, column=1)
+    #Frame detections
+    detectionFrame = Frame(pytorchCameraTk, bg="red", width=100, height=600)
+    detectionFrame.grid(row=0, column=1, padx=10, pady=5)
+
+    ##Subs frames lvl 1 detections
+    headFrame = Frame(detectionFrame, bg="blue")
+    headFrame.grid(row=0, column=0, padx=10, pady=5)
+
+    handFrame = Frame(detectionFrame, bg="blue")
+    handFrame.grid(row=1, column=0, padx=10, pady=5)
+
+    bootFrame = Frame(detectionFrame, bg="blue")
+    bootFrame.grid(row=2, column=0, padx=10, pady=5)
+
+    ###Subs frames lvl 2 headFrame
+    imageHeadFrame = Frame(headFrame, bg="green")
+    imageHeadFrame.grid(row=0, column=0, padx=10, pady=5)
+
+    dataHeadFrame = Frame(headFrame, bg="green")
+    dataHeadFrame.grid(row=0, column=1, padx=10, pady=5)
+
+    ###Subs frames lvl 2 handFrame
+    imageHandFrame = Frame(handFrame, bg="green")
+    imageHandFrame.grid(row=0, column=0, padx=10, pady=5)
+
+    dataHandFrame = Frame(handFrame, bg="green")
+    dataHandFrame.grid(row=0, column=1, padx=10, pady=5)
+
+    ###Subs frames lvl 2 bootFrame
+    imageBootFrame = Frame(bootFrame, bg="green")
+    imageBootFrame.grid(row=0, column=0, padx=10, pady=5)
+
+    dataBootFrame = Frame(bootFrame, bg="green")
+    dataBootFrame.grid(row=0, column=1, padx=10, pady=5)
+
+    ###Label imageHeadFrame Sub frame lvl 2 headFrame
+    Label(imageHeadFrame, image=original_image).grid(row=1, column=0, padx=5, pady=5)
+
+    ###Label imageHandFrame Sub frame lvl 2 handFrame
+    Label(imageHandFrame, image=original_image).grid(row=1, column=0, padx=5, pady=5)
+
+    ###Label imagebootFrame Sub frame lvl 2 bootFrame
+    Label(imageBootFrame, image=original_image).grid(row=1, column=0, padx=5, pady=5)
+
+    ####Label dataHeadFrame Sub frame lvl 2 headFrame
+    Label(dataHeadFrame, text="texto 0,0").grid(row=0, column=0, padx=5, pady=5)
+    Label(dataHeadFrame, text="texto 1,0").grid(row=1, column=0, padx=5, pady=5)
+    Label(dataHeadFrame, text="texto 2,0").grid(row=2, column=0, padx=5, pady=5)
+
+    ####Label dataHandFrame Sub frame lvl 2 headFrame
+    Label(dataHandFrame, text="texto 0,0").grid(row=0, column=0, padx=5, pady=5)
+    Label(dataHandFrame, text="texto 1,0").grid(row=1, column=0, padx=5, pady=5)
+    Label(dataHandFrame, text="texto 2,0").grid(row=2, column=0, padx=5, pady=5)
+
+    ####Label dataBootFrame Sub frame lvl 2 headFrame
+    Label(dataBootFrame, text="texto 0,0").grid(row=0, column=0, padx=5, pady=5)
+    Label(dataBootFrame, text="texto 1,0").grid(row=1, column=0, padx=5, pady=5)
+    Label(dataBootFrame, text="texto 2,0").grid(row=2, column=0, padx=5, pady=5)
 
     #Capture video frames
     labelVideo = Label(cameraFrame)
