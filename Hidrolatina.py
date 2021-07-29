@@ -242,19 +242,19 @@ def clearCacheMDETR():
 def loadEfficient():
     ### Arreglar directorio
     import sys
-    sys.path.append("C:/Users/Doravan/Desktop/Hidrolatina/torchtest/Yet-Another-EfficientDet-Pytorch")
-    # os.chdir('C:/Users/Doravan/Desktop/Hidrolatina/torchtest/Yet-Another-EfficientDet-Pytorch')
+    sys.path.append('C:/Users/Doravan/Desktop/Hidrolatina/torchtest/Yet-Another-EfficientDet-Pytorch')
     from torch.backends import cudnn
+
     from backbone import EfficientDetBackbone
-    # import cv2
+    import cv2
     import matplotlib.pyplot as plt
     import numpy as np
+
     from efficientdet.utils import BBoxTransform, ClipBoxes
     from utils.utils import preprocess, invert_affine, postprocess
 
     ##################Arreglar global##################
-    global preprocess, invert_affine, postprocess, BBoxTransform, ClipBoxes
-
+    global preprocess, invert_affine, postprocess, BBoxTransform, ClipBoxes, obj_list
 
     compound_coef = 2
     force_input_size = None  # set None to use default size
@@ -267,40 +267,43 @@ def loadEfficient():
     cudnn.benchmark = True
 
     obj_list = ['person']
-
     ##################Arreglar global##################
     global input_size
+
     input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536]
     input_size = input_sizes[compound_coef] if force_input_size is None else force_input_size
 
     ##################Arreglar global##################
-    global model
-    model = EfficientDetBackbone(compound_coef=compound_coef, num_classes=len(obj_list),
+    global model_ed
+
+    model_ed = EfficientDetBackbone(compound_coef=compound_coef, num_classes=len(obj_list),
 
                                 # replace this part with your project's anchor config
                                 ratios=[(1.0, 1.0), (1.4, 0.7), (0.7, 1.4)],
-                                scales=[2 * 0, 2 * (1.0 / 3.0), 2 ** (2.0 / 3.0)])
+                                scales=[2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)])
 
-    # model.load_state_dict(torch.load('logs/person - copia/efficientdet-d1_95_2200.pth'))
-    model.load_state_dict(torch.load('C:/Users/Doravan/Desktop/Hidrolatina/torchtest/Yet-Another-EfficientDet-Pytorch/efficientdet-d2_65_9200.pth'))
-    model.requires_grad_(False)
-    model.eval()
+    model_ed.load_state_dict(torch.load('C:/Users/Doravan/Desktop/Hidrolatina/torchtest/Yet-Another-EfficientDet-Pytorch/efficientdet-d2_65_9200.pth'))
+    # model_ed.load_state_dict(torch.load('weights/HHB/efficientdet-d3_56_32000.pth'))
+    model_ed.requires_grad_(False)
+    model_ed.eval()
 
     if use_cuda:
-        model = model.cuda()
+        model_ed = model_ed.cuda()
     if use_float16:
-        model = model.half()
+        model_ed = model_ed.half()
+
+    print('EfficientDET Cargado')
 
 def pytorchCamera():
-    # import cv2
-    import matplotlib.pyplot as plt
-    import datetime
-    det=0
-
+    ###REAL##
+    import cv2
     cap = cv2.VideoCapture(0)
-    import numpy as np
 
-    obj_list = ['person']
+    import numpy as np
+    import datetime
+    import matplotlib.pyplot as plt
+
+    det=0
 
     while True:
         # Read frame from camera
@@ -309,8 +312,8 @@ def pytorchCamera():
         image_path=[image_np]
 
         
-        threshold = 0.9
-        iou_threshold = 0.4
+        threshold = 0.6
+        iou_threshold = 0.1
 
         # # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
         # image_np_expanded = np.expand_dims(image_np, axis=0)
@@ -324,7 +327,7 @@ def pytorchCamera():
         x = x.to(torch.float32 if not use_float16 else torch.float16).permute(0, 3, 1, 2)
 
         with torch.no_grad():
-            features, regression, classification, anchors = model(x)
+            features, regression, classification, anchors = model_ed(x)
 
             regressBoxes = BBoxTransform()
             clipBoxes = ClipBoxes()
@@ -336,15 +339,8 @@ def pytorchCamera():
 
         out = invert_affine(framed_metas, out)
 
-        ##FILTER EMPTY DETECTIONS
-        bads=[]
-        for i in range((out[0]['scores']).size):
-            detected_boxes= out[0]['rois'][i]
-            if detected_boxes[0]==detected_boxes[2]:
-                bads.append(i)
-        out[0]['rois']=np.delete(out[0]['rois'],bads,axis=0)
-        out[0]['scores']=np.delete(out[0]['scores'],bads,axis=0)
-        out[0]['class_ids']=np.delete(out[0]['class_ids'],bads,axis=0)
+
+        # if len(out[0]['rois']) == 0:
 
         ori_img = ori_imgs[0].copy()
         for j in range(len(out[0]['rois'])):
@@ -362,10 +358,11 @@ def pytorchCamera():
             cap.release()
             cv2.destroyAllWindows()
             break
+   
 
         if len(out[0]['scores']) > 0:
             det += 1
-            if det==5:     #break in det-1
+            if det==20:     #break in det-1
                 global date_hour
                 now = datetime.datetime.now()
                 date_hour='%d/%d/%d-%d:%d:%d'%( now.day, now.month, now.year, now.hour, now.minute, now.second )
@@ -379,31 +376,26 @@ def pytorchCamera():
 
 
         
-        # Print objects detected's labels
-        # score_index= np.where(score > score_thresh)[0]
-        # class_index= classes[score_index]
+        # Save Bounding Boxes
 
         for i in range((out[0]['scores']).size):
             detected_boxes= out[0]['rois'][i]
-            # detected_labels= category_index[class_index[i-1]]['name']
-                
+              
 
 
         # Crop and save detedtec bounding box image
-            # (frame_height, frame_width) = ori_img.shape[:2]
-            # ymin = int((detected_boxes[0]*frame_height))
-            # xmin = int((detected_boxes[1]*frame_width))
-            # ymax = int((detected_boxes[2]*frame_height))
-            # xmax = int((detected_boxes[3]*frame_width))
+
             xmin = int((detected_boxes[0]))
             ymin = int((detected_boxes[1]))
             xmax = int((detected_boxes[2]))
             ymax = int((detected_boxes[3]))
             cropped_img = image_np[ymin:ymax,xmin:xmax]
 
-            global im
-            im = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
-            print(im)
+            if cropped_img.size != 0:
+                imagencamera = cropped_img
+                global im
+                im = Image.fromarray(cv2.cvtColor(imagencamera, cv2.COLOR_BGR2RGB))
+                print(im)
             # imgplot = plt.imshow(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
             # plt.show()
             # print(imgplot)
