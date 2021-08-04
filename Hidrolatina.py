@@ -671,7 +671,7 @@ def showPytorchCameraTk():
     # y = root.winfo_y()
     # pytorchCameraTk.geometry("+%d+%d" % (x, y))
 
-    image = PhotoImage(file="logo-sm.png") # edit the file name to use a different image
+    image = PhotoImage(file="white-image.png")
     original_image = image.subsample(1,1)
 
     #Frame Camera
@@ -723,19 +723,25 @@ def showPytorchCameraTk():
     Label(imageBootFrame, image=original_image).grid(row=1, column=0, padx=5, pady=5)
 
     ####Label dataHeadFrame Sub frame lvl 2 headFrame
-    Label(dataHeadFrame, text="texto 0,0").grid(row=0, column=0, padx=5, pady=5)
-    Label(dataHeadFrame, text="texto 1,0").grid(row=1, column=0, padx=5, pady=5)
-    Label(dataHeadFrame, text="texto 2,0").grid(row=2, column=0, padx=5, pady=5)
+    Label(dataHeadFrame, text="Casco", width=8).grid(row=0, column=0, padx=5, pady=5)
+    Label(dataHeadFrame, width=10).grid(row=0, column=1, padx=5, pady=5)
+
+    Label(dataHeadFrame, text="Audífonos", width=8).grid(row=1, column=0, padx=5, pady=5)
+    Label(dataHeadFrame, width=10).grid(row=1, column=1, padx=5, pady=5)
+
+    Label(dataHeadFrame, text="Antiparras", width=8).grid(row=2, column=0, padx=5, pady=5)
+    Label(dataHeadFrame, width=10).grid(row=2, column=1, padx=5, pady=5)
+
+    Label(dataHeadFrame, text="Mascarilla", width=8).grid(row=3, column=0, padx=5, pady=5)
+    Label(dataHeadFrame, width=10).grid(row=3, column=1, padx=5, pady=5)
 
     ####Label dataHandFrame Sub frame lvl 2 headFrame
-    Label(dataHandFrame, text="texto 0,0").grid(row=0, column=0, padx=5, pady=5)
-    Label(dataHandFrame, text="texto 1,0").grid(row=1, column=0, padx=5, pady=5)
-    Label(dataHandFrame, text="texto 2,0").grid(row=2, column=0, padx=5, pady=5)
+    Label(dataHandFrame, text="Guantes", width=8).grid(row=0, column=0, padx=5, pady=5)
+    Label(dataHandFrame, width=10).grid(row=0, column=1, padx=5, pady=5)
 
     ####Label dataBootFrame Sub frame lvl 2 headFrame
-    Label(dataBootFrame, text="texto 0,0").grid(row=0, column=0, padx=5, pady=5)
-    Label(dataBootFrame, text="texto 1,0").grid(row=1, column=0, padx=5, pady=5)
-    Label(dataBootFrame, text="texto 2,0").grid(row=2, column=0, padx=5, pady=5)
+    Label(dataBootFrame, text="Botas", width=8).grid(row=0, column=0, padx=5, pady=5)
+    Label(dataBootFrame, width=10).grid(row=0, column=1, padx=5, pady=5)
 
     #Capture video frames
     labelVideo = Label(cameraFrame)
@@ -749,7 +755,7 @@ def showPytorchCameraTk():
         pytorchCameraTk.destroy()
         # root.deiconify()
 
-    def show_frame():
+    def showFrame():
         _, frame = cap.read()
         frame = cv2.flip(frame, 1)
         cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
@@ -757,18 +763,43 @@ def showPytorchCameraTk():
         imgtk = ImageTk.PhotoImage(image=img)
         labelVideo.imgtk = imgtk
         labelVideo.configure(image=imgtk)
-        labelVideo.after(10, show_frame) 
+        labelVideo.after(10, showFrame)
+
+    def updateLabelTest():
+        global image
+        global original_image
+
+        image = PhotoImage(file="logo-sm.png")
+        original_image = image.subsample(1,1)
+
+        #Head Frame
+        Label(imageHeadFrame, image=original_image).grid(row=1, column=0, padx=5, pady=5)
+        Label(dataHeadFrame, text="OK", width=10).grid(row=0, column=1, padx=5, pady=5)
+        Label(dataHeadFrame, text="No detectado", width=10).grid(row=1, column=1, padx=5, pady=5)
+        Label(dataHeadFrame, text="OK", width=10).grid(row=2, column=1, padx=5, pady=5)
+        Label(dataHeadFrame, text="OK", width=10).grid(row=3, column=1, padx=5, pady=5)
+
+        #Hand Frame
+        Label(imageHandFrame, image=original_image).grid(row=1, column=0, padx=5, pady=5)
+        Label(dataHandFrame,  text="OK", width=10).grid(row=0, column=1, padx=5, pady=5)
+
+        #Boot Frame
+        Label(imageBootFrame, image=original_image).grid(row=1, column=0, padx=5, pady=5)
+        Label(dataBootFrame, text="No detectado", width=10).grid(row=0, column=1, padx=5, pady=5)
+        return
 
     #Slider window (slider controls stage position)
     # sliderFrame = Frame(pytorchCameraTk, width=600, height=100)
     # sliderFrame.grid(row = 600, column=0, padx=10, pady=2)
 
 
-    show_frame()  #Display 2
-    # window.mainloop()  #Starts GUI
+    showFrame()  #Display 2
 
     exitButton = Button(pytorchCameraTk, text='Cerrar ventana', command=closeTk)
     exitButton.grid(row=1, column=0)
+
+    testButtonUpdate = Button(pytorchCameraTk, text='Test Update', command=updateLabelTest)
+    testButtonUpdate.grid(row=1, column=1)
 
     # import cv2
     # import imutils
