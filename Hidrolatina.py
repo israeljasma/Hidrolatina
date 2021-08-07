@@ -522,41 +522,6 @@ def clip():
         
     cropPerson = imageClip(ImageTk.PhotoImage(im_head), 'PPE in head: '+pred)
     listImagenClip.append(cropPerson)
-    #     np_image = np.array(head)
-    # plt.imshow(np_image)
-
-# if platform.system() == "Darwin":
-#     print("MacOS")
-# elif platform.system() == "Linux":
-#     print("Linux")
-# elif platform.system() == "Windows":
-#     print("Windows")
-#     DATA_DIR = os.path.join('c:\hidrolatina', 'data')
-#     DATA_DIR = DATA_DIR.replace("\\","/")
-#     print(DATA_DIR)
-#     MODELS_DIR = os.path.join(DATA_DIR, 'models')
-#     MODELS_DIR = MODELS_DIR.replace("\\","/")
-#     print(MODELS_DIR)
-#     for dir in [DATA_DIR, MODELS_DIR]:
-#         if not os.path.exists(dir):
-#             os.makedirs(dir)
-
-##Data Base
-#Crate conecction
-#connection = sqlite3.connect('hidrolatina.db')
-
-#Create Cursor
-#c = connection.cursor()
-
-#Create table
-#    path text)""")
-#c.execute("""CREATE TABLE mytable(
-
-#Commit changes
-#connection.commit
-
-#Close Connection
-#connection.close
 
 ########Windows#######
 
@@ -886,76 +851,13 @@ def showPytorchCameraTk():
     # sliderFrame.grid(row = 600, column=0, padx=10, pady=2)
 
 
-    showFrame()  #Display 2
+    showFrame()
 
     exitButton = Button(pytorchCameraTk, text='Cerrar ventana', command=closeTk)
     exitButton.grid(row=1, column=0)
 
     testButtonUpdate = Button(pytorchCameraTk, text='Test Update', command=updateLabelTest)
     testButtonUpdate.grid(row=1, column=1)
-
-    # import cv2
-    # import imutils
-    # #Config Tk
-    # pytorchCameraTk = Toplevel()
-    # pytorchCameraTk.title('Camara')
-    # pytorchCameraTk.resizable(False,False)
-    # # pytorchCameraTk.overrideredirect(True)
-    # x = root.winfo_x()
-    # y = root.winfo_y()
-    # pytorchCameraTk.geometry("+%d+%d" % (x, y))
-
-    # #Def into tk
-    # def closeTk():
-    #     #Destroy window
-    #     pytorchCameraTk.destroy()
-    #     root.deiconify()
-
-    # def visualizar():
-    #     global cap
-    #     print('visualizar')
-    #     if cap is not None:
-    #         print('cap?')
-    #         ret, frame = cap.read()
-    #         if ret == True:
-    #             print('ret?')
-    #             frame = imutils.resize(frame, width=640)
-    #             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-    #             im = Image.fromarray(frame)
-    #             img = ImageTk.PhotoImage(image=im)
-
-    #             labelVideo.configure(image=img)
-    #             # labelVideo.image = img
-    #             labelVideo.after(10, visualizar)
-    #         else:
-    #             # labelVideo.image = ''
-    #             cap.release()
-
-    # def iniciar():
-    #     print('llega?')
-    #     global cap
-    #     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-    #     visualizar()
-    
-    # #Hide Root Window
-    # root.withdraw()
-
-    # #Label Tk
-    # labelVideo = Label(pytorchCameraTk)
-    # labelVideo.grid(row=1, column=0, columnspan=2)
-
-    # #Buttons Tk
-    # testButton = Button(pytorchCameraTk, text='test camara')
-    # testButton.grid(row=3, column=1)
-
-    # iniciarButton = Button(pytorchCameraTk, text='Iniciar', width=45, command=iniciar)
-    # iniciarButton.grid(column=0, row=0, padx=5, pady=5)
-    # finalizarButton = Button(pytorchCameraTk, text='Finalizar', width=45)
-    # finalizarButton.grid(column=1, row=0, padx=5, pady=5)
-
-    # exitButton = Button(pytorchCameraTk, text='Cerrar ventana', command=closeTk)
-    # exitButton.grid(row=2, column=1)
 
 def showImageClipTk():
     #Config Tk
@@ -1186,7 +1088,6 @@ clearMDETRyButton = Button(root, text='Limpiar Cache', command=clearCacheMDETR).
 importLibraryButton = Button(root, text='Cargar MDETR', command=importMDETER).pack()
 loadClipButton = Button(root, text='Cargar Clip', command=loadClip).pack()
 loadEfficientIButton = Button(root, text='Cargar EfficientDet', command=loadEfficient).pack()
-pytorchCameraButton = Button(root, text='Evaluación de Camara', command=pytorchCamera).pack()
 MDETRButton = Button(root, text='MDETR', command=MDETR).pack()
 clipButton = Button(root, text='Clip', command=clip).pack()
 showImageClipButton = Button(root, text='Resultados', command=checkListImagenClip).pack()
