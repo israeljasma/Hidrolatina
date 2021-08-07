@@ -242,8 +242,10 @@ def clearCacheMDETR():
 def loadEfficient():
     ### Arreglar directorio
     import sys
-    sys.path.append('C:/Users/Doravan/Desktop/Hidrolatina/torchtest/Yet-Another-EfficientDet-Pytorch')
+    sys.path.append("C:/Users/Doravan/Desktop/Hidrolatina/torchtest/Yet-Another-EfficientDet-Pytorch")
+    import torch
     from torch.backends import cudnn
+    from threading import Thread, Lock
 
     from backbone import EfficientDetBackbone
     import cv2
@@ -253,27 +255,23 @@ def loadEfficient():
     from efficientdet.utils import BBoxTransform, ClipBoxes
     from utils.utils import preprocess, invert_affine, postprocess
 
-    ##################Arreglar global##################
-    global preprocess, invert_affine, postprocess, BBoxTransform, ClipBoxes, obj_list
+    global preprocess, invert_affine, postprocess, BBoxTransform, ClipBoxes
 
     compound_coef = 2
     force_input_size = None  # set None to use default size
 
-    ##################Arreglar global##################
     global use_cuda, use_float16
     use_cuda = True
-    use_float16 = False
+    use_float16 = False                                                 
     cudnn.fastest = True
     cudnn.benchmark = True
 
     obj_list = ['person']
-    ##################Arreglar global##################
+
     global input_size
 
     input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536]
     input_size = input_sizes[compound_coef] if force_input_size is None else force_input_size
-
-    ##################Arreglar global##################
     global model_ed
 
     model_ed = EfficientDetBackbone(compound_coef=compound_coef, num_classes=len(obj_list),
@@ -283,7 +281,7 @@ def loadEfficient():
                                 scales=[2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)])
 
     model_ed.load_state_dict(torch.load('C:/Users/Doravan/Desktop/Hidrolatina/torchtest/Yet-Another-EfficientDet-Pytorch/efficientdet-d2_65_9200.pth'))
-    # model_ed.load_state_dict(torch.load('weights/HHB/efficientdet-d3_56_32000.pth'))
+    # model_ed.load_state_dict(torch.load('E:/Users/darkb/OneDrive/Documentos/EIE/Tesis/Pruebas_de_codigos/Yet-Another-EfficientDet-Pytorch/weights/efficientdet-d3_206_34776_best.pth'))
     model_ed.requires_grad_(False)
     model_ed.eval()
 
@@ -291,6 +289,46 @@ def loadEfficient():
         model_ed = model_ed.cuda()
     if use_float16:
         model_ed = model_ed.half()
+
+    ##Class CameraStream
+    global CameraStream
+    class CameraStream(object):
+        def __init__(self, src=0):
+            self.stream = cv2.VideoCapture(src)
+
+            (self.grabbed, self.frame) = self.stream.read()
+            self.started = False
+            self.read_lock = Lock()
+
+        def start(self):
+            if self.started:
+                print("already started!!")
+                return None
+            self.started = True
+            self.thread = Thread(target=self.update, args=())
+            self.thread.start()
+            return self
+
+        def update(self):
+            while self.started:
+                (grabbed, frame) = self.stream.read()
+                self.read_lock.acquire()
+                self.grabbed, self.frame = grabbed, frame
+                self.read_lock.release()
+
+        def read(self):
+            self.read_lock.acquire()
+            frame = self.frame.copy()
+            self.read_lock.release()
+            return frame
+
+        def stop(self):
+            self.started = False
+            self.stream.release()
+        
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            self.thread.join()
 
     print('EfficientDET Cargado')
 
@@ -660,8 +698,22 @@ def openDownloadModelsTk():
     closeWindow.pack()
 
 def showPytorchCameraTk():
+    #Import
+    import matplotlib.pyplot as plt
+    import datetime
+    import numpy as np
+
+    #Var
+    det=0
     global image
     global original_image
+    obj_list = ['person']
+
+    #Global
+    global image
+    global original_image
+
+    #Tkinter config
     pytorchCameraTk = Toplevel()
     pytorchCameraTk.title('Camara')
     pytorchCameraTk.resizable(False,False)
@@ -746,19 +798,60 @@ def showPytorchCameraTk():
     #Capture video frames
     labelVideo = Label(cameraFrame)
     labelVideo.grid(row=0, column=0)
-    cap = cv2.VideoCapture(0)
+    cap = CameraStream(0).start()
 
     #Def into tk
     def closeTk():
         #Destroy window
-        cap.release()
+        cap.stop()
         pytorchCameraTk.destroy()
         # root.deiconify()
 
     def showFrame():
-        _, frame = cap.read()
-        frame = cv2.flip(frame, 1)
-        cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+        # _, frame = cap.read()
+        # frame = cv2.flip(frame, 1)
+        frame = cap.read()
+
+        threshold = 0.4
+        iou_threshold = 0.1
+
+        image_path= [frame]
+        ori_imgs, framed_imgs, framed_metas = preprocess(image_path, max_size=input_size)
+
+        if use_cuda:
+            x = torch.stack([torch.from_numpy(fi).cuda() for fi in framed_imgs], 0)
+        else:
+            x = torch.stack([torch.from_numpy(fi) for fi in framed_imgs], 0)
+
+        x = x.to(torch.float32 if not use_float16 else torch.float16).permute(0, 3, 1, 2)
+
+        with torch.no_grad():
+            features, regression, classification, anchors = model_ed(x)
+
+            regressBoxes = BBoxTransform()
+            clipBoxes = ClipBoxes()
+
+            out = postprocess(x,
+                            anchors, regression, classification,
+                            regressBoxes, clipBoxes,
+                            threshold, iou_threshold)
+
+        out = invert_affine(framed_metas, out)
+
+        # if len(out[0]['rois']) == 0:
+
+        ori_img = ori_imgs[0].copy()
+        for j in range(len(out[0]['rois'])):
+            (x1, y1, x2, y2) = out[0]['rois'][j].astype(np.int)
+            cv2.rectangle(ori_img, (x1, y1), (x2, y2), (255, 255, 0), 2)
+            obj = obj_list[out[0]['class_ids'][j]]
+            score = float(out[0]['scores'][j])
+
+            cv2.putText(ori_img, '{}, {:.3f}'.format(obj, score),
+                        (x1, y1 + 10), cv2.FONT_HERSHEY_SIMPLEX, .5,
+                        (255, 255, 0), 2)
+
+        cv2image = cv2.cvtColor(cv2.resize(ori_img, (600, 500)), cv2.COLOR_BGR2RGBA)
         img = Image.fromarray(cv2image)
         imgtk = ImageTk.PhotoImage(image=img)
         labelVideo.imgtk = imgtk
