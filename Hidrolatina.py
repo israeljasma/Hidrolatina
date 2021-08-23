@@ -484,17 +484,17 @@ def MDETR(im):
     return objectListMDETR
 
 def loadClip():
-    import clip
+    global clipit
+    import clip as clipit
     import glob
 
-    global class_names, candidate_captions
-    class_names=['mask and headphones', 'mask and goggles ','mask, headphones and goggles','mask', 'goggles', 'no_mask']
-    candidate_captions=['A head with a medical mask and headphones',
-    'A head with goggles and medical mask',
-    'A head with a mask and goggles and headphones',
-    'A face with medical mask',
-    'A face with goggles',
-    'Just a face']
+    global candidate_captions
+    # class_names={'im_head': [['helmet','no_helmet'], ['mask', 'no_mask'], ['goggles', 'no_goggles'], ['headphones', 'no_headphones']],
+    #             'im_hand':[['gloves', 'no_gloves']],
+    #             'im_boot': [['boots', 'no boots']]}
+    candidate_captions={'im_head': [['a head with a helmet','Just a head'], ['Head with headphones', 'Just a head'],['a Head with a goggle', 'Just a head'],['Head with a medical mask', 'Just a head']],
+                'im_hand':[['A blue hand', 'A pink hand']],
+                'im_boot':[['A large black boot', 'Just a thing']]}
 
     global argmax
     def argmax(iterable):
@@ -507,11 +507,13 @@ def loadClip():
 
     ##################Arreglar global##################
     global modelc, process
-    modelc, process = clip.load("ViT-B/32", device=device)
+    modelc, process = clipit.load("ViT-B/32", device=device)
 
     ##################Arreglar global##################
-    global text
-    text = clip.tokenize(candidate_captions).to(device)
+    global nstr
+    def nstr(obj):
+        return [name for name in globals() if globals()[name] is obj][0]
+    print('Clip Cargado')
 
 def clip():
     # head=Image.open('E:/Softmaking/Proyectos/Hidrolatina/valorant.jpg')
