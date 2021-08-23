@@ -269,6 +269,7 @@ def loadEfficient():
     cudnn.fastest = True
     cudnn.benchmark = True
 
+    global obj_list
     obj_list = ['person']
 
     global input_size
