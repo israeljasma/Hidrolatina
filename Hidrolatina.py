@@ -515,22 +515,30 @@ def loadClip():
         return [name for name in globals() if globals()[name] is obj][0]
     print('Clip Cargado')
 
-def clip():
+def clip(bodypart):
     # head=Image.open('E:/Softmaking/Proyectos/Hidrolatina/valorant.jpg')
-    image = process(im_head).unsqueeze(0).to(device)
+    pred_clip=[]
+    for i in range(len(candidate_captions[bodypart])):
+        # head=Image.open('E:/Users/darkb/OneDrive/Documentos/EIE/Tesis/Pruebas_de_codigos/Bases_de_datos/Implementos seguridad/others/goggles_headphones/head (99).jpg')
+        # print(candidate_captions[nstr(bodypart)][i])
+        text = clipit.tokenize(candidate_captions[bodypart][i]).to(device)
+        image = process(mdetr_list[bodypart]).unsqueeze(0).to(device)
 
-    with torch.no_grad():
-        image_features = modelc.encode_image(image)
-        text_features = modelc.encode_text(text)
-        
-        logits_per_image, logits_per_text = modelc(image, text)
-        probs = logits_per_image.softmax(dim=-1).cpu().numpy()
+        with torch.no_grad():
+            image_features = modelc.encode_image(image)
+            text_features = modelc.encode_text(text)
+            
+            logits_per_image, logits_per_text = modelc(image, text)
+            probs = logits_per_image.softmax(dim=-1).cpu().numpy()
 
-        pred = class_names[argmax(list(probs)[0])]
-        print(pred)
-        
-    cropPerson = imageClip(ImageTk.PhotoImage(im_head), 'PPE in head: '+pred)
-    listImagenClip.append(cropPerson)
+            # pred = class_names[argmax(list(probs)[0])]
+            if argmax(list(probs)[0])== 0:
+                pred_clip.append('OK')
+            else:
+                pred_clip.append('NO DETECTADO')
+        #     np_image = np.array(head)
+        # plt.imshow(np_image)
+    return pred_clip
 
 ########Windows#######
 
