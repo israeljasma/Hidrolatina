@@ -456,7 +456,7 @@ def pytorchCamera():
     listImagenClip.append(cropPerson)
 
 
-def MDETR():
+def MDETR(im):
     import cv2
     # im = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
     # im = Image.fromarray(imagencamera)
@@ -465,20 +465,23 @@ def MDETR():
     plot_inference(im, "a tiny head")
     global im_head
     im_head=im.crop((bboxes[len(bboxes)-1]))
+    plot_inference(im, "a rain boot")
+    global im_boot
+    im_boot=im.crop((bboxes[len(bboxes)-1]))
     # cropPersonHead = imageClip(im_head, "")
     # listImagenClip.append(cropPersonHead)
     # im_head.save('clip/cropped_head.jpg')
-    plot_inference_qa(im_hand, "what color are the fingers?")
-    if answer =='purple' or answer =='blue':
-        gloves= 'Yes'
+    # plot_inference_qa(im_hand, "what color are the fingers?")
+    # if answer =='purple' or answer =='blue':
+    #     gloves= 'Yes'
 
-    else:
-        gloves= 'No'
-    cropPersonHand = imageClip(ImageTk.PhotoImage(im_hand), 'Gloves: '+gloves)
-    listImagenClip.append(cropPersonHand)
+    # else:
+    #     gloves= 'No'
+    # cropPersonHand = imageClip(ImageTk.PhotoImage(im_hand), 'Gloves: '+gloves)
+    # listImagenClip.append(cropPersonHand)
 
-    global objectListMDETR
-    objectListMDETR= im_head
+    objectListMDETR= {'im_head':im_head.resize((150,150)), 'im_hand': im_hand.resize((150,150)), 'im_boot': im_boot.resize((150,150))}
+    return objectListMDETR
 
 def loadClip():
     import clip
