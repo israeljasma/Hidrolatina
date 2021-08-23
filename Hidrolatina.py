@@ -685,16 +685,12 @@ def showPytorchCameraTk():
     import datetime
     import numpy as np
 
-    #Var
+    #Var/Global
     global det
-    det=0
     global image
     global original_image
     obj_list = ['person']
-
-    #Global
-    global image
-    global original_image
+    det=0
 
     #Tkinter config
     pytorchCameraTk = Toplevel()
@@ -781,8 +777,8 @@ def showPytorchCameraTk():
     #Capture video frames
     labelVideo = Label(cameraFrame)
     labelVideo.grid(row=0, column=0)
-    # cap = CameraStream(0).start()
-    cap = cv2.VideoCapture(0)
+    cap = CameraStream(0).start()
+    # cap = cv2.VideoCapture(0)
 
     #Def into tk
     def closeTk():
@@ -857,7 +853,47 @@ def showPytorchCameraTk():
         imgtk = ImageTk.PhotoImage(image=img)
         labelVideo.imgtk = imgtk
         labelVideo.configure(image=imgtk)
-        labelVideo.after(10, showFrame)
+
+        print(det)
+        if len(out[0]['class_ids']) == 0:
+            det = 0
+        if len(out[0]['class_ids']) > 0:
+            det += 1
+            if det==20:
+
+                print("Reset")
+                for i in range((out[0]['scores']).size):
+                    detected_boxes= out[0]['rois'][i]
+
+                # Crop and save detedtec bounding box image
+
+                xmin = int((detected_boxes[0]))
+                ymin = int((detected_boxes[1]))
+                xmax = int((detected_boxes[2]))
+                ymax = int((detected_boxes[3]))
+                cropped_img =frame[ymin:ymax,xmin:xmax]
+
+
+                global im
+                im = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
+                print(im)
+                cap.stop()
+                copy_imgtk = imgtk
+                labelVideo.imgtk = copy_imgtk
+                global mdetr_list
+                mdetr_list=MDETR(im)
+
+                # print(mdetr_list)
+                global listImagenClip
+                for bodypart in mdetr_list.keys():
+                    listImagenClip.append(imageClip(ImageTk.PhotoImage(mdetr_list[bodypart]), clip(bodypart)))
+                    # print(bodypart)
+                
+                updateLabelTest()
+                
+                
+        if det<20:
+            labelVideo.after(10, showFrame)
 
     def updateLabelTest():
         global image
@@ -867,27 +903,27 @@ def showPytorchCameraTk():
         original_image = image.subsample(1,1)
 
         #Head Frame
-        Label(imageHeadFrame, image=original_image).grid(row=1, column=0, padx=5, pady=5)
-        Label(dataHeadFrame, text="OK", width=10).grid(row=0, column=1, padx=5, pady=5)
-        Label(dataHeadFrame, text="No detectado", width=10).grid(row=1, column=1, padx=5, pady=5)
-        Label(dataHeadFrame, text="OK", width=10).grid(row=2, column=1, padx=5, pady=5)
-        Label(dataHeadFrame, text="OK", width=10).grid(row=3, column=1, padx=5, pady=5)
+        Label(imageHeadFrame, image=(listImagenClip[0].getImage())).grid(row=1, column=0, padx=5, pady=5)
+        Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
+        Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[1]), width=15).grid(row=1, column=1, padx=5, pady=5)
+        Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[2]), width=15).grid(row=2, column=1, padx=5, pady=5)
+        Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[3]), width=15).grid(row=3, column=1, padx=5, pady=5)
 
         #Hand Frame
-        Label(imageHandFrame, image=original_image).grid(row=1, column=0, padx=5, pady=5)
-        Label(dataHandFrame,  text="OK", width=10).grid(row=0, column=1, padx=5, pady=5)
+        Label(imageHandFrame, image=(listImagenClip[1].getImage())).grid(row=1, column=0, padx=5, pady=5)
+        Label(dataHandFrame,  text=(listImagenClip[1].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
 
         #Boot Frame
-        Label(imageBootFrame, image=original_image).grid(row=1, column=0, padx=5, pady=5)
-        Label(dataBootFrame, text="No detectado", width=10).grid(row=0, column=1, padx=5, pady=5)
+        Label(imageBootFrame, image=(listImagenClip[2].getImage())).grid(row=1, column=0, padx=5, pady=5)
+        Label(dataBootFrame, text=(listImagenClip[2].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
         return
 
     #Slider window (slider controls stage position)
     # sliderFrame = Frame(pytorchCameraTk, width=600, height=100)
     # sliderFrame.grid(row = 600, column=0, padx=10, pady=2)
 
-    testFrame()
-    # showFrame()
+    # testFrame()
+    showFrame()
 
     exitButton = Button(pytorchCameraTk, text='Cerrar ventana', command=closeTk)
     exitButton.grid(row=1, column=0)
