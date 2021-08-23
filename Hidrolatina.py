@@ -9,6 +9,8 @@ from tkinter import simpledialog
 import cv2
 import os
 import platform
+
+from torch.functional import cartesian_prod
 from imagenClipClass import imageClip
 
 ##Download EfficientDET import's
@@ -88,9 +90,9 @@ def importMDETER():
     torch.set_grad_enabled(False);
     temp = pathlib.PosixPath
     pathlib.PosixPath = pathlib.WindowsPath
-    model_qa = torch.hub.load('ashkamath/mdetr:main', 'mdetr_efficientnetB5_gqa', pretrained=True, return_postprocessor=False)
-    model_qa = model_qa.cuda()
-    model_qa.eval();
+    # model_qa = torch.hub.load('ashkamath/mdetr:main', 'mdetr_efficientnetB5_gqa', pretrained=True, return_postprocessor=False)
+    # model_qa = model_qa.cuda()
+    # model_qa.eval();
     model, postprocessor = torch.hub.load('ashkamath/mdetr:main', 'mdetr_efficientnetB5', pretrained=True, return_postprocessor=True)
     model = model.cuda()
     model.eval();
@@ -196,45 +198,46 @@ def importMDETER():
         labels = [predicted_spans [k] for k in sorted(list(predicted_spans .keys()))]
         global bboxes
         bboxes=bboxes_scaled.numpy()
-        print('boxes: ', bboxes )
+        # print('boxes: ', bboxes)
         # plot_results(im, probas[keep], bboxes_scaled, labels)
 
-    def plot_inference_qa(im, caption):
-        # mean-std normalize the input image (batch-size: 1)
-        img = transform(im).unsqueeze(0).cuda()
+    # def plot_inference_qa(im, caption):
+    #     # mean-std normalize the input image (batch-size: 1)
+    #     img = transform(im).unsqueeze(0).cuda()
 
-        # propagate through the model
-        memory_cache = model_qa(img, [caption], encode_and_save=True)
-        outputs = model_qa(img, [caption], encode_and_save=False, memory_cache=memory_cache)
+    #     # propagate through the model
+    #     memory_cache = model_qa(img, [caption], encode_and_save=True)
+    #     outputs = model_qa(img, [caption], encode_and_save=False, memory_cache=memory_cache)
 
-        # keep only predictions with 0.7+ confidence
-        probas = 1 - outputs['pred_logits'].softmax(-1)[0, :, -1].cpu()
-        keep = (probas > 0.7).cpu()
+    #     # keep only predictions with 0.7+ confidence
+    #     probas = 1 - outputs['pred_logits'].softmax(-1)[0, :, -1].cpu()
+    #     keep = (probas > 0.7).cpu()
 
-        # convert boxes from [0; 1] to image scales
-        bboxes_scaled = rescale_bboxes(outputs['pred_boxes'].cpu()[0, keep], im.size)
+    #     # convert boxes from [0; 1] to image scales
+    #     bboxes_scaled = rescale_bboxes(outputs['pred_boxes'].cpu()[0, keep], im.size)
 
-        # Extract the text spans predicted by each box
-        positive_tokens = (outputs["pred_logits"].cpu()[0, keep].softmax(-1) > 0.1).nonzero().tolist()
-        predicted_spans = defaultdict(str)
-        for tok in positive_tokens:
-            item, pos = tok
-            if pos < 255:
-                span = memory_cache["tokenized"].token_to_chars(0, pos)
-                predicted_spans [item] += " " + caption[span.start:span.end]
+    #     # Extract the text spans predicted by each box
+    #     positive_tokens = (outputs["pred_logits"].cpu()[0, keep].softmax(-1) > 0.1).nonzero().tolist()
+    #     predicted_spans = defaultdict(str)
+    #     for tok in positive_tokens:
+    #         item, pos = tok
+    #         if pos < 255:
+    #             span = memory_cache["tokenized"].token_to_chars(0, pos)
+    #             predicted_spans [item] += " " + caption[span.start:span.end]
 
-        labels = [predicted_spans [k] for k in sorted(list(predicted_spans .keys()))]
-        # plot_results(im, probas[keep], bboxes_scaled, labels)
+    #     labels = [predicted_spans [k] for k in sorted(list(predicted_spans .keys()))]
+    #     # plot_results(im, probas[keep], bboxes_scaled, labels)
 
-        # Classify the question type
-        type_conf, type_pred = outputs["pred_answer_type"].softmax(-1).max(-1)
-        ans_type = type_pred.item()
-        types = ["obj", "attr", "rel", "global", "cat"]
+    #     # Classify the question type
+    #     type_conf, type_pred = outputs["pred_answer_type"].softmax(-1).max(-1)
+    #     ans_type = type_pred.item()
+    #     types = ["obj", "attr", "rel", "global", "cat"]
 
-        ans_conf, ans = outputs[f"pred_answer_{types[ans_type]}"][0].softmax(-1).max(-1)
-        global answer
-        answer = id2answerbytype[f"answer_{types[ans_type]}"][ans.item()]
-        print(f"Predicted answer: {answer}\t confidence={round(100 * type_conf.item() * ans_conf.item(), 2)}")
+    #     ans_conf, ans = outputs[f"pred_answer_{types[ans_type]}"][0].softmax(-1).max(-1)
+    #     global answer
+    #     answer = id2answerbytype[f"answer_{types[ans_type]}"][ans.item()]
+    #     print(f"Predicted answer: {answer}\t confidence={round(100 * type_conf.item() * ans_conf.item(), 2)}")
+    print("MDETR cargado")
 
 def clearCacheMDETR():
     torch.cuda.empty_cache()
@@ -669,6 +672,7 @@ def showPytorchCameraTk():
     import numpy as np
 
     #Var
+    global det
     det=0
     global image
     global original_image
@@ -692,7 +696,7 @@ def showPytorchCameraTk():
     original_image = image.subsample(1,1)
 
     #Frame Camera
-    cameraFrame = Frame(pytorchCameraTk, width=600, height=500)
+    cameraFrame = Frame(pytorchCameraTk, width=800, height=600)
     cameraFrame.grid(row=0, column=0, padx=10, pady=2)
 
     #Frame detections
@@ -763,14 +767,32 @@ def showPytorchCameraTk():
     #Capture video frames
     labelVideo = Label(cameraFrame)
     labelVideo.grid(row=0, column=0)
-    cap = CameraStream(0).start()
+    # cap = CameraStream(0).start()
+    cap = cv2.VideoCapture(0)
 
     #Def into tk
     def closeTk():
         #Destroy window
-        cap.stop()
+        cap.release()
         pytorchCameraTk.destroy()
         # root.deiconify()
+
+    def testFrame():
+        _, frame = cap.read()
+        frame = cv2.flip(frame, 1)
+        cv2image = cv2.cvtColor(cv2.resize(frame, (800, 600)), cv2.COLOR_BGR2RGBA)
+        img = Image.fromarray(cv2image)
+        imgtk = ImageTk.PhotoImage(image=img)
+        labelVideo.imgtk = imgtk
+        labelVideo.configure(image=imgtk)
+        labelVideo.after(10, testFrame)
+
+        global det
+        det = det+1
+        if det > 60:
+            print('Rseset det to 0')
+            updateLabelTest()
+            det = 0
 
     def showFrame():
         # _, frame = cap.read()
@@ -850,8 +872,8 @@ def showPytorchCameraTk():
     # sliderFrame = Frame(pytorchCameraTk, width=600, height=100)
     # sliderFrame.grid(row = 600, column=0, padx=10, pady=2)
 
-
-    showFrame()
+    testFrame()
+    # showFrame()
 
     exitButton = Button(pytorchCameraTk, text='Cerrar ventana', command=closeTk)
     exitButton.grid(row=1, column=0)
