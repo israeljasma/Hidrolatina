@@ -9,9 +9,12 @@ from tkinter import simpledialog
 import cv2
 import os
 import platform
+import zipfile
 
 from torch.functional import cartesian_prod
 from imagenClipClass import imageClip
+from FileManagementClass import FileManagement
+from threading import Thread
 
 ##Download EfficientDET import's
 import tarfile
@@ -42,6 +45,11 @@ elif platform.system() == "Windows":
     for dir in [DATA_DIR, MODELS_DIR]:
         if not os.path.exists(dir):
             os.makedirs(dir)
+
+def downloadEfficientDet():
+    url = 'https://github.com/EquipoVandV/VandVEfficientDet/archive/refs/heads/main.zip'
+    FileManagement.extractFile(FileManagement.downloadFile(url, MODELS_DIR), MODELS_DIR)
+    return
 
 def efficientDETModels(MODELS_DIR, selected):
     MODEL_DATE = '20200711'
@@ -1167,6 +1175,7 @@ configButton = Button(root, text='Configuraciones', command=openConfigurationTk,
 
 testButton = Button(root, text='Test Camara',command=showPytorchCameraTk, fg='red').pack()
 
+testButton = Button(root, text='Test download',command=downloadEfficientDet, fg='red').pack()
 
 exitButton = Button(root, text="Salir", command=root.quit)
 exitButton.pack()
