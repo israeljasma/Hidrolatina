@@ -48,7 +48,7 @@ elif platform.system() == "Windows":
 
 def downloadEfficientDet():
     url = 'https://github.com/EquipoVandV/VandVEfficientDet/archive/refs/heads/main.zip'
-    FileManagement.extractFile(FileManagement.downloadFile(url, MODELS_DIR), MODELS_DIR)
+    FileManagement.extractFile(FileManagement.downloadFile(url, DATA_DIR), DATA_DIR)
     return
 
 def efficientDETModels(MODELS_DIR, selected):
