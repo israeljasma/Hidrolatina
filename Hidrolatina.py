@@ -916,6 +916,38 @@ def showImageClipTk():
         buttonForward.grid(row=2, column=2)
 
 
+def configCameraTk(configurationTk):
+    # Config tk
+    configCameraTk = Toplevel()
+    configCameraTk.resizable(False,False)
+    configCameraTk.protocol("WM_DELETE_WINDOW", exit)
+    configCameraTk.title("Configuracion camaras")
+    # configCameraTk.overrideredirect(True)
+
+    width = 200
+    height = 300
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    x = (screen_width/2) - (app_width/2)
+    y = (screen_height/2) - (app_height/2)
+
+    configCameraTk.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
+
+
+
+    #Def
+    def closeTk(configurationTk):
+        configCameraTk.destroy()
+        configurationTk.deiconify()
+
+    #Hide configurationTk Window
+    configurationTk.withdraw()
+
+    #Labels Tk
+    closeWindow = Button(configCameraTk, text="Cerrar Ventana", command=lambda:closeTk(configurationTk))
+    closeWindow.pack()
+
 def openConfigurationTk():
     # Config tk
     configurationTk = Toplevel()
@@ -1023,6 +1055,9 @@ def openConfigurationTk():
     buttonDetLimit.pack()
 
     buttonClass = Button(configurationTk, text="Cambiar clases")
+    buttonClass.pack()
+
+    buttonClass = Button(configurationTk, text="Configurar Camaras", command=lambda:configCameraTk(configurationTk))
     buttonClass.pack()
 
     closeWindow = Button(configurationTk, text="Cerrar Ventana", command=lambda:closeTk())
