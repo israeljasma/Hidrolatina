@@ -652,7 +652,7 @@ def showPytorchCameraTk():
     #Capture video frames
     labelVideo = Label(cameraFrame)
     labelVideo.grid(row=0, column=0)
-    cap = CameraStream(0).start()
+    cap = CameraStream(varCamera).start()
     # cap = cv2.VideoCapture(0)
 
     #Def into tk
@@ -934,17 +934,28 @@ def configCameraTk(configurationTk):
 
     configCameraTk.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
 
-
-
     #Def
     def closeTk(configurationTk):
         configCameraTk.destroy()
         configurationTk.deiconify()
 
+    def setCamera():
+        global varCamera
+        varCamera = simpledialog.askstring(title="Camara", prompt="Ingrese Camara:")
+        if varCamera == '':
+            varCamera = 0
+            print(varCamera)
+        else:
+            print(varCamera)
+
     #Hide configurationTk Window
     configurationTk.withdraw()
 
     #Labels Tk
+    buttonClass = Button(configCameraTk, text="Configurar Camara(Principal)", command=lambda:setCamera())
+    buttonClass.pack()
+
+    #Buttons Tk
     closeWindow = Button(configCameraTk, text="Cerrar Ventana", command=lambda:closeTk(configurationTk))
     closeWindow.pack()
 
