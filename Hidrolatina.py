@@ -9,16 +9,12 @@ from tkinter import simpledialog
 import cv2
 import os
 import platform
-import zipfile
+import time
+# from varname import varname, nameof
 
-from torch.functional import cartesian_prod
+from numpy import CLIP
 from imagenClipClass import imageClip
 from FileManagementClass import FileManagement
-from threading import Thread
-
-##Download EfficientDET import's
-import tarfile
-import urllib.request
 
 import torch
 
@@ -516,6 +512,16 @@ def clip(bodypart):
         # plt.imshow(np_image)
     return pred_clip
 
+def loadALL():
+    # from threading import Thread
+    # thread= Thread(target=librerias, args=())
+    # thread.start()
+
+    importMDETER()
+    loadClip()
+    loadEfficient()
+    messagebox.showinfo(message="Dependencias cargadas")
+
 ########Windows#######
 
 root = Tk()
@@ -827,7 +833,6 @@ def showImageClipTk():
     global labelText
     global listImagenClip
 
-    
 
     #Def into tk
     def closeTk():
@@ -1079,16 +1084,13 @@ def openConfigurationTk():
 # downloadModels = Button(root, text="Modelos", command=openDownloadModelsTk).pack()
 
 clearMDETRyButton = Button(root, text='Limpiar Cache', command=clearCacheMDETR).pack()
-importLibraryButton = Button(root, text='Cargar MDETR', command=importMDETER).pack()
-loadClipButton = Button(root, text='Cargar Clip', command=loadClip).pack()
-loadEfficientIButton = Button(root, text='Cargar EfficientDet', command=loadEfficient).pack()
-MDETRButton = Button(root, text='MDETR', command=MDETR).pack()
-clipButton = Button(root, text='Clip', command=clip).pack()
-showImageClipButton = Button(root, text='Resultados', command=checkListImagenClip).pack()
+loadALLButton=  Button(root, text='Cargar Dependencias', command=loadALL).pack()
+# MDETRButton = Button(root, text='MDETR', command=MDETR).pack()
+# clipButton = Button(root, text='Clip', command=clip).pack()
+# showImageClipButton = Button(root, text='Resultados', command=checkListImagenClip).pack()
 configButton = Button(root, text='Configuraciones', command=openConfigurationTk, fg='blue').pack()
 
 testButton = Button(root, text='Test Camara',command=showPytorchCameraTk, fg='red').pack()
-
 testButton = Button(root, text='Test download',command=downloadEfficientDet, fg='red').pack()
 
 exitButton = Button(root, text="Salir", command=root.quit)
