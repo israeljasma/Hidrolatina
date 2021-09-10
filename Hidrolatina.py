@@ -1081,8 +1081,6 @@ def openConfigurationTk():
     closeWindow.pack()
 
 #Buttons
-# downloadModels = Button(root, text="Modelos", command=openDownloadModelsTk).pack()
-
 clearMDETRyButton = Button(root, text='Limpiar Cache', command=clearCacheMDETR).pack()
 loadALLButton=  Button(root, text='Cargar Dependencias', command=loadALL).pack()
 # MDETRButton = Button(root, text='MDETR', command=MDETR).pack()
