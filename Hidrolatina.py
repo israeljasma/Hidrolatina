@@ -729,6 +729,7 @@ def showPytorchCameraTk():
         labelVideo.imgtk = imgtk
         labelVideo.configure(image=imgtk)
 
+        global det
         print(det)
         if len(out[0]['class_ids']) == 0:
             det = 0
