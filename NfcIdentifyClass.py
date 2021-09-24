@@ -1,0 +1,132 @@
+from multiprocessing import Queue
+from threading import Thread
+
+def foo(bar):
+    print('hello {0}'.format(bar))
+    return 'hola'
+
+que = Queue()
+
+t = Thread(target=lambda q, arg1: q.put(foo(arg1)), args=(que, 'world!'))
+t.start()
+t.join()
+result = que.get()
+print(result)
+# import time
+# from threading import Thread
+# from tkinter import *
+
+
+# root = Tk()
+# root.title("Softmaking")
+# root.resizable(False,False)
+
+# #Center windows
+# app_width = 300
+# app_height = 300
+
+# screen_width = root.winfo_screenwidth()
+# screen_height = root.winfo_screenheight()
+
+# x = (screen_width/2) - (app_width/2)
+# y = (screen_height/2) - (app_height/2)
+
+# root.geometry(f'{app_width}x{app_height}+{int(x)}+{int(y)}')
+
+# def ReadNFC(res):
+#     from smartcard.CardRequest import CardRequest
+#     from smartcard.Exceptions import CardRequestTimeoutException
+#     from smartcard.CardType import AnyCardType
+#     from smartcard import util
+
+#     # res = StringVar()
+    
+#     # Label(NFCTestTk,textvariable=res).pack(pady = 200)
+#     WAIT_FOR_SECONDS = 60
+
+#     # respond to the insertion of any type of smart card
+#     card_type = AnyCardType()
+
+#     # create the request. Wait for up to x seconds for a card to be attached
+#     request = CardRequest(timeout=WAIT_FOR_SECONDS, cardType=card_type)
+
+#     while True:
+#         # listen for the card
+#         service = None
+#         try:
+#             service = request.waitforcard()
+#         except CardRequestTimeoutException:
+#             print("Tarjeta no detectada")
+#             res.set("Tarjeta no detectada")
+#             # could add "exit(-1)" to make code terminate
+
+#         # when a card is attached, open a connection
+#         try:
+#             conn = service.connection
+#             conn.connect()
+
+#             # get the ATR and UID of the card
+#             get_uid = util.toBytes("FF CA 00 00 00")
+#             data, sw1, sw2 = conn.transmit(get_uid)
+#             uid = util.toHexString(data)
+#             status = util.toHexString([sw1, sw2])
+#             if uid == "44 CE 4A 0B":
+            
+#             # print the ATR and UID of the card
+#             # print("ATR = {}".format(util.toHexString(conn.getATR())))
+#                 print("Operador Javier Reconocido")
+#                 res.set("Operador Javier Reconocido")
+#                 break
+#         except:
+#             pass
+#     time.sleep(2)
+#     res.set("Abriendo")
+
+# def nfc_identify():
+#     # import time
+#     # from threading import Thread
+
+
+#     #NFC_TEST
+#     global NFCTestTk
+#     NFCTestTk = Toplevel()
+#     # NFCTestTk.title('Imagenes')
+#     # NFCTestTk.resizable(False,False)
+#     NFCTestTk.protocol("WM_DELETE_WINDOW", exit)
+#     # NFCTestTk.overrideredirect(True)
+#     # NFCTestTk.geometry('300x300')
+
+#     width = 300
+#     height = 300
+#     screen_width = root.winfo_screenwidth()
+#     screen_height = root.winfo_screenheight()
+
+#     x = (screen_width/2) - (app_width/2)
+#     y = (screen_height/2) - (app_height/2)
+
+#     NFCTestTk.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
+#     v = StringVar()
+#     v.set("Esperando Identificación ....")
+#     Label(NFCTestTk,textvariable=v).pack(pady = 100)
+#     # Label(NFCTestTk,text ="nowwwwwwwww").pack(pady = 100)
+
+#     # root.withdraw()
+#     Button(NFCTestTk, text="Cerrar Ventana", command=lambda:closeTk()).pack(pady=10)
+
+
+#     thread= Thread(target=ReadNFC, args=(v,))
+#     thread.start()
+#     # thread.join()
+    
+
+#     def closeTk():
+#         NFCTestTk.destroy()
+#         root.deiconify()
+
+
+# testButton = Button(root, text='Test download',command=nfc_identify, fg='red').pack()
+
+# exitButton = Button(root, text="Salir", command=root.quit)
+# exitButton.pack()
+
+# root.mainloop()

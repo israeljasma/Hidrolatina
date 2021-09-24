@@ -10,6 +10,8 @@ import cv2
 import os
 import platform
 import time
+from multiprocessing import Queue
+from threading import Thread
 # from varname import varname, nameof
 
 from numpy import CLIP
@@ -965,6 +967,48 @@ def configCameraTk(configurationTk):
     closeWindow = Button(configCameraTk, text="Cerrar Ventana", command=lambda:closeTk(configurationTk))
     closeWindow.pack()
 
+def nfc_identifyTk():
+    # Config tk
+    NFC_Tk = Toplevel()
+    NFC_Tk.resizable(False,False)
+    NFC_Tk.protocol("WM_DELETE_WINDOW", exit)
+    NFC_Tk.title("Identificación")
+    # configurationTk.overrideredirect(True)
+
+    width = 300
+    height = 300
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    x = (screen_width/2) - (app_width/2)
+    y = (screen_height/2) - (app_height/2)
+
+    NFC_Tk.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
+
+    #Def
+    def closeTk():
+        NFC_Tk.destroy()
+        root.deiconify()
+    
+    #Hide Root Window
+    root.withdraw()
+
+    #Labels Tk
+    labelText = Label(NFC_Tk, text='Esperando Identificación ....', pady=100)
+    labelText.pack()
+
+    #Buttons Tk
+    Button(NFC_Tk, text="Cerrar Ventana", command=lambda:closeTk()).pack(pady=10)
+
+    #Code
+    # que = Queue()
+
+    # t = Thread(target=lambda q, arg1: q.put(foo(arg1)), args=(que, 'world!'))
+    # t.start()
+    # t.join()
+    # result = que.get()
+    # print(result)
+
 def openConfigurationTk():
     # Config tk
     configurationTk = Toplevel()
@@ -1090,6 +1134,7 @@ configButton = Button(root, text='Configuraciones', command=openConfigurationTk,
 
 testButton = Button(root, text='Test Camara',command=showPytorchCameraTk, fg='red').pack()
 testButton = Button(root, text='Test download',command=downloadEfficientDet, fg='red').pack()
+testButton = Button(root, text='Test NFC',command=nfc_identifyTk, fg='red').pack()
 
 exitButton = Button(root, text="Salir", command=root.quit)
 exitButton.pack()
