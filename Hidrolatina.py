@@ -1036,6 +1036,66 @@ def nfc_identifyTk():
     # result = que.get()
     # print(result)
 
+def popupIdentificationTk():
+    # Config tk
+    popupIdentificationTk = Toplevel()
+    popupIdentificationTk.resizable(False,False)
+    # NFC_Tk.protocol("WM_DELETE_WINDOW", exit)
+    # popupIdentificationTk.title("Identificación")
+    # NFC_Tk.overrideredirect(True)
+
+    #Dimensions
+    print(popupIdentificationTk.winfo_screenwidth())
+    print(popupIdentificationTk.winfo_screenheight())
+    # NFC_Tk.geometry(f'{NFC_Tk.winfo_screenwidth()}x{NFC_Tk.winfo_screenheight()}')
+    popupIdentificationTk.geometry("1280x720")
+    
+
+    #Def
+    def closeTk():
+        popupIdentificationTk.destroy()
+        root.deiconify()
+    
+    #Hide Root Window
+    # root.withdraw()
+
+    # Create top, middle and bottom frames
+    top_frame = Frame(popupIdentificationTk, width=1280, height=720*0.2, bg='grey')
+    top_frame.grid(row=0, column=0)
+
+    middle_frame = Frame(popupIdentificationTk, width=1280, height=720*0.6, bg='green')
+    middle_frame.grid(row=1, column=0)
+
+    bottom_frame = Frame(popupIdentificationTk, width=1280, height=720*0.2, bg='blue')
+    bottom_frame.grid(row=2, column=0)
+
+    # # Divide top frame
+    left_top_frame = Frame(top_frame, width=top_frame.winfo_reqwidth()*0.5, height=top_frame.winfo_reqheight(), bg='green')
+    left_top_frame.grid(row=0, column=0)
+
+    right_top_frame = Frame(top_frame, width=top_frame.winfo_reqwidth()*0.5, height=top_frame.winfo_reqheight(), bg='orange')
+    right_top_frame.grid(row=0, column=1)
+
+    # # Divide middle frame
+    left_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.32, height=middle_frame.winfo_reqheight(), bg='purple')
+    left_middle_frame.grid(row=0, column=0)
+
+    middle_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.36, height=middle_frame.winfo_reqheight(), bg='red')
+    middle_middle_frame.grid(row=0, column=2)
+
+    right_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.32, height=middle_frame.winfo_reqheight(), bg='purple')
+    right_middle_frame.grid(row=0, column=3)
+
+    # # Divide bottom frame
+    left_top_frame = Frame(bottom_frame, width=bottom_frame.winfo_reqwidth()*0.5, height=bottom_frame.winfo_reqheight(), bg='orange')
+    left_top_frame.grid(row=0, column=0)
+    
+    right_top_frame = Frame(bottom_frame, width=bottom_frame.winfo_reqwidth()*0.5, height=bottom_frame.winfo_reqheight(), bg='green')
+    right_top_frame.grid(row=0, column=1)
+
+    #Buttons Tk
+    # Button(NFC_Tk, text="Cerrar Ventana", command=lambda:closeTk()).pack(pady=10)
+
 def openConfigurationTk():
     # Config tk
     configurationTk = Toplevel()
@@ -1162,6 +1222,7 @@ configButton = Button(root, text='Configuraciones', command=openConfigurationTk,
 testButton = Button(root, text='Test Camara',command=showPytorchCameraTk, fg='red').pack()
 testButton = Button(root, text='Test download',command=downloadEfficientDet, fg='red').pack()
 testButton = Button(root, text='Test NFC',command=nfc_identifyTk, fg='red').pack()
+testButton = Button(root, text='Test POPUP',command=popupIdentificationTk, fg='red').pack()
 
 exitButton = Button(root, text="Salir", command=root.quit)
 exitButton.pack()
