@@ -970,7 +970,7 @@ def configCameraTk(configurationTk):
 def nfc_identifyTk():
     # Config tk
     NFC_Tk = Toplevel()
-    # NFC_Tk.resizable(False,False)
+    NFC_Tk.resizable(False,False)
     # NFC_Tk.protocol("WM_DELETE_WINDOW", exit)
     NFC_Tk.title("Identificación")
     # NFC_Tk.overrideredirect(True)
@@ -985,10 +985,12 @@ def nfc_identifyTk():
 
     # NFC_Tk.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
 
-    # NFC_Tk.state('zoomed')
+    #Dimensions
     print(NFC_Tk.winfo_screenwidth())
     print(NFC_Tk.winfo_screenheight())
-    NFC_Tk.geometry(f'{NFC_Tk.winfo_screenwidth()}x{NFC_Tk.winfo_screenheight()}')
+    # NFC_Tk.geometry(f'{NFC_Tk.winfo_screenwidth()}x{NFC_Tk.winfo_screenheight()}')
+    NFC_Tk.geometry("1280x720")
+    
 
     #Def
     def closeTk():
@@ -996,17 +998,34 @@ def nfc_identifyTk():
         root.deiconify()
     
     #Hide Root Window
-    root.withdraw()
+    # root.withdraw()
+
+    # Create left and right frames
+    left_frame = Frame(NFC_Tk, width=1280*0.6, height=720, bg='grey')
+    left_frame.grid(row=0, column=0)
+
+    right_frame = Frame(NFC_Tk, width=1280*0.4, height=720, bg='red')
+    right_frame.grid(row=0, column=1)
+
+    # Divide right frame
+    up_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.3, bg='green')
+    up_frame_right_frame.grid(row=0, column=0)
+
+    down_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.7, bg='blue')
+    down_frame_right_frame.grid(row=1, column=0)
+
+    # Labels up_frame_right_frame
+    # labelText = Label(up_frame_right_frame, text='Esperando Identificación ....')
+    # labelText.grid(row=0, column=0)
+
 
     #Labels Tk
-    labelText = Label(NFC_Tk, text='Esperando Identificación ....')
-    labelText.place(relx=0.5, rely=0.5, relwidth=0.5, relheight=0.5)
+    # labelText = Label(NFC_Tk, text='Esperando Identificación ....', size=14)
+    # labelText.pack()
 
 
     #Buttons Tk
-    Button(NFC_Tk, text="Cerrar Ventana", command=lambda:closeTk()).pack(pady=10)
-
-    print(NFC_Tk.winfo_reqheight(), NFC_Tk.winfo_reqwidth())
+    # Button(NFC_Tk, text="Cerrar Ventana", command=lambda:closeTk()).pack(pady=10)
 
     #Code
     # que = Queue()
