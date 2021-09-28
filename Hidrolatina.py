@@ -970,20 +970,25 @@ def configCameraTk(configurationTk):
 def nfc_identifyTk():
     # Config tk
     NFC_Tk = Toplevel()
-    NFC_Tk.resizable(False,False)
-    NFC_Tk.protocol("WM_DELETE_WINDOW", exit)
+    # NFC_Tk.resizable(False,False)
+    # NFC_Tk.protocol("WM_DELETE_WINDOW", exit)
     NFC_Tk.title("Identificación")
-    # configurationTk.overrideredirect(True)
+    # NFC_Tk.overrideredirect(True)
 
-    width = 300
-    height = 300
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
+    # width = 300
+    # height = 300
+    # screen_width = root.winfo_screenwidth()
+    # screen_height = root.winfo_screenheight()
 
-    x = (screen_width/2) - (app_width/2)
-    y = (screen_height/2) - (app_height/2)
+    # x = (screen_width/2) - (app_width/2)
+    # y = (screen_height/2) - (app_height/2)
 
-    NFC_Tk.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
+    # NFC_Tk.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
+
+    # NFC_Tk.state('zoomed')
+    print(NFC_Tk.winfo_screenwidth())
+    print(NFC_Tk.winfo_screenheight())
+    NFC_Tk.geometry(f'{NFC_Tk.winfo_screenwidth()}x{NFC_Tk.winfo_screenheight()}')
 
     #Def
     def closeTk():
@@ -994,11 +999,14 @@ def nfc_identifyTk():
     root.withdraw()
 
     #Labels Tk
-    labelText = Label(NFC_Tk, text='Esperando Identificación ....', pady=100)
-    labelText.pack()
+    labelText = Label(NFC_Tk, text='Esperando Identificación ....')
+    labelText.place(relx=0.5, rely=0.5, relwidth=0.5, relheight=0.5)
+
 
     #Buttons Tk
     Button(NFC_Tk, text="Cerrar Ventana", command=lambda:closeTk()).pack(pady=10)
+
+    print(NFC_Tk.winfo_reqheight(), NFC_Tk.winfo_reqwidth())
 
     #Code
     # que = Queue()
