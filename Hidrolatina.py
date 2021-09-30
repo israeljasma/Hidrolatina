@@ -584,6 +584,7 @@ def showPytorchCameraTk():
     # x = root.winfo_x()
     # y = root.winfo_y()
     # pytorchCameraTk.geometry("+%d+%d" % (x, y))
+    pytorchCameraTk.geometry("1280x720")
 
     image = PhotoImage(file="white-image.png")
     original_image = image.subsample(1,1)
@@ -649,19 +650,19 @@ def showPytorchCameraTk():
     Label(dataHeadFrame, text="Mascarilla", width=8).grid(row=3, column=0, padx=5, pady=5)
     Label(dataHeadFrame, width=10).grid(row=3, column=1, padx=5, pady=5)
 
-    ####Label dataHandFrame Sub frame lvl 2 headFrame
+    ####Label dataHandFrame Sub frame lvl 2 handFrame
     Label(dataHandFrame, text="Guantes", width=8).grid(row=0, column=0, padx=5, pady=5)
     Label(dataHandFrame, width=10).grid(row=0, column=1, padx=5, pady=5)
 
-    ####Label dataBootFrame Sub frame lvl 2 headFrame
+    ####Label dataBootFrame Sub frame lvl 2 bootFrame
     Label(dataBootFrame, text="Botas", width=8).grid(row=0, column=0, padx=5, pady=5)
     Label(dataBootFrame, width=10).grid(row=0, column=1, padx=5, pady=5)
 
     #Capture video frames
     labelVideo = Label(cameraFrame)
     labelVideo.grid(row=0, column=0)
-    cap = CameraStream(varCamera).start()
-    # cap = cv2.VideoCapture(0)
+    # cap = CameraStream(varCamera).start()
+    cap = cv2.VideoCapture(0)
 
     #Def into tk
     def closeTk():
@@ -684,7 +685,7 @@ def showPytorchCameraTk():
         det = det+1
         if det > 60:
             print('Rseset det to 0')
-            updateLabelTest()
+            # updateLabelTest()
             det = 0
 
     def showFrame():
@@ -806,8 +807,8 @@ def showPytorchCameraTk():
     # sliderFrame = Frame(pytorchCameraTk, width=600, height=100)
     # sliderFrame.grid(row = 600, column=0, padx=10, pady=2)
 
-    # testFrame()
-    showFrame()
+    testFrame()
+    # showFrame()
 
     exitButton = Button(pytorchCameraTk, text='Cerrar ventana', command=closeTk)
     exitButton.grid(row=1, column=0)
@@ -1008,15 +1009,21 @@ def nfc_identifyTk():
     right_frame.grid(row=0, column=1)
 
     # Divide right frame
-    up_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.3, bg='green')
+    up_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.7, bg='green')
     up_frame_right_frame.grid(row=0, column=0)
 
-    down_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.7, bg='blue')
+    down_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.3, bg='blue')
     down_frame_right_frame.grid(row=1, column=0)
 
     # Labels up_frame_right_frame
-    # labelText = Label(up_frame_right_frame, text='Esperando Identificación ....')
-    # labelText.grid(row=0, column=0)
+    print(right_frame.winfo_reqheight()*0.3)
+    labelText = Label(up_frame_right_frame, text='Esperando Identificación ....')
+    labelText.config(font=('Helvatical bold',20))
+    labelText.grid(pady=(right_frame.winfo_reqheight()*0.7-labelText.winfo_reqheight())/2)
+
+    print((right_frame.winfo_reqheight()*0.3-labelText.winfo_reqheight())/2)
+    # labelText = Label(down_frame_right_frame, text='dsdsd ....')
+    # labelText.grid()
 
 
     #Labels Tk
