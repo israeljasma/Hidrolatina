@@ -779,6 +779,16 @@ def showPytorchCameraTk():
                 
         if det<20:
             labelVideo.after(10, showFrame)
+    
+    def timePop():
+        ContinueExecuting = True
+        starting_point = time.time()
+        while ContinueExecuting:
+            elapsed_time = time.time () - starting_point
+            elapsed_time_int = int(elapsed_time)
+            if elapsed_time_int >= 10:
+                popupIdentificationTk()
+                ContinueExecuting = False
 
     def updateLabelTest():
         global image
@@ -801,7 +811,9 @@ def showPytorchCameraTk():
         #Boot Frame
         Label(imageBootFrame, image=(listImagenClip[2].getImage())).grid(row=1, column=0, padx=5, pady=5)
         Label(dataBootFrame, text=(listImagenClip[2].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
-        return
+
+        thread = Thread(target=timePop,args=())
+        thread.start()
 
     #Slider window (slider controls stage position)
     # sliderFrame = Frame(pytorchCameraTk, width=600, height=100)
@@ -1094,6 +1106,7 @@ def popupIdentificationTk():
     # Config tk
     popupIdentificationTk = Toplevel()
     popupIdentificationTk.resizable(False,False)
+    popupIdentificationTk.after(10000, popupIdentificationTk.destroy)
     # NFC_Tk.protocol("WM_DELETE_WINDOW", exit)
     # popupIdentificationTk.title("Identificación")
     # NFC_Tk.overrideredirect(True)
