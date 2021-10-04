@@ -16,7 +16,7 @@ from threading import Thread
 
 from numpy import CLIP
 from imagenClipClass import imageClip
-from NfcIdentifyClass import NFC
+from NFCClass import NFC
 from FileManagementClass import FileManagement
 
 import torch
