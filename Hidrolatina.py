@@ -1,4 +1,5 @@
 from glob import glob
+import queue
 from sys import path
 from tkinter import *
 from tkinter import ttk
@@ -544,8 +545,6 @@ y = (screen_height/2) - (app_height/2)
 
 root.geometry(f'{app_width}x{app_height}+{int(x)}+{int(y)}')
 
-
-
 #Def
 def popup(message):
     messagebox.showinfo(message=message)
@@ -799,19 +798,19 @@ def showPytorchCameraTk():
         original_image = image.subsample(1,1)
 
         #Head Frame
-        Label(imageHeadFrame, image=(listImagenClip[0].getImage())).grid(row=1, column=0, padx=5, pady=5)
-        Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
-        Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[1]), width=15).grid(row=1, column=1, padx=5, pady=5)
-        Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[2]), width=15).grid(row=2, column=1, padx=5, pady=5)
-        Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[3]), width=15).grid(row=3, column=1, padx=5, pady=5)
+        # Label(imageHeadFrame, image=(listImagenClip[0].getImage())).grid(row=1, column=0, padx=5, pady=5)
+        # Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
+        # Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[1]), width=15).grid(row=1, column=1, padx=5, pady=5)
+        # Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[2]), width=15).grid(row=2, column=1, padx=5, pady=5)
+        # Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[3]), width=15).grid(row=3, column=1, padx=5, pady=5)
 
-        #Hand Frame
-        Label(imageHandFrame, image=(listImagenClip[1].getImage())).grid(row=1, column=0, padx=5, pady=5)
-        Label(dataHandFrame,  text=(listImagenClip[1].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
+        # #Hand Frame
+        # Label(imageHandFrame, image=(listImagenClip[1].getImage())).grid(row=1, column=0, padx=5, pady=5)
+        # Label(dataHandFrame,  text=(listImagenClip[1].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
 
-        #Boot Frame
-        Label(imageBootFrame, image=(listImagenClip[2].getImage())).grid(row=1, column=0, padx=5, pady=5)
-        Label(dataBootFrame, text=(listImagenClip[2].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
+        # #Boot Frame
+        # Label(imageBootFrame, image=(listImagenClip[2].getImage())).grid(row=1, column=0, padx=5, pady=5)
+        # Label(dataBootFrame, text=(listImagenClip[2].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
 
         thread = Thread(target=timePop,args=())
         thread.start()
@@ -1004,9 +1003,15 @@ def nfc_identifyTk():
     print(NFC_Tk.winfo_screenheight())
     # NFC_Tk.geometry(f'{NFC_Tk.winfo_screenwidth()}x{NFC_Tk.winfo_screenheight()}')
     NFC_Tk.geometry("1280x720")
-    
 
     #Def
+    def thread_identify(que):
+        thread = Thread(target=NFC.identify,args=(que,))
+        thread.start()
+        time.sleep(2)
+        showPytorchCameraTk()
+        return True
+
     def closeTk():
         NFC_Tk.destroy()
         root.deiconify()
@@ -1047,17 +1052,21 @@ def nfc_identifyTk():
     #Buttons Tk
     # Button(NFC_Tk, text="Cerrar Ventana", command=lambda:closeTk()).pack(pady=10)
 
+    que = Queue()
     #Code
-    # que = Queue()
-
+    thread_identify(que)
+    
+    # thre = Thread(thread_identify, args=(que,))
+    # thre.start()
     # thread = Thread(target=lambda q, arg1: q.put(foo(arg1)), args=(que, 'world!'))
-    # thread = Thread(target=ReadNFC,args=(que))
+    # thread = Thread(target=NFC.identify,args=(que,))
     # thread.start()
-    # thread.join()
-    # result = que.get()
+    # result = queue.get()
     # print(result)
-    thread= Thread(target=NFC.identify, args=())
-    thread.start()
+
+    # thread= Thread(target=NFC.identify, args=())
+    # thread.start()
+
     # thread.join()
 
 def popupIdentificationTk():
@@ -1084,39 +1093,57 @@ def popupIdentificationTk():
     #Hide Root Window
     # root.withdraw()
 
+    test = True
+
+    global detecctions
+    if test:
+        detecctions = Image.open('images/approved_detections.png')
+        detecctions = detecctions.resize((1280, 720), Image.ANTIALIAS)
+        detecctions = ImageTk.PhotoImage(detecctions)
+    else:
+        detecctions = Image.open('images/unapproved_detections.png')
+        detecctions = detecctions.resize((1280, 720), Image.ANTIALIAS)
+        detecctions = ImageTk.PhotoImage(detecctions)
+
+    imageFrame = Frame(popupIdentificationTk, width=1280, height=720)
+    imageFrame.grid(row=0, column=0)
+    imageLabel = Label(imageFrame, image=detecctions)
+    imageLabel.pack()
+
     # Create top, middle and bottom frames
-    top_frame = Frame(popupIdentificationTk, width=1280, height=720*0.2, bg='grey')
-    top_frame.grid(row=0, column=0)
-
-    middle_frame = Frame(popupIdentificationTk, width=1280, height=720*0.6, bg='green')
-    middle_frame.grid(row=1, column=0)
-
-    bottom_frame = Frame(popupIdentificationTk, width=1280, height=720*0.2, bg='blue')
-    bottom_frame.grid(row=2, column=0)
-
-    # # Divide top frame
-    left_top_frame = Frame(top_frame, width=top_frame.winfo_reqwidth()*0.5, height=top_frame.winfo_reqheight(), bg='green')
-    left_top_frame.grid(row=0, column=0)
-
-    right_top_frame = Frame(top_frame, width=top_frame.winfo_reqwidth()*0.5, height=top_frame.winfo_reqheight(), bg='orange')
-    right_top_frame.grid(row=0, column=1)
-
-    # # Divide middle frame
-    left_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.32, height=middle_frame.winfo_reqheight(), bg='purple')
-    left_middle_frame.grid(row=0, column=0)
-
-    middle_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.36, height=middle_frame.winfo_reqheight(), bg='red')
-    middle_middle_frame.grid(row=0, column=2)
-
-    right_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.32, height=middle_frame.winfo_reqheight(), bg='purple')
-    right_middle_frame.grid(row=0, column=3)
-
-    # # Divide bottom frame
-    left_top_frame = Frame(bottom_frame, width=bottom_frame.winfo_reqwidth()*0.5, height=bottom_frame.winfo_reqheight(), bg='orange')
-    left_top_frame.grid(row=0, column=0)
+    # top_frame = Frame(popupIdentificationTk, width=1280, height=720*0.2, bg='grey')
+    # top_frame.grid(row=0, column=0)
     
-    right_top_frame = Frame(bottom_frame, width=bottom_frame.winfo_reqwidth()*0.5, height=bottom_frame.winfo_reqheight(), bg='green')
-    right_top_frame.grid(row=0, column=1)
+
+    # middle_frame = Frame(popupIdentificationTk, width=1280, height=720*0.6, bg='green')
+    # middle_frame.grid(row=1, column=0)
+
+    # bottom_frame = Frame(popupIdentificationTk, width=1280, height=720*0.2, bg='blue')
+    # bottom_frame.grid(row=2, column=0)
+
+    # # # Divide top frame
+    # left_top_frame = Frame(top_frame, width=top_frame.winfo_reqwidth()*0.5, height=top_frame.winfo_reqheight(), bg='green')
+    # left_top_frame.grid(row=0, column=0)
+
+    # right_top_frame = Frame(top_frame, width=top_frame.winfo_reqwidth()*0.5, height=top_frame.winfo_reqheight(), bg='orange')
+    # right_top_frame.grid(row=0, column=1)
+
+    # # # Divide middle frame
+    # left_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.32, height=middle_frame.winfo_reqheight(), bg='purple')
+    # left_middle_frame.grid(row=0, column=0)
+
+    # middle_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.36, height=middle_frame.winfo_reqheight(), bg='red')
+    # middle_middle_frame.grid(row=0, column=2)
+
+    # right_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.32, height=middle_frame.winfo_reqheight(), bg='purple')
+    # right_middle_frame.grid(row=0, column=3)
+
+    # # # Divide bottom frame
+    # left_top_frame = Frame(bottom_frame, width=bottom_frame.winfo_reqwidth()*0.5, height=bottom_frame.winfo_reqheight(), bg='orange')
+    # left_top_frame.grid(row=0, column=0)
+    
+    # right_top_frame = Frame(bottom_frame, width=bottom_frame.winfo_reqwidth()*0.5, height=bottom_frame.winfo_reqheight(), bg='green')
+    # right_top_frame.grid(row=0, column=1)
 
     #Buttons Tk
     # Button(NFC_Tk, text="Cerrar Ventana", command=lambda:closeTk()).pack(pady=10)
