@@ -790,7 +790,7 @@ def showPytorchCameraTk():
                 popupIdentificationTk(booleanAnswer)
                 ContinueExecuting = False
 
-    def updateLabelTest():
+    def updateLabel():
         global image
         global original_image
 
@@ -824,17 +824,13 @@ def showPytorchCameraTk():
         thread = Thread(target=timePop,args=(booleanAnswer,))
         thread.start()
 
-    #Slider window (slider controls stage position)
-    # sliderFrame = Frame(pytorchCameraTk, width=600, height=100)
-    # sliderFrame.grid(row = 600, column=0, padx=10, pady=2)
-
     testFrame()
     # showFrame()
 
     exitButton = Button(pytorchCameraTk, text='Cerrar ventana', command=closeTk)
     exitButton.grid(row=1, column=0)
 
-    testButtonUpdate = Button(pytorchCameraTk, text='Test Update', command=updateLabelTest)
+    testButtonUpdate = Button(pytorchCameraTk, text='Test Update', command=updateLabel)
     testButtonUpdate.grid(row=1, column=1)
 
 def showImageClipTk():
