@@ -780,14 +780,14 @@ def showPytorchCameraTk():
         if det<20:
             labelVideo.after(10, showFrame)
     
-    def timePop():
+    def timePop(booleanAnswer):
         ContinueExecuting = True
         starting_point = time.time()
         while ContinueExecuting:
             elapsed_time = time.time () - starting_point
             elapsed_time_int = int(elapsed_time)
             if elapsed_time_int >= 10:
-                popupIdentificationTk()
+                popupIdentificationTk(booleanAnswer)
                 ContinueExecuting = False
 
     def updateLabelTest():
@@ -798,21 +798,30 @@ def showPytorchCameraTk():
         original_image = image.subsample(1,1)
 
         #Head Frame
-        # Label(imageHeadFrame, image=(listImagenClip[0].getImage())).grid(row=1, column=0, padx=5, pady=5)
-        # Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
-        # Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[1]), width=15).grid(row=1, column=1, padx=5, pady=5)
-        # Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[2]), width=15).grid(row=2, column=1, padx=5, pady=5)
-        # Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[3]), width=15).grid(row=3, column=1, padx=5, pady=5)
+        Label(imageHeadFrame, image=(listImagenClip[0].getImage())).grid(row=1, column=0, padx=5, pady=5)
+        Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
+        Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[1]), width=15).grid(row=1, column=1, padx=5, pady=5)
+        Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[2]), width=15).grid(row=2, column=1, padx=5, pady=5)
+        Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[3]), width=15).grid(row=3, column=1, padx=5, pady=5)
 
-        # #Hand Frame
-        # Label(imageHandFrame, image=(listImagenClip[1].getImage())).grid(row=1, column=0, padx=5, pady=5)
-        # Label(dataHandFrame,  text=(listImagenClip[1].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
+        #Hand Frame
+        Label(imageHandFrame, image=(listImagenClip[1].getImage())).grid(row=1, column=0, padx=5, pady=5)
+        Label(dataHandFrame,  text=(listImagenClip[1].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
 
-        # #Boot Frame
-        # Label(imageBootFrame, image=(listImagenClip[2].getImage())).grid(row=1, column=0, padx=5, pady=5)
-        # Label(dataBootFrame, text=(listImagenClip[2].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
+        #Boot Frame
+        Label(imageBootFrame, image=(listImagenClip[2].getImage())).grid(row=1, column=0, padx=5, pady=5)
+        Label(dataBootFrame, text=(listImagenClip[2].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
 
-        thread = Thread(target=timePop,args=())
+        booleanAnswer = None
+        for i in range(len(listImagenClip)):
+            for j in range(len(listImagenClip[i])):
+                if listImagenClip[i].getAnswer()[j] == 'OK':
+                    booleanAnswer = True
+                else:
+                    booleanAnswer = False
+                    break
+
+        thread = Thread(target=timePop,args=(booleanAnswer,))
         thread.start()
 
     #Slider window (slider controls stage position)
@@ -1069,7 +1078,7 @@ def nfc_identifyTk():
 
     # thread.join()
 
-def popupIdentificationTk():
+def popupIdentificationTk(booleanAnswer):
     # Config tk
     popupIdentificationTk = Toplevel()
     popupIdentificationTk.resizable(False,False)
@@ -1086,17 +1095,10 @@ def popupIdentificationTk():
     
 
     #Def
-    def closeTk():
-        popupIdentificationTk.destroy()
-        root.deiconify()
-    
-    #Hide Root Window
-    # root.withdraw()
 
-    test = True
-
+    #Code
     global detecctions
-    if test:
+    if booleanAnswer:
         detecctions = Image.open('images/approved_detections.png')
         detecctions = detecctions.resize((1280, 720), Image.ANTIALIAS)
         detecctions = ImageTk.PhotoImage(detecctions)
