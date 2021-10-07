@@ -580,64 +580,64 @@ def showPytorchCameraTk():
     pytorchCameraTk.title('Camara')
     pytorchCameraTk.resizable(False,False)
     pytorchCameraTk.config(background="#FFFFFF")
-    # pytorchCameraTk.overrideredirect(True)
-    # x = root.winfo_x()
-    # y = root.winfo_y()
-    # pytorchCameraTk.geometry("+%d+%d" % (x, y))
-    pytorchCameraTk.geometry("1280x720")
+    pytorchCameraTk.overrideredirect(True)
+    pytorchCameraTk.geometry(f'{pytorchCameraTk.winfo_screenwidth()}x{pytorchCameraTk.winfo_screenheight()}')
+    # pytorchCameraTk.geometry(f'{1280}x{720}')
+ 
+    # pytorchCameraTk.geometry("1280x720")
 
     image = PhotoImage(file="white-image.png")
     original_image = image.subsample(1,1)
 
     #Frame Camera
-    cameraFrame = Frame(pytorchCameraTk, width=800, height=600)
-    cameraFrame.grid(row=0, column=0, padx=10, pady=2)
+    cameraFrame = Frame(pytorchCameraTk, width=pytorchCameraTk.winfo_screenwidth()*0.7, height=pytorchCameraTk.winfo_screenheight())
+    cameraFrame.grid(row=0, column=0)
 
-    #Frame detections
-    detectionFrame = Frame(pytorchCameraTk, bg="red", width=100, height=600)
-    detectionFrame.grid(row=0, column=1, padx=10, pady=5)
+    # #Frame detections
+    detectionFrame = Frame(pytorchCameraTk, bg="red", width=pytorchCameraTk.winfo_screenwidth()*0.3, height=pytorchCameraTk.winfo_screenheight())
+    detectionFrame.grid(row=0, column=1)
 
-    ##Subs frames lvl 1 detections
-    headFrame = Frame(detectionFrame, bg="blue")
-    headFrame.grid(row=0, column=0, padx=10, pady=5)
+    # ##Subs frames lvl 1 detections
+    headFrame = Frame(detectionFrame, bg="blue", width=detectionFrame.winfo_reqwidth(), height=detectionFrame.winfo_reqheight()*0.334)
+    headFrame.grid(row=0, column=0)
 
-    handFrame = Frame(detectionFrame, bg="blue")
-    handFrame.grid(row=1, column=0, padx=10, pady=5)
+    handFrame = Frame(detectionFrame, bg="blue", width=detectionFrame.winfo_reqwidth(), height=detectionFrame.winfo_reqheight()*0.334)
+    handFrame.grid(row=1, column=0)
 
-    bootFrame = Frame(detectionFrame, bg="blue")
-    bootFrame.grid(row=2, column=0, padx=10, pady=5)
+    bootFrame = Frame(detectionFrame, bg="blue", width=detectionFrame.winfo_reqwidth(), height=detectionFrame.winfo_reqheight()*0.334)
+    bootFrame.grid(row=2, column=0)
 
-    ###Subs frames lvl 2 headFrame
-    imageHeadFrame = Frame(headFrame, bg="green")
-    imageHeadFrame.grid(row=0, column=0, padx=10, pady=5)
+    # ###Subs frames lvl 2 headFrame
+    imageHeadFrame = Frame(headFrame, bg="green", width=headFrame.winfo_reqwidth()*0.5, height=headFrame.winfo_reqheight())
+    imageHeadFrame.grid(row=0, column=0)
 
-    dataHeadFrame = Frame(headFrame, bg="green")
-    dataHeadFrame.grid(row=0, column=1, padx=10, pady=5)
+    dataHeadFrame = Frame(headFrame, bg="green", width=headFrame.winfo_reqwidth()*0.5, height=headFrame.winfo_reqheight())
+    dataHeadFrame.grid(row=0, column=1)
 
-    ###Subs frames lvl 2 handFrame
-    imageHandFrame = Frame(handFrame, bg="green")
-    imageHandFrame.grid(row=0, column=0, padx=10, pady=5)
+    # ###Subs frames lvl 2 handFrame
+    imageHandFrame = Frame(handFrame, bg="green", width=handFrame.winfo_reqwidth()*0.5, height=handFrame.winfo_reqheight())
+    imageHandFrame.grid(row=0, column=0)
 
-    dataHandFrame = Frame(handFrame, bg="green")
-    dataHandFrame.grid(row=0, column=1, padx=10, pady=5)
+    dataHandFrame = Frame(handFrame, bg="green", width=handFrame.winfo_reqwidth()*0.5, height=handFrame.winfo_reqheight())
+    dataHandFrame.grid(row=0, column=1)
 
-    ###Subs frames lvl 2 bootFrame
-    imageBootFrame = Frame(bootFrame, bg="green")
-    imageBootFrame.grid(row=0, column=0, padx=10, pady=5)
+    # ###Subs frames lvl 2 bootFrame
+    imageBootFrame = Frame(bootFrame, bg="green", width=bootFrame.winfo_reqwidth()*0.5, height=bootFrame.winfo_reqheight())
+    imageBootFrame.grid(row=0, column=0)
 
-    dataBootFrame = Frame(bootFrame, bg="green")
-    dataBootFrame.grid(row=0, column=1, padx=10, pady=5)
+    dataBootFrame = Frame(bootFrame, bg="green", width=bootFrame.winfo_reqwidth()*0.5, height=bootFrame.winfo_reqheight())
+    dataBootFrame.grid(row=0, column=1)
 
-    ###Label imageHeadFrame Sub frame lvl 2 headFrame
+    # ###Label imageHeadFrame Sub frame lvl 2 headFrame
     Label(imageHeadFrame, image=original_image).grid(row=1, column=0, padx=5, pady=5)
 
-    ###Label imageHandFrame Sub frame lvl 2 handFrame
+    # ###Label imageHandFrame Sub frame lvl 2 handFrame
     Label(imageHandFrame, image=original_image).grid(row=1, column=0, padx=5, pady=5)
 
-    ###Label imagebootFrame Sub frame lvl 2 bootFrame
+    # ###Label imagebootFrame Sub frame lvl 2 bootFrame
     Label(imageBootFrame, image=original_image).grid(row=1, column=0, padx=5, pady=5)
 
-    ####Label dataHeadFrame Sub frame lvl 2 headFrame
+    # ####Label dataHeadFrame Sub frame lvl 2 headFrame
     Label(dataHeadFrame, text="Casco", width=8).grid(row=0, column=0, padx=5, pady=5)
     Label(dataHeadFrame, width=10).grid(row=0, column=1, padx=5, pady=5)
 
@@ -650,19 +650,26 @@ def showPytorchCameraTk():
     Label(dataHeadFrame, text="Mascarilla", width=8).grid(row=3, column=0, padx=5, pady=5)
     Label(dataHeadFrame, width=10).grid(row=3, column=1, padx=5, pady=5)
 
-    ####Label dataHandFrame Sub frame lvl 2 handFrame
+    # ####Label dataHandFrame Sub frame lvl 2 handFrame
     Label(dataHandFrame, text="Guantes", width=8).grid(row=0, column=0, padx=5, pady=5)
     Label(dataHandFrame, width=10).grid(row=0, column=1, padx=5, pady=5)
 
-    ####Label dataBootFrame Sub frame lvl 2 bootFrame
+    # ####Label dataBootFrame Sub frame lvl 2 bootFrame
     Label(dataBootFrame, text="Botas", width=8).grid(row=0, column=0, padx=5, pady=5)
     Label(dataBootFrame, width=10).grid(row=0, column=1, padx=5, pady=5)
+    
+    #Slider window (slider controls stage position)
+    # sliderFrame = Frame(pytorchCameraTk, width=600, height=100)
+    # sliderFrame.grid(row = 600, column=0, padx=10, pady=2)
 
     #Capture video frames
     labelVideo = Label(cameraFrame)
     labelVideo.grid(row=0, column=0)
     # cap = CameraStream(varCamera).start()
     cap = cv2.VideoCapture(0)
+
+    camWidth = round(cameraFrame.winfo_reqwidth())
+    camHeight = round(cameraFrame.winfo_reqheight()*0.85)
 
     #Def into tk
     def closeTk():
@@ -674,7 +681,7 @@ def showPytorchCameraTk():
     def testFrame():
         _, frame = cap.read()
         frame = cv2.flip(frame, 1)
-        cv2image = cv2.cvtColor(cv2.resize(frame, (800, 600)), cv2.COLOR_BGR2RGBA)
+        cv2image = cv2.cvtColor(cv2.resize(frame, (round(camWidth), round(camHeight))), cv2.COLOR_BGR2RGBA)
         img = Image.fromarray(cv2image)
         imgtk = ImageTk.PhotoImage(image=img)
         labelVideo.imgtk = imgtk
@@ -1079,31 +1086,26 @@ def popupIdentificationTk(booleanAnswer):
     popupIdentificationTk = Toplevel()
     popupIdentificationTk.resizable(False,False)
     popupIdentificationTk.after(10000, popupIdentificationTk.destroy)
-    # NFC_Tk.protocol("WM_DELETE_WINDOW", exit)
-    # popupIdentificationTk.title("Identificación")
-    # NFC_Tk.overrideredirect(True)
-
-    #Dimensions
-    print(popupIdentificationTk.winfo_screenwidth())
-    print(popupIdentificationTk.winfo_screenheight())
-    # NFC_Tk.geometry(f'{NFC_Tk.winfo_screenwidth()}x{NFC_Tk.winfo_screenheight()}')
-    popupIdentificationTk.geometry("1280x720")
+    popupIdentificationTk.overrideredirect(True)
+    popupIdentificationTk.geometry(f'{popupIdentificationTk.winfo_screenwidth()}x{popupIdentificationTk.winfo_screenheight()}')
+    # popupIdentificationTk.geometry("1280x720")
     
+    #Globals
+    global detecctions
 
     #Def
 
     #Code
-    global detecctions
     if booleanAnswer:
         detecctions = Image.open('images/approved_detections.png')
-        detecctions = detecctions.resize((1280, 720), Image.ANTIALIAS)
+        detecctions = detecctions.resize((popupIdentificationTk.winfo_screenwidth(), popupIdentificationTk.winfo_screenheight()), Image.ANTIALIAS)
         detecctions = ImageTk.PhotoImage(detecctions)
     else:
         detecctions = Image.open('images/unapproved_detections.png')
-        detecctions = detecctions.resize((1280, 720), Image.ANTIALIAS)
+        detecctions = detecctions.resize((popupIdentificationTk.winfo_screenwidth(), popupIdentificationTk.winfo_screenheight()), Image.ANTIALIAS)
         detecctions = ImageTk.PhotoImage(detecctions)
 
-    imageFrame = Frame(popupIdentificationTk, width=1280, height=720)
+    imageFrame = Frame(popupIdentificationTk, width=popupIdentificationTk.winfo_screenwidth(), height=popupIdentificationTk.winfo_screenheight())
     imageFrame.grid(row=0, column=0)
     imageLabel = Label(imageFrame, image=detecctions)
     imageLabel.pack()
