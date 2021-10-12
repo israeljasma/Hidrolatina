@@ -1,4 +1,5 @@
 from glob import glob
+import queue
 from sys import path
 from tkinter import *
 from tkinter import ttk
@@ -10,10 +11,13 @@ import cv2
 import os
 import platform
 import time
+from multiprocessing import Queue
+from threading import Thread
 # from varname import varname, nameof
 
 from numpy import CLIP
 from imagenClipClass import imageClip
+from NFCClass import NFC
 from FileManagementClass import FileManagement
 
 import torch
@@ -541,8 +545,6 @@ y = (screen_height/2) - (app_height/2)
 
 root.geometry(f'{app_width}x{app_height}+{int(x)}+{int(y)}')
 
-
-
 #Def
 def popup(message):
     messagebox.showinfo(message=message)
@@ -578,63 +580,64 @@ def showPytorchCameraTk():
     pytorchCameraTk.title('Camara')
     pytorchCameraTk.resizable(False,False)
     pytorchCameraTk.config(background="#FFFFFF")
-    # pytorchCameraTk.overrideredirect(True)
-    # x = root.winfo_x()
-    # y = root.winfo_y()
-    # pytorchCameraTk.geometry("+%d+%d" % (x, y))
+    pytorchCameraTk.overrideredirect(True)
+    pytorchCameraTk.geometry(f'{pytorchCameraTk.winfo_screenwidth()}x{pytorchCameraTk.winfo_screenheight()}')
+    # pytorchCameraTk.geometry(f'{1280}x{720}')
+ 
+    # pytorchCameraTk.geometry("1280x720")
 
     image = PhotoImage(file="white-image.png")
     original_image = image.subsample(1,1)
 
     #Frame Camera
-    cameraFrame = Frame(pytorchCameraTk, width=800, height=600)
-    cameraFrame.grid(row=0, column=0, padx=10, pady=2)
+    cameraFrame = Frame(pytorchCameraTk, width=pytorchCameraTk.winfo_screenwidth()*0.7, height=pytorchCameraTk.winfo_screenheight())
+    cameraFrame.grid(row=0, column=0)
 
-    #Frame detections
-    detectionFrame = Frame(pytorchCameraTk, bg="red", width=100, height=600)
-    detectionFrame.grid(row=0, column=1, padx=10, pady=5)
+    # #Frame detections
+    detectionFrame = Frame(pytorchCameraTk, bg="red", width=pytorchCameraTk.winfo_screenwidth()*0.3, height=pytorchCameraTk.winfo_screenheight())
+    detectionFrame.grid(row=0, column=1)
 
-    ##Subs frames lvl 1 detections
-    headFrame = Frame(detectionFrame, bg="blue")
-    headFrame.grid(row=0, column=0, padx=10, pady=5)
+    # ##Subs frames lvl 1 detections
+    headFrame = Frame(detectionFrame, bg="blue", width=detectionFrame.winfo_reqwidth(), height=detectionFrame.winfo_reqheight()*0.334)
+    headFrame.grid(row=0, column=0)
 
-    handFrame = Frame(detectionFrame, bg="blue")
-    handFrame.grid(row=1, column=0, padx=10, pady=5)
+    handFrame = Frame(detectionFrame, bg="blue", width=detectionFrame.winfo_reqwidth(), height=detectionFrame.winfo_reqheight()*0.334)
+    handFrame.grid(row=1, column=0)
 
-    bootFrame = Frame(detectionFrame, bg="blue")
-    bootFrame.grid(row=2, column=0, padx=10, pady=5)
+    bootFrame = Frame(detectionFrame, bg="blue", width=detectionFrame.winfo_reqwidth(), height=detectionFrame.winfo_reqheight()*0.334)
+    bootFrame.grid(row=2, column=0)
 
-    ###Subs frames lvl 2 headFrame
-    imageHeadFrame = Frame(headFrame, bg="green")
-    imageHeadFrame.grid(row=0, column=0, padx=10, pady=5)
+    # ###Subs frames lvl 2 headFrame
+    imageHeadFrame = Frame(headFrame, bg="green", width=headFrame.winfo_reqwidth()*0.5, height=headFrame.winfo_reqheight())
+    imageHeadFrame.grid(row=0, column=0)
 
-    dataHeadFrame = Frame(headFrame, bg="green")
-    dataHeadFrame.grid(row=0, column=1, padx=10, pady=5)
+    dataHeadFrame = Frame(headFrame, bg="green", width=headFrame.winfo_reqwidth()*0.5, height=headFrame.winfo_reqheight())
+    dataHeadFrame.grid(row=0, column=1)
 
-    ###Subs frames lvl 2 handFrame
-    imageHandFrame = Frame(handFrame, bg="green")
-    imageHandFrame.grid(row=0, column=0, padx=10, pady=5)
+    # ###Subs frames lvl 2 handFrame
+    imageHandFrame = Frame(handFrame, bg="green", width=handFrame.winfo_reqwidth()*0.5, height=handFrame.winfo_reqheight())
+    imageHandFrame.grid(row=0, column=0)
 
-    dataHandFrame = Frame(handFrame, bg="green")
-    dataHandFrame.grid(row=0, column=1, padx=10, pady=5)
+    dataHandFrame = Frame(handFrame, bg="green", width=handFrame.winfo_reqwidth()*0.5, height=handFrame.winfo_reqheight())
+    dataHandFrame.grid(row=0, column=1)
 
-    ###Subs frames lvl 2 bootFrame
-    imageBootFrame = Frame(bootFrame, bg="green")
-    imageBootFrame.grid(row=0, column=0, padx=10, pady=5)
+    # ###Subs frames lvl 2 bootFrame
+    imageBootFrame = Frame(bootFrame, bg="green", width=bootFrame.winfo_reqwidth()*0.5, height=bootFrame.winfo_reqheight())
+    imageBootFrame.grid(row=0, column=0)
 
-    dataBootFrame = Frame(bootFrame, bg="green")
-    dataBootFrame.grid(row=0, column=1, padx=10, pady=5)
+    dataBootFrame = Frame(bootFrame, bg="green", width=bootFrame.winfo_reqwidth()*0.5, height=bootFrame.winfo_reqheight())
+    dataBootFrame.grid(row=0, column=1)
 
-    ###Label imageHeadFrame Sub frame lvl 2 headFrame
+    # ###Label imageHeadFrame Sub frame lvl 2 headFrame
     Label(imageHeadFrame, image=original_image).grid(row=1, column=0, padx=5, pady=5)
 
-    ###Label imageHandFrame Sub frame lvl 2 handFrame
+    # ###Label imageHandFrame Sub frame lvl 2 handFrame
     Label(imageHandFrame, image=original_image).grid(row=1, column=0, padx=5, pady=5)
 
-    ###Label imagebootFrame Sub frame lvl 2 bootFrame
+    # ###Label imagebootFrame Sub frame lvl 2 bootFrame
     Label(imageBootFrame, image=original_image).grid(row=1, column=0, padx=5, pady=5)
 
-    ####Label dataHeadFrame Sub frame lvl 2 headFrame
+    # ####Label dataHeadFrame Sub frame lvl 2 headFrame
     Label(dataHeadFrame, text="Casco", width=8).grid(row=0, column=0, padx=5, pady=5)
     Label(dataHeadFrame, width=10).grid(row=0, column=1, padx=5, pady=5)
 
@@ -647,19 +650,26 @@ def showPytorchCameraTk():
     Label(dataHeadFrame, text="Mascarilla", width=8).grid(row=3, column=0, padx=5, pady=5)
     Label(dataHeadFrame, width=10).grid(row=3, column=1, padx=5, pady=5)
 
-    ####Label dataHandFrame Sub frame lvl 2 headFrame
+    # ####Label dataHandFrame Sub frame lvl 2 handFrame
     Label(dataHandFrame, text="Guantes", width=8).grid(row=0, column=0, padx=5, pady=5)
     Label(dataHandFrame, width=10).grid(row=0, column=1, padx=5, pady=5)
 
-    ####Label dataBootFrame Sub frame lvl 2 headFrame
+    # ####Label dataBootFrame Sub frame lvl 2 bootFrame
     Label(dataBootFrame, text="Botas", width=8).grid(row=0, column=0, padx=5, pady=5)
     Label(dataBootFrame, width=10).grid(row=0, column=1, padx=5, pady=5)
+    
+    #Slider window (slider controls stage position)
+    # sliderFrame = Frame(pytorchCameraTk, width=600, height=100)
+    # sliderFrame.grid(row = 600, column=0, padx=10, pady=2)
 
     #Capture video frames
     labelVideo = Label(cameraFrame)
     labelVideo.grid(row=0, column=0)
-    cap = CameraStream(varCamera).start()
-    # cap = cv2.VideoCapture(0)
+    # cap = CameraStream(varCamera).start()
+    cap = cv2.VideoCapture(0)
+
+    camWidth = round(cameraFrame.winfo_reqwidth())
+    camHeight = round(cameraFrame.winfo_reqheight()*0.85)
 
     #Def into tk
     def closeTk():
@@ -671,7 +681,7 @@ def showPytorchCameraTk():
     def testFrame():
         _, frame = cap.read()
         frame = cv2.flip(frame, 1)
-        cv2image = cv2.cvtColor(cv2.resize(frame, (800, 600)), cv2.COLOR_BGR2RGBA)
+        cv2image = cv2.cvtColor(cv2.resize(frame, (round(camWidth), round(camHeight))), cv2.COLOR_BGR2RGBA)
         img = Image.fromarray(cv2image)
         imgtk = ImageTk.PhotoImage(image=img)
         labelVideo.imgtk = imgtk
@@ -682,7 +692,7 @@ def showPytorchCameraTk():
         det = det+1
         if det > 60:
             print('Rseset det to 0')
-            updateLabelTest()
+            # updateLabelTest()
             det = 0
 
     def showFrame():
@@ -776,8 +786,18 @@ def showPytorchCameraTk():
                 
         if det<20:
             labelVideo.after(10, showFrame)
+    
+    def timePop(booleanAnswer):
+        ContinueExecuting = True
+        starting_point = time.time()
+        while ContinueExecuting:
+            elapsed_time = time.time () - starting_point
+            elapsed_time_int = int(elapsed_time)
+            if elapsed_time_int >= 10:
+                popupIdentificationTk(booleanAnswer)
+                ContinueExecuting = False
 
-    def updateLabelTest():
+    def updateLabel():
         global image
         global original_image
 
@@ -798,19 +818,26 @@ def showPytorchCameraTk():
         #Boot Frame
         Label(imageBootFrame, image=(listImagenClip[2].getImage())).grid(row=1, column=0, padx=5, pady=5)
         Label(dataBootFrame, text=(listImagenClip[2].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
-        return
 
-    #Slider window (slider controls stage position)
-    # sliderFrame = Frame(pytorchCameraTk, width=600, height=100)
-    # sliderFrame.grid(row = 600, column=0, padx=10, pady=2)
+        booleanAnswer = None
+        for i in range(len(listImagenClip)):
+            for j in range(len(listImagenClip[i])):
+                if listImagenClip[i].getAnswer()[j] == 'OK':
+                    booleanAnswer = True
+                else:
+                    booleanAnswer = False
+                    break
 
-    # testFrame()
-    showFrame()
+        thread = Thread(target=timePop,args=(booleanAnswer,))
+        thread.start()
+
+    testFrame()
+    # showFrame()
 
     exitButton = Button(pytorchCameraTk, text='Cerrar ventana', command=closeTk)
     exitButton.grid(row=1, column=0)
 
-    testButtonUpdate = Button(pytorchCameraTk, text='Test Update', command=updateLabelTest)
+    testButtonUpdate = Button(pytorchCameraTk, text='Test Update', command=updateLabel)
     testButtonUpdate.grid(row=1, column=1)
 
 def showImageClipTk():
@@ -965,6 +992,162 @@ def configCameraTk(configurationTk):
     closeWindow = Button(configCameraTk, text="Cerrar Ventana", command=lambda:closeTk(configurationTk))
     closeWindow.pack()
 
+def nfc_identifyTk():
+    # Config tk
+    NFC_Tk = Toplevel()
+    NFC_Tk.resizable(False,False)
+    # NFC_Tk.protocol("WM_DELETE_WINDOW", exit)
+    NFC_Tk.title("Identificación")
+    # NFC_Tk.overrideredirect(True)
+
+    # width = 300
+    # height = 300
+    # screen_width = root.winfo_screenwidth()
+    # screen_height = root.winfo_screenheight()
+
+    # x = (screen_width/2) - (app_width/2)
+    # y = (screen_height/2) - (app_height/2)
+
+    # NFC_Tk.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
+
+    #Dimensions
+    print(NFC_Tk.winfo_screenwidth())
+    print(NFC_Tk.winfo_screenheight())
+    # NFC_Tk.geometry(f'{NFC_Tk.winfo_screenwidth()}x{NFC_Tk.winfo_screenheight()}')
+    NFC_Tk.geometry("1280x720")
+
+    #Def
+    def thread_identify(que):
+        thread = Thread(target=NFC.identify,args=(que,))
+        thread.start()
+        time.sleep(2)
+        showPytorchCameraTk()
+        return True
+
+    def closeTk():
+        NFC_Tk.destroy()
+        root.deiconify()
+    
+    #Hide Root Window
+    # root.withdraw()
+
+    # Create left and right frames
+    left_frame = Frame(NFC_Tk, width=1280*0.6, height=720, bg='grey')
+    left_frame.grid(row=0, column=0)
+
+    right_frame = Frame(NFC_Tk, width=1280*0.4, height=720, bg='red')
+    right_frame.grid(row=0, column=1)
+
+    # Divide right frame
+    up_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.7, bg='green')
+    up_frame_right_frame.grid(row=0, column=0)
+
+    down_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.3, bg='blue')
+    down_frame_right_frame.grid(row=1, column=0)
+
+    # Labels up_frame_right_frame
+    print(right_frame.winfo_reqheight()*0.3)
+    labelText = Label(up_frame_right_frame, text='Esperando Identificación ....')
+    labelText.config(font=('Helvatical bold',20))
+    labelText.grid(pady=(right_frame.winfo_reqheight()*0.7-labelText.winfo_reqheight())/2)
+
+    print((right_frame.winfo_reqheight()*0.3-labelText.winfo_reqheight())/2)
+    # labelText = Label(down_frame_right_frame, text='dsdsd ....')
+    # labelText.grid()
+
+
+    #Labels Tk
+    # labelText = Label(NFC_Tk, text='Esperando Identificación ....', size=14)
+    # labelText.pack()
+
+
+    #Buttons Tk
+    # Button(NFC_Tk, text="Cerrar Ventana", command=lambda:closeTk()).pack(pady=10)
+
+    que = Queue()
+    #Code
+    thread_identify(que)
+    
+    # thre = Thread(thread_identify, args=(que,))
+    # thre.start()
+    # thread = Thread(target=lambda q, arg1: q.put(foo(arg1)), args=(que, 'world!'))
+    # thread = Thread(target=NFC.identify,args=(que,))
+    # thread.start()
+    # result = queue.get()
+    # print(result)
+
+    # thread= Thread(target=NFC.identify, args=())
+    # thread.start()
+
+    # thread.join()
+
+def popupIdentificationTk(booleanAnswer):
+    # Config tk
+    popupIdentificationTk = Toplevel()
+    popupIdentificationTk.resizable(False,False)
+    popupIdentificationTk.after(10000, popupIdentificationTk.destroy)
+    popupIdentificationTk.overrideredirect(True)
+    popupIdentificationTk.geometry(f'{popupIdentificationTk.winfo_screenwidth()}x{popupIdentificationTk.winfo_screenheight()}')
+    # popupIdentificationTk.geometry("1280x720")
+    
+    #Globals
+    global detecctions
+
+    #Def
+
+    #Code
+    if booleanAnswer:
+        detecctions = Image.open('images/approved_detections.png')
+        detecctions = detecctions.resize((popupIdentificationTk.winfo_screenwidth(), popupIdentificationTk.winfo_screenheight()), Image.ANTIALIAS)
+        detecctions = ImageTk.PhotoImage(detecctions)
+    else:
+        detecctions = Image.open('images/unapproved_detections.png')
+        detecctions = detecctions.resize((popupIdentificationTk.winfo_screenwidth(), popupIdentificationTk.winfo_screenheight()), Image.ANTIALIAS)
+        detecctions = ImageTk.PhotoImage(detecctions)
+
+    imageFrame = Frame(popupIdentificationTk, width=popupIdentificationTk.winfo_screenwidth(), height=popupIdentificationTk.winfo_screenheight())
+    imageFrame.grid(row=0, column=0)
+    imageLabel = Label(imageFrame, image=detecctions)
+    imageLabel.pack()
+
+    # Create top, middle and bottom frames
+    # top_frame = Frame(popupIdentificationTk, width=1280, height=720*0.2, bg='grey')
+    # top_frame.grid(row=0, column=0)
+    
+
+    # middle_frame = Frame(popupIdentificationTk, width=1280, height=720*0.6, bg='green')
+    # middle_frame.grid(row=1, column=0)
+
+    # bottom_frame = Frame(popupIdentificationTk, width=1280, height=720*0.2, bg='blue')
+    # bottom_frame.grid(row=2, column=0)
+
+    # # # Divide top frame
+    # left_top_frame = Frame(top_frame, width=top_frame.winfo_reqwidth()*0.5, height=top_frame.winfo_reqheight(), bg='green')
+    # left_top_frame.grid(row=0, column=0)
+
+    # right_top_frame = Frame(top_frame, width=top_frame.winfo_reqwidth()*0.5, height=top_frame.winfo_reqheight(), bg='orange')
+    # right_top_frame.grid(row=0, column=1)
+
+    # # # Divide middle frame
+    # left_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.32, height=middle_frame.winfo_reqheight(), bg='purple')
+    # left_middle_frame.grid(row=0, column=0)
+
+    # middle_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.36, height=middle_frame.winfo_reqheight(), bg='red')
+    # middle_middle_frame.grid(row=0, column=2)
+
+    # right_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.32, height=middle_frame.winfo_reqheight(), bg='purple')
+    # right_middle_frame.grid(row=0, column=3)
+
+    # # # Divide bottom frame
+    # left_top_frame = Frame(bottom_frame, width=bottom_frame.winfo_reqwidth()*0.5, height=bottom_frame.winfo_reqheight(), bg='orange')
+    # left_top_frame.grid(row=0, column=0)
+    
+    # right_top_frame = Frame(bottom_frame, width=bottom_frame.winfo_reqwidth()*0.5, height=bottom_frame.winfo_reqheight(), bg='green')
+    # right_top_frame.grid(row=0, column=1)
+
+    #Buttons Tk
+    # Button(NFC_Tk, text="Cerrar Ventana", command=lambda:closeTk()).pack(pady=10)
+
 def openConfigurationTk():
     # Config tk
     configurationTk = Toplevel()
@@ -1081,8 +1264,6 @@ def openConfigurationTk():
     closeWindow.pack()
 
 #Buttons
-# downloadModels = Button(root, text="Modelos", command=openDownloadModelsTk).pack()
-
 clearMDETRyButton = Button(root, text='Limpiar Cache', command=clearCacheMDETR).pack()
 loadALLButton=  Button(root, text='Cargar Dependencias', command=loadALL).pack()
 # MDETRButton = Button(root, text='MDETR', command=MDETR).pack()
@@ -1092,6 +1273,8 @@ configButton = Button(root, text='Configuraciones', command=openConfigurationTk,
 
 testButton = Button(root, text='Test Camara',command=showPytorchCameraTk, fg='red').pack()
 testButton = Button(root, text='Test download',command=downloadEfficientDet, fg='red').pack()
+testButton = Button(root, text='Test NFC',command=nfc_identifyTk, fg='red').pack()
+testButton = Button(root, text='Test POPUP',command=popupIdentificationTk, fg='red').pack()
 
 exitButton = Button(root, text="Salir", command=root.quit)
 exitButton.pack()
