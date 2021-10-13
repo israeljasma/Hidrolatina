@@ -579,8 +579,8 @@ def showPytorchCameraTk():
     pytorchCameraTk = Toplevel()
     pytorchCameraTk.title('Camara')
     pytorchCameraTk.resizable(False,False)
-    pytorchCameraTk.config(background="#FFFFFF")
-    pytorchCameraTk.overrideredirect(True)
+    pytorchCameraTk.config(background="#cceeff")
+    # pytorchCameraTk.overrideredirect(True)
     pytorchCameraTk.geometry(f'{pytorchCameraTk.winfo_screenwidth()}x{pytorchCameraTk.winfo_screenheight()}')
     # pytorchCameraTk.geometry(f'{1280}x{720}')
  
@@ -590,42 +590,42 @@ def showPytorchCameraTk():
     original_image = image.subsample(1,1)
 
     #Frame Camera
-    cameraFrame = Frame(pytorchCameraTk, width=pytorchCameraTk.winfo_screenwidth()*0.7, height=pytorchCameraTk.winfo_screenheight())
+    cameraFrame = Frame(pytorchCameraTk, width=pytorchCameraTk.winfo_screenwidth()*0.7, height=pytorchCameraTk.winfo_screenheight(), bg='#cceeff')
     cameraFrame.grid(row=0, column=0)
 
     # #Frame detections
-    detectionFrame = Frame(pytorchCameraTk, bg="red", width=pytorchCameraTk.winfo_screenwidth()*0.3, height=pytorchCameraTk.winfo_screenheight())
+    detectionFrame = Frame(pytorchCameraTk, bg="#cceeff", width=pytorchCameraTk.winfo_screenwidth()*0.3, height=pytorchCameraTk.winfo_screenheight())
     detectionFrame.grid(row=0, column=1)
 
     # ##Subs frames lvl 1 detections
-    headFrame = Frame(detectionFrame, bg="blue", width=detectionFrame.winfo_reqwidth(), height=detectionFrame.winfo_reqheight()*0.334)
+    headFrame = Frame(detectionFrame, bg="#b5e6ff", width=detectionFrame.winfo_reqwidth(), height=detectionFrame.winfo_reqheight()*0.334)
     headFrame.grid(row=0, column=0)
 
-    handFrame = Frame(detectionFrame, bg="blue", width=detectionFrame.winfo_reqwidth(), height=detectionFrame.winfo_reqheight()*0.334)
+    handFrame = Frame(detectionFrame, bg="#b5e6ff", width=detectionFrame.winfo_reqwidth(), height=detectionFrame.winfo_reqheight()*0.334)
     handFrame.grid(row=1, column=0)
 
-    bootFrame = Frame(detectionFrame, bg="blue", width=detectionFrame.winfo_reqwidth(), height=detectionFrame.winfo_reqheight()*0.334)
+    bootFrame = Frame(detectionFrame, bg="#b5e6ff", width=detectionFrame.winfo_reqwidth(), height=detectionFrame.winfo_reqheight()*0.334)
     bootFrame.grid(row=2, column=0)
 
     # ###Subs frames lvl 2 headFrame
-    imageHeadFrame = Frame(headFrame, bg="green", width=headFrame.winfo_reqwidth()*0.5, height=headFrame.winfo_reqheight())
+    imageHeadFrame = Frame(headFrame, bg="#b5e6ff", width=headFrame.winfo_reqwidth()*0.5, height=headFrame.winfo_reqheight())
     imageHeadFrame.grid(row=0, column=0)
 
-    dataHeadFrame = Frame(headFrame, bg="green", width=headFrame.winfo_reqwidth()*0.5, height=headFrame.winfo_reqheight())
+    dataHeadFrame = Frame(headFrame, bg="#b5e6ff", width=headFrame.winfo_reqwidth()*0.5, height=headFrame.winfo_reqheight())
     dataHeadFrame.grid(row=0, column=1)
 
     # ###Subs frames lvl 2 handFrame
-    imageHandFrame = Frame(handFrame, bg="green", width=handFrame.winfo_reqwidth()*0.5, height=handFrame.winfo_reqheight())
+    imageHandFrame = Frame(handFrame, bg="#b5e6ff", width=handFrame.winfo_reqwidth()*0.5, height=handFrame.winfo_reqheight())
     imageHandFrame.grid(row=0, column=0)
 
-    dataHandFrame = Frame(handFrame, bg="green", width=handFrame.winfo_reqwidth()*0.5, height=handFrame.winfo_reqheight())
+    dataHandFrame = Frame(handFrame, bg="#b5e6ff", width=handFrame.winfo_reqwidth()*0.5, height=handFrame.winfo_reqheight())
     dataHandFrame.grid(row=0, column=1)
 
     # ###Subs frames lvl 2 bootFrame
-    imageBootFrame = Frame(bootFrame, bg="green", width=bootFrame.winfo_reqwidth()*0.5, height=bootFrame.winfo_reqheight())
+    imageBootFrame = Frame(bootFrame, bg="#b5e6ff", width=bootFrame.winfo_reqwidth()*0.5, height=bootFrame.winfo_reqheight())
     imageBootFrame.grid(row=0, column=0)
 
-    dataBootFrame = Frame(bootFrame, bg="green", width=bootFrame.winfo_reqwidth()*0.5, height=bootFrame.winfo_reqheight())
+    dataBootFrame = Frame(bootFrame, bg="#b5e6ff", width=bootFrame.winfo_reqwidth()*0.5, height=bootFrame.winfo_reqheight())
     dataBootFrame.grid(row=0, column=1)
 
     # ###Label imageHeadFrame Sub frame lvl 2 headFrame
@@ -1033,7 +1033,7 @@ def identify():
         except:
             pass
     time.sleep(2)
-    showPytorchCameraTk()
+    # showPytorchCameraTk()
 
 def nfc_identifyTk():
     # Config tk
