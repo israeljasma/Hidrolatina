@@ -5,6 +5,8 @@ login = Tk()
 login.geometry('350x500+500+50')
 # login.overrideredirect(1)
 login.resizable(0,0)
+login.config(bg='#CCEEFF')
+login.title('Hidrolatina')
 # login.protocol("WM_DELETE_WINDOW")
 
 #Def
@@ -25,20 +27,20 @@ def closeLogin():
 logo = Image.open('images/logo_hidrolatina.png')
 logo = logo.resize((325, 97), Image.ANTIALIAS)
 logo = ImageTk.PhotoImage(logo)
-logoLabel = Label(login, image=logo, width=325, height=97)
+logoLabel = Label(login, image=logo, width=325, height=97, bg='#CCEEFF')
 logoLabel.pack(pady=30)
 
-userLabel = Label(login, text='Usuario').pack()
-userEntry = Entry()
+userLabel = Label(login, text='Usuario', bg='#CCEEFF').pack()
+userEntry = Entry(fg='#c2eaff')
 userEntry.pack()
 
-passwordLabel = Label(login, text='Contraseña').pack()
+passwordLabel = Label(login, text='Contraseña', bg='#CCEEFF').pack()
 passwordEntry = Entry(show='*')
 passwordEntry.pack()
 
-loginButton = Button(login, command=verification, text='Iniciar Sesión').pack()
+loginButton = Button(login, command=verification, text='Iniciar Sesión', bg='#c2eaff').pack()
 
-closeButton = Button(login, text='Salir', command=closeLogin).pack()
+closeButton = Button(login, text='Salir', command=closeLogin, bg='#c2eaff').pack()
 login.mainloop()
 
 # import tkinter as tk
