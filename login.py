@@ -3,11 +3,10 @@ from PIL import Image, ImageTk
 
 login = Tk()
 login.geometry('350x500+500+50')
-# login.overrideredirect(1)
+# login.overrideredirect(True)
 login.resizable(0,0)
 login.config(bg='#CCEEFF')
 login.title('Hidrolatina')
-# login.protocol("WM_DELETE_WINDOW")
 
 #Def
 def verification():
@@ -31,7 +30,7 @@ logoLabel = Label(login, image=logo, width=325, height=97, bg='#CCEEFF')
 logoLabel.pack(pady=30)
 
 userLabel = Label(login, text='Usuario', bg='#CCEEFF').pack()
-userEntry = Entry(fg='#c2eaff')
+userEntry = Entry()
 userEntry.pack()
 
 passwordLabel = Label(login, text='Contraseña', bg='#CCEEFF').pack()
