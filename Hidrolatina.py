@@ -992,6 +992,49 @@ def configCameraTk(configurationTk):
     closeWindow = Button(configCameraTk, text="Cerrar Ventana", command=lambda:closeTk(configurationTk))
     closeWindow.pack()
 
+def identify():
+    from smartcard.CardRequest import CardRequest
+    from smartcard.Exceptions import CardRequestTimeoutException
+    from smartcard.CardType import AnyCardType
+    from smartcard import util
+    import time
+    WAIT_FOR_SECONDS = 60
+    # respond to the insertion of any type of smart card
+    card_type = AnyCardType()
+
+    # create the request. Wait for up to x seconds for a card to be attached
+    request = CardRequest(timeout=WAIT_FOR_SECONDS, cardType=card_type)
+
+    while True:
+        # listen for the card
+        service = None
+        try:
+            service = request.waitforcard()
+        except CardRequestTimeoutException:
+            print("Tarjeta no detectada")
+            # could add "exit(-1)" to make code terminate
+
+        # when a card is attached, open a connection
+        try:
+            conn = service.connection
+            conn.connect()
+
+            # get the ATR and UID of the card
+            get_uid = util.toBytes("FF CA 00 00 00")
+            data, sw1, sw2 = conn.transmit(get_uid)
+            uid = util.toHexString(data)
+            status = util.toHexString([sw1, sw2])
+            if uid == "44 CE 4A 0B":
+
+            # print the ATR and UID of the card
+            # print("ATR = {}".format(util.toHexString(conn.getATR())))
+                print("Operador Reconocido")
+                break
+        except:
+            pass
+    time.sleep(2)
+    showPytorchCameraTk()
+
 def nfc_identifyTk():
     # Config tk
     NFC_Tk = Toplevel()
@@ -1017,11 +1060,11 @@ def nfc_identifyTk():
     NFC_Tk.geometry("1280x720")
 
     #Def
-    def thread_identify(que):
-        thread = Thread(target=NFC.identify,args=(que,))
-        thread.start()
-        time.sleep(2)
-        showPytorchCameraTk()
+    def thread_identify():
+        while True:
+            NFC.testnfc()
+        # thread = Thread(target=NFC.identify, args=(q,))
+        # thread.start()
         return True
 
     def closeTk():
@@ -1064,9 +1107,21 @@ def nfc_identifyTk():
     #Buttons Tk
     # Button(NFC_Tk, text="Cerrar Ventana", command=lambda:closeTk()).pack(pady=10)
 
-    que = Queue()
+    # que = Queue()
     #Code
-    thread_identify(que)
+    q = queue.Queue()
+    def myfunc(a1,a2):
+        while True:
+            print(a1,a2)
+            time.sleep(1)
+
+    # threead = Thread(target=myfunc, args=('test','arg2'))
+    # threead.start()
+    # time.sleep(1)
+    thread= Thread(target=identify, args=())
+    thread.start()
+    # if bool:
+    #     showPytorchCameraTk
     
     # thre = Thread(thread_identify, args=(que,))
     # thre.start()
