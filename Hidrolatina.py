@@ -1040,7 +1040,8 @@ def nfc_identifyTk():
     NFC_Tk = Toplevel()
     NFC_Tk.resizable(False,False)
     NFC_Tk.title("Identificación")
-    # NFC_Tk.overrideredirect(True)
+    NFC_Tk.overrideredirect(True)
+    NFC_Tk.geometry(f'{NFC_Tk.winfo_screenwidth()}x{NFC_Tk.winfo_screenheight()}')
 
     # width = 300
     # height = 300
@@ -1056,7 +1057,7 @@ def nfc_identifyTk():
     print(NFC_Tk.winfo_screenwidth())
     print(NFC_Tk.winfo_screenheight())
     # NFC_Tk.geometry(f'{NFC_Tk.winfo_screenwidth()}x{NFC_Tk.winfo_screenheight()}')
-    NFC_Tk.geometry("1280x720")
+    # NFC_Tk.geometry("1280x720")
 
     #Def
     def time_string():
@@ -1082,19 +1083,27 @@ def nfc_identifyTk():
     # root.withdraw()
 
     # Frame
-    NFCFrame = Frame(NFC_Tk, width=1280, height=720, bg='#CCEEFF')
+    NFCFrame = Frame(NFC_Tk, width=NFC_Tk.winfo_screenwidth(), height=NFC_Tk.winfo_screenheight(), bg='#CCEEFF')
     NFCFrame.grid()
+    global imageFrame
+    imageFrame = Image.open('images/waiting_identification.png')
+    imageFrame = imageFrame.resize((round(NFCFrame.winfo_reqwidth()), round(NFCFrame.winfo_reqheight())), Image.ANTIALIAS)
+    imageFrame = ImageTk.PhotoImage(imageFrame)
+    imageTestFrame = Label(NFCFrame, image=imageFrame)
+    imageTestFrame.grid(row=0, column=0)
 
-    # Create left and right frames
-    left_frame = Frame(NFCFrame, width=round(NFCFrame.winfo_reqwidth()*0.5), height=round(NFCFrame.winfo_reqheight()), bg='#CCEEFF')
-    left_frame.grid(row=0, column=0)
+    # print(imageTestFrame.winfo_reqwidth(), imageTestFrame.winfo_reqheight())
 
-    print(round(left_frame.winfo_reqwidth()), left_frame.winfo_reqheight())
+    # # Create left and right frames
+    # left_frame = Frame(NFCFrame, width=round(NFCFrame.winfo_reqwidth()*0.5), height=round(NFCFrame.winfo_reqheight()), bg='#CCEEFF')
+    # left_frame.grid(row=0, column=0)
 
-    right_frame = Frame(NFCFrame, width=round(NFCFrame.winfo_reqwidth()*0.5), height=round(NFCFrame.winfo_reqheight()), bg='#CCEEFF')
-    right_frame.grid(row=0, column=1)
+    # print(round(left_frame.winfo_reqwidth()), left_frame.winfo_reqheight())
 
-    print(round(right_frame.winfo_reqwidth()), right_frame.winfo_reqheight())
+    # right_frame = Frame(NFCFrame, width=round(NFCFrame.winfo_reqwidth()*0.5), height=round(NFCFrame.winfo_reqheight()), bg='#CCEEFF')
+    # right_frame.grid(row=0, column=1)
+
+    # print(round(right_frame.winfo_reqwidth()), right_frame.winfo_reqheight())
 
     # # Divide right frame
     # up_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.15, bg='#CCEEFF')
@@ -1102,40 +1111,36 @@ def nfc_identifyTk():
 
     # print(up_frame_right_frame.winfo_reqwidth(), up_frame_right_frame.winfo_reqheight())
 
-    # # # middle_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.65, bg='green')
-    # # # middle_frame_right_frame.grid(row=1, column=0)
+    # # # # middle_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.65, bg='green')
+    # # # # middle_frame_right_frame.grid(row=1, column=0)
 
     # down_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.85, bg='#CCEEFF')
     # down_frame_right_frame.grid(row=1, column=0)
 
     # print(down_frame_right_frame.winfo_reqwidth(), down_frame_right_frame.winfo_reqheight())
 
-    # Labels left_frame
-    global imageWaitDetectionLeft
-    xImage = 640
-    yImage = 720
-    # detections = Image.open('images/approved_detections.png')
-    # detections = detections.resize((xImage, yImage), Image.ANTIALIAS)
-    # detections = ImageTk.PhotoImage(detections)
-    imageWaitDetectionLeft = Image.open('images/waiting_identification_left.png')
-    imageWaitDetectionLeft = imageWaitDetectionLeft.resize((xImage, yImage), Image.ANTIALIAS)
-    imageWaitDetectionLeft = ImageTk.PhotoImage(imageWaitDetectionLeft)
-    # xImage = left_frame.winfo_screenmmwidth()
-    # yImage = left_frame.winfo_screenmmheight()
-    imageLabelLeft_Frame = Label(left_frame, image=imageWaitDetectionLeft)
-    imageLabelLeft_Frame.grid(row=0, column=0)
+    # # Labels left_frame
+    # global imageWaitDetectionLeft
+    # xImage = 640
+    # yImage = 720
+    # imageWaitDetectionLeft = Image.open('images/waiting_identification_left.png')
+    # imageWaitDetectionLeft = imageWaitDetectionLeft.resize((round(NFCFrame.winfo_reqwidth()*0.5), round(NFCFrame.winfo_reqheight())), Image.ANTIALIAS)
+    # imageWaitDetectionLeft = ImageTk.PhotoImage(imageWaitDetectionLeft)
+    # imageLabelLeft_Frame = Label(left_frame, image=imageWaitDetectionLeft)
+    # imageLabelLeft_Frame.grid(row=0, column=0)
 
     # print(imageLabelLeft_Frame.winfo_reqwidth(), imageLabelLeft_Frame.winfo_reqheight())
+    # # print(imageLabelLeft_Frame.winfo_reqwidth(), imageLabelLeft_Frame.winfo_reqheight())
 
     # # Labels up_frame_right_frame
-    # timeLabel = Label(up_frame_right_frame, text=time_string(), bg='red', font=('Digital-7', 10))
+    # timeLabel = Label(up_frame_right_frame, text=time_string(), bg='#CCEEFF', font=('Digital-7', 62))
     # timeLabel.grid()
 
     # global imageWaitDetectionRight
     # imageWaitDetectionRight = Image.open('images/waiting_identification_right.png')
-    # imageWaitDetectionRight = imageWaitDetectionRight.resize((right_frame.winfo_reqwidth(), right_frame.winfo_reqheight()), Image.ANTIALIAS)
+    # imageWaitDetectionRight = imageWaitDetectionRight.resize((640, 612), Image.ANTIALIAS)
     # imageWaitDetectionRight = ImageTk.PhotoImage(imageWaitDetectionRight)
-    # imageLabelRight_frameDown = Label(right_frame, image=imageWaitDetectionRight, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight())
+    # imageLabelRight_frameDown = Label(right_frame, image=imageWaitDetectionRight)
     # imageLabelRight_frameDown.grid(row=1, column=0)
 
     # timeLabel = Label(up_frame_right_frame, text=time_string(), bg='red', font=('Digital-7', 40))
@@ -1169,11 +1174,11 @@ def nfc_identifyTk():
 
     # que = Queue()
     #Code
-    q = queue.Queue()
-    def myfunc(a1,a2):
-        while True:
-            print(a1,a2)
-            time.sleep(1)
+    # q = queue.Queue()
+    # def myfunc(a1,a2):
+    #     while True:
+    #         print(a1,a2)
+    #         time.sleep(1)
 
     # threead = Thread(target=myfunc, args=('test','arg2'))
     # threead.start()
