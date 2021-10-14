@@ -1039,7 +1039,6 @@ def nfc_identifyTk():
     # Config tk
     NFC_Tk = Toplevel()
     NFC_Tk.resizable(False,False)
-    # NFC_Tk.protocol("WM_DELETE_WINDOW", exit)
     NFC_Tk.title("Identificación")
     # NFC_Tk.overrideredirect(True)
 
@@ -1060,6 +1059,14 @@ def nfc_identifyTk():
     NFC_Tk.geometry("1280x720")
 
     #Def
+    def time_string():
+        return time.strftime('%H:%M:%S')
+
+    # def update():
+    #     timeLabel.configure(text=time_string())
+    #     # Recursive
+    #     timeLabel.after(1000, update)
+
     def thread_identify():
         while True:
             NFC.testnfc()
@@ -1074,27 +1081,80 @@ def nfc_identifyTk():
     #Hide Root Window
     # root.withdraw()
 
+    # Frame
+    NFCFrame = Frame(NFC_Tk, width=1280, height=720, bg='#CCEEFF')
+    NFCFrame.grid()
+
     # Create left and right frames
-    left_frame = Frame(NFC_Tk, width=1280*0.6, height=720, bg='grey')
+    left_frame = Frame(NFCFrame, width=round(NFCFrame.winfo_reqwidth()*0.5), height=round(NFCFrame.winfo_reqheight()), bg='#CCEEFF')
     left_frame.grid(row=0, column=0)
 
-    right_frame = Frame(NFC_Tk, width=1280*0.4, height=720, bg='red')
+    print(round(left_frame.winfo_reqwidth()), left_frame.winfo_reqheight())
+
+    right_frame = Frame(NFCFrame, width=round(NFCFrame.winfo_reqwidth()*0.5), height=round(NFCFrame.winfo_reqheight()), bg='#CCEEFF')
     right_frame.grid(row=0, column=1)
 
-    # Divide right frame
-    up_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.7, bg='green')
-    up_frame_right_frame.grid(row=0, column=0)
+    print(round(right_frame.winfo_reqwidth()), right_frame.winfo_reqheight())
 
-    down_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.3, bg='blue')
-    down_frame_right_frame.grid(row=1, column=0)
+    # # Divide right frame
+    # up_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.15, bg='#CCEEFF')
+    # up_frame_right_frame.grid(row=0, column=0)
 
-    # Labels up_frame_right_frame
-    print(right_frame.winfo_reqheight()*0.3)
-    labelText = Label(up_frame_right_frame, text='Esperando Identificación ....')
-    labelText.config(font=('Helvatical bold',20))
-    labelText.grid(pady=(right_frame.winfo_reqheight()*0.7-labelText.winfo_reqheight())/2)
+    # print(up_frame_right_frame.winfo_reqwidth(), up_frame_right_frame.winfo_reqheight())
 
-    print((right_frame.winfo_reqheight()*0.3-labelText.winfo_reqheight())/2)
+    # # # middle_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.65, bg='green')
+    # # # middle_frame_right_frame.grid(row=1, column=0)
+
+    # down_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.85, bg='#CCEEFF')
+    # down_frame_right_frame.grid(row=1, column=0)
+
+    # print(down_frame_right_frame.winfo_reqwidth(), down_frame_right_frame.winfo_reqheight())
+
+    # Labels left_frame
+    global imageWaitDetectionLeft
+    xImage = 640
+    yImage = 720
+    # detections = Image.open('images/approved_detections.png')
+    # detections = detections.resize((xImage, yImage), Image.ANTIALIAS)
+    # detections = ImageTk.PhotoImage(detections)
+    imageWaitDetectionLeft = Image.open('images/waiting_identification_left.png')
+    imageWaitDetectionLeft = imageWaitDetectionLeft.resize((xImage, yImage), Image.ANTIALIAS)
+    imageWaitDetectionLeft = ImageTk.PhotoImage(imageWaitDetectionLeft)
+    # xImage = left_frame.winfo_screenmmwidth()
+    # yImage = left_frame.winfo_screenmmheight()
+    imageLabelLeft_Frame = Label(left_frame, image=imageWaitDetectionLeft)
+    imageLabelLeft_Frame.grid(row=0, column=0)
+
+    # print(imageLabelLeft_Frame.winfo_reqwidth(), imageLabelLeft_Frame.winfo_reqheight())
+
+    # # Labels up_frame_right_frame
+    # timeLabel = Label(up_frame_right_frame, text=time_string(), bg='red', font=('Digital-7', 10))
+    # timeLabel.grid()
+
+    # global imageWaitDetectionRight
+    # imageWaitDetectionRight = Image.open('images/waiting_identification_right.png')
+    # imageWaitDetectionRight = imageWaitDetectionRight.resize((right_frame.winfo_reqwidth(), right_frame.winfo_reqheight()), Image.ANTIALIAS)
+    # imageWaitDetectionRight = ImageTk.PhotoImage(imageWaitDetectionRight)
+    # imageLabelRight_frameDown = Label(right_frame, image=imageWaitDetectionRight, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight())
+    # imageLabelRight_frameDown.grid(row=1, column=0)
+
+    # timeLabel = Label(up_frame_right_frame, text=time_string(), bg='red', font=('Digital-7', 40))
+    # timeLabel.grid()
+    
+    # labelText = Label(middle_frame_right_frame, text='Esperando Identificación ....')
+    # labelText.config(font=('Helvatical bold',20))
+    # labelText.grid()
+    # # pady=(right_frame.winfo_reqheight()*0.65-labelText.winfo_reqheight())/2
+    # testLabel = Label(down_frame_right_frame, text=time_string(), bg='magenta')
+    # testLabel.grid()
+
+    
+    # timeLabel.after(1000, update)
+    # print((right_frame.winfo_reqheight()*0.3-labelText.winfo_reqheight())/2)
+
+    # print(up_frame_right_frame.winfo_reqwidth(), up_frame_right_frame.winfo_reqheight())
+    # print(middle_frame_right_frame.winfo_reqwidth(), middle_frame_right_frame.winfo_reqheight())
+    # print(down_frame_right_frame.winfo_reqwidth(), down_frame_right_frame.winfo_reqheight())
     # labelText = Label(down_frame_right_frame, text='dsdsd ....')
     # labelText.grid()
 
@@ -1118,8 +1178,8 @@ def nfc_identifyTk():
     # threead = Thread(target=myfunc, args=('test','arg2'))
     # threead.start()
     # time.sleep(1)
-    thread= Thread(target=identify, args=())
-    thread.start()
+    # thread= Thread(target=identify, args=())
+    # thread.start()
     # if bool:
     #     showPytorchCameraTk
     
@@ -1152,17 +1212,17 @@ def popupIdentificationTk(booleanAnswer):
 
     #Code
     if booleanAnswer:
-        detecctions = Image.open('images/approved_detections.png')
-        detecctions = detecctions.resize((popupIdentificationTk.winfo_screenwidth(), popupIdentificationTk.winfo_screenheight()), Image.ANTIALIAS)
-        detecctions = ImageTk.PhotoImage(detecctions)
+        detections = Image.open('images/approved_detections.png')
+        detections = detections.resize((popupIdentificationTk.winfo_screenwidth(), popupIdentificationTk.winfo_screenheight()), Image.ANTIALIAS)
+        detections = ImageTk.PhotoImage(detections)
     else:
-        detecctions = Image.open('images/unapproved_detections.png')
-        detecctions = detecctions.resize((popupIdentificationTk.winfo_screenwidth(), popupIdentificationTk.winfo_screenheight()), Image.ANTIALIAS)
-        detecctions = ImageTk.PhotoImage(detecctions)
+        detections = Image.open('images/unapproved_detections.png')
+        detections = detections.resize((popupIdentificationTk.winfo_screenwidth(), popupIdentificationTk.winfo_screenheight()), Image.ANTIALIAS)
+        detections = ImageTk.PhotoImage(detections)
 
     imageFrame = Frame(popupIdentificationTk, width=popupIdentificationTk.winfo_screenwidth(), height=popupIdentificationTk.winfo_screenheight())
     imageFrame.grid(row=0, column=0)
-    imageLabel = Label(imageFrame, image=detecctions)
+    imageLabel = Label(imageFrame, image=detections)
     imageLabel.pack()
 
     # Create top, middle and bottom frames
