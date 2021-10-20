@@ -156,6 +156,7 @@ def importMDETER():
         memory_cache = model(img, [caption], encode_and_save=True)
         outputs = model(img, [caption], encode_and_save=False, memory_cache=memory_cache)
 
+        global probas, keep
         # keep only predictions with 0.7+ confidence
         probas = 1 - outputs['pred_logits'].softmax(-1)[0, :, -1].cpu()
         keep = (probas > 0.7).cpu()
@@ -437,13 +438,13 @@ def MDETR(im):
     # im = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
     # im = Image.fromarray(imagencamera)
     plot_inference(im, "a hand")
-    im_hand=im.crop((bboxes[len(bboxes)-1]))
+    im_hand=im.crop((bboxes[argmax(probas[keep])]))
     plot_inference(im, "a tiny head")
     global im_head
-    im_head=im.crop((bboxes[len(bboxes)-1]))
+    im_head=im.crop((bboxes[argmax(probas[keep])]))
     plot_inference(im, "a rain boot")
     global im_boot
-    im_boot=im.crop((bboxes[len(bboxes)-1]))
+    im_boot=im.crop((bboxes[argmax(probas[keep])]))
     # cropPersonHead = imageClip(im_head, "")
     # listImagenClip.append(cropPersonHead)
     # im_head.save('clip/cropped_head.jpg')
@@ -456,7 +457,7 @@ def MDETR(im):
     # cropPersonHand = imageClip(ImageTk.PhotoImage(im_hand), 'Gloves: '+gloves)
     # listImagenClip.append(cropPersonHand)
 
-    objectListMDETR= {'im_head':im_head.resize((150,150)), 'im_hand': im_hand.resize((150,150)), 'im_boot': im_boot.resize((150,150))}
+    objectListMDETR= {'im_head':im_head, 'im_hand': im_hand, 'im_boot': im_boot}
     return objectListMDETR
 
 def loadClip():
@@ -468,9 +469,9 @@ def loadClip():
     # class_names={'im_head': [['helmet','no_helmet'], ['mask', 'no_mask'], ['goggles', 'no_goggles'], ['headphones', 'no_headphones']],
     #             'im_hand':[['gloves', 'no_gloves']],
     #             'im_boot': [['boots', 'no boots']]}
-    candidate_captions={'im_head': [['a head with a helmet','Just a head'], ['Head with headphones', 'Just a head'],['a Head with a goggle', 'Just a head'],['Head with a medical mask', 'Just a head']],
+    candidate_captions={'im_head': [['a white hat','A head'], ['big black headphone', 'A head'],['head with glasses', 'A face'],['Mask', 'Just a head']],
                 'im_hand':[['A blue hand', 'A pink hand']],
-                'im_boot':[['A large black boot', 'Just a thing']]}
+                'im_boot':[['a large boot', 'a small shoe']]}
 
     global argmax
     def argmax(iterable):
@@ -774,15 +775,19 @@ def showPytorchCameraTk():
                 labelVideo.imgtk = copy_imgtk
                 global mdetr_list
                 mdetr_list=MDETR(im)
-
+################################################ CORRERGIR ###############################################
+################################################ CORRERGIR ###############################################
+################################################ CORRERGIR ###############################################
                 # print(mdetr_list)
                 global listImagenClip
                 for bodypart in mdetr_list.keys():
-                    listImagenClip.append(imageClip(ImageTk.PhotoImage(mdetr_list[bodypart]), clip(bodypart)))
+                    listImagenClip.append(imageClip(ImageTk.PhotoImage(mdetr_list[bodypart].resize((150,150))), clip(bodypart)))
                     # print(bodypart)
                 
-                updateLabelTest()
-                
+                updateLabel()
+################################################ CORRERGIR ###############################################
+################################################ CORRERGIR ###############################################
+################################################ CORRERGIR ###############################################
                 
         if det<20:
             labelVideo.after(10, showFrame)
@@ -1107,8 +1112,8 @@ def nfc_identifyTk():
     #Buttons Tk
     # Button(NFC_Tk, text="Cerrar Ventana", command=lambda:closeTk()).pack(pady=10)
 
-    thread= Thread(target=NFC.identify, args=())
-    thread.start()
+    # thread= Thread(target=NFC.identify, args=())
+    # thread.start()
 
     # thread.join()
 
@@ -1120,61 +1125,70 @@ def popupIdentificationTk(booleanAnswer):
     popupIdentificationTk.overrideredirect(True)
     popupIdentificationTk.geometry(f'{popupIdentificationTk.winfo_screenwidth()}x{popupIdentificationTk.winfo_screenheight()}')
     # popupIdentificationTk.geometry("1280x720")
-    
-    #Globals
-    global detecctions
-
-    #Def
 
     #Code
+
+    PopUpIdentificationFrame = Frame(popupIdentificationTk, width=popupIdentificationTk.winfo_screenwidth(), height=popupIdentificationTk.winfo_screenheight(), bg='#CCEEFF')
+    PopUpIdentificationFrame.grid()
+
     if booleanAnswer:
+        global detections
         detections = Image.open('images/approved_detections.png')
-        detections = detections.resize((popupIdentificationTk.winfo_screenwidth(), popupIdentificationTk.winfo_screenheight()), Image.ANTIALIAS)
+        detections = detections.resize((PopUpIdentificationFrame.winfo_reqwidth(), PopUpIdentificationFrame.winfo_reqheight()), Image.ANTIALIAS)
         detections = ImageTk.PhotoImage(detections)
+
+        imageFrame = Frame(PopUpIdentificationFrame, width=PopUpIdentificationFrame.winfo_reqwidth(), height=PopUpIdentificationFrame.winfo_reqheight())
+        imageFrame.grid(row=0, column=0)
+        imageLabel = Label(imageFrame, image=detections)
+        imageLabel.pack()
+    
     else:
-        detections = Image.open('images/unapproved_detections.png')
-        detections = detections.resize((popupIdentificationTk.winfo_screenwidth(), popupIdentificationTk.winfo_screenheight()), Image.ANTIALIAS)
-        detections = ImageTk.PhotoImage(detections)
-
-    imageFrame = Frame(popupIdentificationTk, width=popupIdentificationTk.winfo_screenwidth(), height=popupIdentificationTk.winfo_screenheight())
-    imageFrame.grid(row=0, column=0)
-    imageLabel = Label(imageFrame, image=detections)
-    imageLabel.pack()
-
-    # Create top, middle and bottom frames
-    # top_frame = Frame(popupIdentificationTk, width=1280, height=720*0.2, bg='grey')
-    # top_frame.grid(row=0, column=0)
+        global imageTop, imageMiddleLeft, imageMiddleRight, imageBottom
+        # Create top, middle and bottom frames
+        top_frame = Frame(PopUpIdentificationFrame, width=round(PopUpIdentificationFrame.winfo_reqwidth()), height=round(PopUpIdentificationFrame.winfo_reqheight()*0.19), bg='#CCEEFF')
+        top_frame.grid(row=0, column=0)
     
+        middle_frame = Frame(PopUpIdentificationFrame, width=round(PopUpIdentificationFrame.winfo_reqwidth()), height=round(PopUpIdentificationFrame.winfo_reqheight()*0.51), bg='#CCEEFF')
+        middle_frame.grid(row=1, column=0)
 
-    # middle_frame = Frame(popupIdentificationTk, width=1280, height=720*0.6, bg='green')
-    # middle_frame.grid(row=1, column=0)
+        bottom_frame = Frame(PopUpIdentificationFrame, width=round(PopUpIdentificationFrame.winfo_reqwidth()), height=round(PopUpIdentificationFrame.winfo_reqheight()*0.3), bg='#CCEEFF')
+        bottom_frame.grid(row=2, column=0)
 
-    # bottom_frame = Frame(popupIdentificationTk, width=1280, height=720*0.2, bg='blue')
-    # bottom_frame.grid(row=2, column=0)
+        # # Divide middle frame
+        left_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.4, height=middle_frame.winfo_reqheight(), bg='#CCEEFF')
+        left_middle_frame.grid(row=0, column=0)
 
-    # # # Divide top frame
-    # left_top_frame = Frame(top_frame, width=top_frame.winfo_reqwidth()*0.5, height=top_frame.winfo_reqheight(), bg='green')
-    # left_top_frame.grid(row=0, column=0)
+        right_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.6, height=middle_frame.winfo_reqheight(), bg='#CCEEFF')
+        right_middle_frame.grid(row=0, column=1)
 
-    # right_top_frame = Frame(top_frame, width=top_frame.winfo_reqwidth()*0.5, height=top_frame.winfo_reqheight(), bg='orange')
-    # right_top_frame.grid(row=0, column=1)
+        # Labels Top Frame
+        imageTop = Image.open('images/unapproved_detections_top.png')
+        imageTop = imageTop.resize((top_frame.winfo_reqwidth(), top_frame.winfo_reqheight()), Image.ANTIALIAS)
+        imageTop = ImageTk.PhotoImage(imageTop)
 
-    # # # Divide middle frame
-    # left_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.32, height=middle_frame.winfo_reqheight(), bg='purple')
-    # left_middle_frame.grid(row=0, column=0)
+        imageMiddleLeft = Image.open('images/unapproved_detections_middle_left.png')
+        imageMiddleLeft = imageMiddleLeft.resize((left_middle_frame.winfo_reqwidth(), left_middle_frame.winfo_reqheight()), Image.ANTIALIAS)
+        imageMiddleLeft = ImageTk.PhotoImage(imageMiddleLeft)
 
-    # middle_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.36, height=middle_frame.winfo_reqheight(), bg='red')
-    # middle_middle_frame.grid(row=0, column=2)
+        imageMiddleRight = Image.open('images/unapproved_detections_middle_right.png')
+        imageMiddleRight = imageMiddleRight.resize((right_middle_frame.winfo_reqwidth(), right_middle_frame.winfo_reqheight()), Image.ANTIALIAS)
+        imageMiddleRight = ImageTk.PhotoImage(imageMiddleRight)
 
-    # right_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.32, height=middle_frame.winfo_reqheight(), bg='purple')
-    # right_middle_frame.grid(row=0, column=3)
+        imageBottom = Image.open('images/unapproved_detections_bottom.png')
+        imageBottom = imageBottom.resize((bottom_frame.winfo_reqwidth(), bottom_frame.winfo_reqheight()), Image.ANTIALIAS)
+        imageBottom = ImageTk.PhotoImage(imageBottom)
 
-    # # # Divide bottom frame
-    # left_top_frame = Frame(bottom_frame, width=bottom_frame.winfo_reqwidth()*0.5, height=bottom_frame.winfo_reqheight(), bg='orange')
-    # left_top_frame.grid(row=0, column=0)
-    
-    # right_top_frame = Frame(bottom_frame, width=bottom_frame.winfo_reqwidth()*0.5, height=bottom_frame.winfo_reqheight(), bg='green')
-    # right_top_frame.grid(row=0, column=1)
+        imageTopLabel = Label(top_frame, image=imageTop, width=top_frame.winfo_reqwidth(), height=top_frame.winfo_reqheight(), borderwidth=0)
+        imageTopLabel.grid(row=0, column=0)
+
+        imageMiddleLeftLabel = Label(left_middle_frame, image=imageMiddleLeft, width=left_middle_frame.winfo_reqwidth(), height=left_middle_frame.winfo_reqheight(), borderwidth=0)
+        imageMiddleLeftLabel.grid(row=0, column=0)
+
+        imageMiddleRightLabel = Label(right_middle_frame, image=imageMiddleRight, width=right_middle_frame.winfo_reqwidth(), height=right_middle_frame.winfo_reqheight(), borderwidth=0)
+        imageMiddleRightLabel.grid(row=0, column=0)
+
+        imageBottomLabel = Label(bottom_frame, image=imageBottom, width=bottom_frame.winfo_reqwidth(), height=bottom_frame.winfo_reqheight(), borderwidth=0)
+        imageBottomLabel.grid(row=0, column=0)
 
     #Buttons Tk
     # Button(NFC_Tk, text="Cerrar Ventana", command=lambda:closeTk()).pack(pady=10)
