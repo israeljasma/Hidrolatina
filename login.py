@@ -1,5 +1,8 @@
 from tkinter import *
 from PIL import Image, ImageTk
+from Services import API_Services
+
+from tkinter import messagebox
 
 login = Tk()
 login.geometry('350x500+500+50')
@@ -12,12 +15,11 @@ login.title('Hidrolatina')
 def verification():
     user = userEntry.get()
     password = passwordEntry.get()
-    print(user, password)
-    if user == 'hidrolatina' or password == 'password':
-        print("oka")
+    person = API_Services.login(user, password)
+    if 'token' in person:
+        messagebox.showinfo(message=[person['user']['name'], person['user']['last_name']], title="Login")
     else:
-        print("Credenciales incorrectas")
-    return
+        messagebox.showinfo(message=person['error'], title="Login")
 
 def closeLogin():
     login.destroy()
