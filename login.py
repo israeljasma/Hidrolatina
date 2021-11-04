@@ -1,8 +1,9 @@
 from tkinter import *
 from PIL import Image, ImageTk
 from Services import API_Services
-
 from tkinter import messagebox
+
+from UserClass import Person
 
 login = Tk()
 login.geometry('350x500+500+50')
@@ -17,6 +18,7 @@ def verification():
     password = passwordEntry.get()
     person = API_Services.login(user, password)
     if 'token' in person:
+        user = Person(person['user']['name'], person['user']['last_name'], person['user']['email'], person['token'])
         messagebox.showinfo(message=[person['user']['name'], person['user']['last_name']], title="Login")
     else:
         messagebox.showinfo(message=person['error'], title="Login")
