@@ -13,6 +13,9 @@ import platform
 import time
 from multiprocessing import Queue
 from threading import Thread
+
+from Services import API_Services
+from UserClass import Person
 # from varname import varname, nameof
 
 from numpy import CLIP
@@ -529,22 +532,42 @@ def loadALL():
 
 ########Windows#######
 
-root = Tk()
-root.title("Softmaking")
-root.resizable(False,False)
-#root.iconbitmap("logo-sm.ico")
+# root = Tk()
+# root.title("Softmaking")
+# root.resizable(False,False)
+# root.config(background="#cceeff")
+# root.resizable(False,False)
+# root.overrideredirect(True)
+# root.geometry(f'{root.winfo_screenwidth()}x{root.winfo_screenheight()}')
+
+# #Frame
+# rootFrame = Frame(root, width=round(root.winfo_screenwidth()), height=round(root.winfo_screenheight()), bg='#cceeff')
+# rootFrame.grid()
+
+# topFrame = Frame(rootFrame, width=round(rootFrame.winfo_reqwidth()), height=rootFrame.winfo_reqheight()*0.4, bg='#cceeff')
+# topFrame.grid(row=0, column=0)
+
+# bottomFrame = Frame(rootFrame, width=round(rootFrame.winfo_reqwidth()), height=rootFrame.winfo_reqheight()*0.6, bg='#cceeff')
+# bottomFrame.grid(row=1, column=0)
+
+# imageLogoRoot = Image.open('images/logo_hidrolatina.png')
+# imageLogoRoot = imageLogoRoot.resize((round(topFrame.winfo_reqwidth()), round(topFrame.winfo_reqheight())), Image.ANTIALIAS)
+# imageLogoRoot = ImageTk.PhotoImage(imageLogoRoot)
+
+# imageLabelLeft_Frame = Label(topFrame, image=imageLogoRoot, bg='#cceeff', borderwidth=0)
+# imageLabelLeft_Frame.grid(row=0, column=0)
 
 #Center windows
-app_width = 300
-app_height = 300
+# app_width = 300
+# app_height = 300
 
-screen_width = root.winfo_screenwidth()
-screen_height = root.winfo_screenheight()
+# screen_width = root.winfo_screenwidth()
+# screen_height = root.winfo_screenheight()
 
-x = (screen_width/2) - (app_width/2)
-y = (screen_height/2) - (app_height/2)
+# x = (screen_width/2) - (app_width/2)
+# y = (screen_height/2) - (app_height/2)
 
-root.geometry(f'{app_width}x{app_height}+{int(x)}+{int(y)}')
+# root.geometry(f'{app_width}x{app_height}+{int(x)}+{int(y)}')
 
 #Def
 def popup(message):
@@ -1117,7 +1140,7 @@ def nfc_identifyTk():
 
     # thread.join()
 
-def popupIdentificationTk(booleanAnswer):
+def popupIdentificationTk(booleanAnswer=False):
     # Config tk
     popupIdentificationTk = Toplevel()
     popupIdentificationTk.resizable(False,False)
@@ -1309,19 +1332,64 @@ def openConfigurationTk():
     closeWindow.pack()
 
 #Buttons
-clearMDETRyButton = Button(root, text='Limpiar Cache', command=clearCacheMDETR).pack()
-loadALLButton=  Button(root, text='Cargar Dependencias', command=loadALL).pack()
-# MDETRButton = Button(root, text='MDETR', command=MDETR).pack()
-# clipButton = Button(root, text='Clip', command=clip).pack()
-# showImageClipButton = Button(root, text='Resultados', command=checkListImagenClip).pack()
-configButton = Button(root, text='Configuraciones', command=openConfigurationTk, fg='blue').pack()
+# clearMDETRyButton = Button(bottomFrame, text='Limpiar Cache', command=clearCacheMDETR).grid()
+# loadALLButton=  Button(bottomFrame, text='Cargar Dependencias', command=loadALL).grid()
+# # # MDETRButton = Button(root, text='MDETR', command=MDETR).pack()
+# # # clipButton = Button(root, text='Clip', command=clip).pack()
+# # # showImageClipButton = Button(root, text='Resultados', command=checkListImagenClip).pack()
+# configButton = Button(bottomFrame, text='Configuraciones', command=openConfigurationTk, fg='blue').grid()
 
-testButton = Button(root, text='Test Camara',command=showPytorchCameraTk, fg='red').pack()
-testButton = Button(root, text='Test download',command=downloadEfficientDet, fg='red').pack()
-testButton = Button(root, text='Test NFC',command=nfc_identifyTk, fg='red').pack()
-testButton = Button(root, text='Test POPUP',command=popupIdentificationTk, fg='red').pack()
+# testButton = Button(bottomFrame, text='Test Camara',command=showPytorchCameraTk, fg='red').grid()
+# testButton = Button(bottomFrame, text='Test download',command=downloadEfficientDet, fg='red').grid()
+# testButton = Button(bottomFrame, text='Test NFC',command=nfc_identifyTk, fg='red').grid()
+# testButton = Button(bottomFrame, text='Test POPUP',command=popupIdentificationTk, fg='red').grid()
 
-exitButton = Button(root, text="Salir", command=root.quit)
-exitButton.pack()
+# exitImageButton = Image.open('images/exit2.png')
+# # exitImageButton = imageLogoRoot.resize((round(topFrame.winfo_reqwidth()), round(topFrame.winfo_reqheight())), Image.ANTIALIAS)
+# exitImageButton = ImageTk.PhotoImage(exitImageButton)
 
+# exitButton = Button(bottomFrame, text="Salir", image=exitImageButton, command=root.quit, bg='#cceeff', activebackground='#cceeff', borderwidth=0)
+# exitButton.grid()
+
+# root.mainloop()
+
+############ Start App ############
+root = Tk()
+root.geometry('350x500+500+50')
+root.resizable(0,0)
+root.config(bg='#CCEEFF')
+root.title('Hidrolatina')
+
+#Def
+def verification():
+    user = userEntry.get()
+    password = passwordEntry.get()
+    person = API_Services.login(user, password)
+    if 'token' in person:
+        user = Person(person['user']['name'], person['user']['last_name'], person['user']['email'], person['token'])
+        messagebox.showinfo(message=[person['user']['name'], person['user']['last_name']], title="Login")
+    else:
+        messagebox.showinfo(message=person['error'], title="Login")
+
+def closeLogin():
+    root.destroy()
+    root.quit()
+
+logo = Image.open('images/logo_hidrolatina.png')
+logo = logo.resize((325, 97), Image.ANTIALIAS)
+logo = ImageTk.PhotoImage(logo)
+logoLabel = Label(root, image=logo, width=325, height=97, bg='#CCEEFF')
+logoLabel.pack(pady=30)
+
+userLabel = Label(root, text='Usuario', bg='#CCEEFF').pack()
+userEntry = Entry()
+userEntry.pack()
+
+passwordLabel = Label(root, text='Contraseña', bg='#CCEEFF').pack()
+passwordEntry = Entry(show='*')
+passwordEntry.pack()
+
+loginButton = Button(root, command=verification, text='Iniciar Sesión', bg='#c2eaff').pack()
+
+closeButton = Button(root, text='Salir', command=closeLogin, bg='#c2eaff').pack()
 root.mainloop()
