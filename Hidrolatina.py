@@ -1364,12 +1364,17 @@ root.title('Hidrolatina')
 def verification():
     user = userEntry.get()
     password = passwordEntry.get()
-    person = API_Services.login(user, password)
-    if 'token' in person:
-        user = Person(person['user']['name'], person['user']['last_name'], person['user']['email'], person['token'])
-        messagebox.showinfo(message=[person['user']['name'], person['user']['last_name']], title="Login")
-    else:
-        messagebox.showinfo(message=person['error'], title="Login")
+    try:
+        person = API_Services.login(user, password)
+        if 'token' in person:
+            user = Person(person['user']['name'], person['user']['last_name'], person['user']['email'], person['token'])
+            messagebox.showinfo(message=[person['user']['name'], person['user']['last_name']], title="Login")
+        else:
+            messagebox.showinfo(message=person['error'], title="Login")
+    except:
+        messagebox.showerror(title='Error de conexión', message='No se ha podido establecer una conexión con el servidor. Comuníquese con su encargado de TI.')
+        print('no hay conexion')
+    
 
 def closeLogin():
     root.destroy()
