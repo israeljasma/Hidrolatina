@@ -1353,6 +1353,35 @@ def openConfigurationTk():
 
 # root.mainloop()
 
+def adminConfigTk(user):
+    adminConfigTk = Toplevel()
+    adminConfigTk.title("Hidrolatina")
+    adminConfigTk.resizable(False,False)
+    adminConfigTk.config(background="#cceeff")
+    adminConfigTk.resizable(False,False)
+    # adminConfigTk.overrideredirect(True)
+    # adminConfigTk.geometry(f'{root.winfo_screenwidth()}x{root.winfo_screenheight()}')
+    adminConfigTk.geometry('300x300')
+
+    def logout(user):
+        del user
+        adminConfigTk.destroy()
+
+    #Labels
+
+    usernameLabel = Label(adminConfigTk, text=user.getUsername())
+    usernameLabel.grid()
+
+    nameLabel = Label(adminConfigTk, text=user.getName())
+    nameLabel.grid()
+
+    Last_nameLabel = Label(adminConfigTk, text=user.getLast_name())
+    Last_nameLabel.grid()
+
+    exitButton = Button(adminConfigTk, text="Cerrar Sesion", command=lambda:logout(user), bg='#cceeff', activebackground='#cceeff', borderwidth=0)
+    exitButton.grid()
+
+
 ############ Start App ############
 root = Tk()
 root.geometry('350x500+500+50')
@@ -1367,13 +1396,14 @@ def verification():
     try:
         person = API_Services.login(user, password)
         if 'token' in person:
-            user = Person(person['user']['name'], person['user']['last_name'], person['user']['email'], person['token'])
-            messagebox.showinfo(message=[person['user']['name'], person['user']['last_name']], title="Login")
+            user = Person(person['user']['username'], person['user']['name'], person['user']['last_name'], person['user']['email'], person['token'])
+            #Hide Root Window
+            # root.withdraw()
+            adminConfigTk(user)
         else:
             messagebox.showinfo(message=person['error'], title="Login")
     except:
         messagebox.showerror(title='Error de conexión', message='No se ha podido establecer una conexión con el servidor. Comuníquese con su encargado de TI.')
-        print('no hay conexion')
     
 
 def closeLogin():
