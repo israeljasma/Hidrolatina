@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from glob import glob
 import queue
 from sys import path
@@ -1216,28 +1217,29 @@ def popupIdentificationTk(booleanAnswer=False):
     #Buttons Tk
     # Button(NFC_Tk, text="Cerrar Ventana", command=lambda:closeTk()).pack(pady=10)
 
-def openConfigurationTk():
+def openConfigurationTk(user, adminConfigTk):
     # Config tk
     configurationTk = Toplevel()
     configurationTk.resizable(False,False)
     configurationTk.protocol("WM_DELETE_WINDOW", exit)
     configurationTk.title("Configuraciones")
     # configurationTk.overrideredirect(True)
+    configurationTk.geometry('200x300')
 
-    width = 200
-    height = 300
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
+    # width = 200
+    # height = 300
+    # screen_width = root.winfo_screenwidth()
+    # screen_height = root.winfo_screenheight()
 
-    x = (screen_width/2) - (app_width/2)
-    y = (screen_height/2) - (app_height/2)
+    # x = (screen_width/2) - (app_width/2)
+    # y = (screen_height/2) - (app_height/2)
 
-    configurationTk.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
+    # configurationTk.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
 
     #Def
     def closeTk():
         configurationTk.destroy()
-        root.deiconify()
+        # adminConfigTk.deiconify()
 
     def changeThreshold():
         while True:
@@ -1355,7 +1357,7 @@ def openConfigurationTk():
 
 def adminConfigTk(user):
     adminConfigTk = Toplevel()
-    adminConfigTk.title("Hidrolatina")
+    adminConfigTk.title("Admin panel")
     adminConfigTk.resizable(False,False)
     adminConfigTk.config(background="#cceeff")
     adminConfigTk.resizable(False,False)
@@ -1378,7 +1380,18 @@ def adminConfigTk(user):
     Last_nameLabel = Label(adminConfigTk, text=user.getLast_name())
     Last_nameLabel.grid()
 
-    exitButton = Button(adminConfigTk, text="Cerrar Sesion", command=lambda:logout(user), bg='#cceeff', activebackground='#cceeff', borderwidth=0)
+    testButton = Button(adminConfigTk, text='Test Camara',command=showPytorchCameraTk, fg='red').grid()
+    testButton = Button(adminConfigTk, text='Test download',command=downloadEfficientDet, fg='red').grid()
+    testButton = Button(adminConfigTk, text='Test NFC',command=nfc_identifyTk, fg='red').grid()
+    testButton = Button(adminConfigTk, text='Test POPUP',command=popupIdentificationTk, fg='red').grid()
+
+    createUser = Button(adminConfigTk, text='Gestion de usuario')
+    createUser.grid()
+
+    configButton = Button(adminConfigTk, command=lambda:openConfigurationTk(user, adminConfigTk), text='Configuraciones')
+    configButton.grid()
+
+    exitButton = Button(adminConfigTk, text="Cerrar Sesion", command=lambda:logout(user))
     exitButton.grid()
 
 
@@ -1389,7 +1402,7 @@ root.resizable(0,0)
 root.config(bg='#CCEEFF')
 root.title('Hidrolatina')
 
-#Def
+# Def
 def verification():
     user = userEntry.get()
     password = passwordEntry.get()
@@ -1410,6 +1423,35 @@ def closeLogin():
     root.destroy()
     root.quit()
 
+def handle_click(event):
+    print("clicked!")
+    global boolCounter
+    boolCounter = False
+    identificationButton = Button(root, command=lambda:nfc_identifyTk(), text='Iniciar Identificación', bg='#c2eaff')
+    identificationButton.pack()
+
+def counter(endTime):
+    if boolCounter:
+        if datetime.now() > endTime:
+            print('si')
+            print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
+            nfc_identifyTk()
+        else:
+            print('no')
+            print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
+            time.sleep(1)
+            root.after(10000, counter, endTime)
+    else:
+        print('f')
+
+    return
+
+# Var
+startTime = datetime.now()
+endTime = datetime.now() + timedelta(seconds=120)
+boolCounter = True
+
+# Labels and Buttons
 logo = Image.open('images/logo_hidrolatina.png')
 logo = logo.resize((325, 97), Image.ANTIALIAS)
 logo = ImageTk.PhotoImage(logo)
@@ -1418,13 +1460,18 @@ logoLabel.pack(pady=30)
 
 userLabel = Label(root, text='Usuario', bg='#CCEEFF').pack()
 userEntry = Entry()
+userEntry.bind("<1>", handle_click)
 userEntry.pack()
 
 passwordLabel = Label(root, text='Contraseña', bg='#CCEEFF').pack()
 passwordEntry = Entry(show='*')
 passwordEntry.pack()
 
-loginButton = Button(root, command=verification, text='Iniciar Sesión', bg='#c2eaff').pack()
+loginButton = Button(root, command=lambda:verification(), text='Iniciar Sesión', bg='#c2eaff').pack()
 
 closeButton = Button(root, text='Salir', command=closeLogin, bg='#c2eaff').pack()
+
+# Call def
+root.after(10000, counter, endTime)
+
 root.mainloop()
