@@ -3,11 +3,8 @@ from glob import glob
 import queue
 from sys import path
 from tkinter import *
-from tkinter import ttk
 from PIL import Image, ImageTk
-from tkinter import messagebox
-from tkinter import filedialog
-from tkinter import simpledialog
+from tkinter import messagebox, filedialog, simpledialog, Listbox
 import cv2
 import os
 import platform
@@ -17,12 +14,13 @@ from threading import Thread
 
 from Services import API_Services
 from UserClass import Person
+from FileManagementClass import FileManagement
 # from varname import varname, nameof
 
 from numpy import CLIP
 from imagenClipClass import imageClip
 from NFCClass import NFC
-from FileManagementClass import FileManagement
+
 
 import torch
 
@@ -1217,6 +1215,143 @@ def popupIdentificationTk(booleanAnswer=False):
     #Buttons Tk
     # Button(NFC_Tk, text="Cerrar Ventana", command=lambda:closeTk()).pack(pady=10)
 
+def userManagementTk(user):
+    # Config tk
+    userManagement = Toplevel()
+    userManagement.resizable(False,False)
+    userManagement.title("Gestion de usuarios")
+    # userManagement.overrideredirect(True)
+    userManagement.geometry('800x600')
+    userManagement.config(bg='#CCEEFF')
+
+    # def Windows tk
+    def createUserTk(userManagement):
+        createUserWindows = Toplevel(userManagement)
+        createUserWindows.resizable(False,False)
+        createUserWindows.title("Gestion de usuarios")
+        # updateUserWindows.overrideredirect(True)
+        createUserWindows.geometry('800x600')
+        createUserWindows.config(bg='#CCEEFF')
+
+        usernameLabel = Label(createUserWindows, text='Nombre de usuario', bg='#CCEEFF')
+        usernameLabel.grid()
+        usernameEntry = Entry(createUserWindows)
+        # # userEntry.bind("<1>", handle_click)
+        usernameEntry.grid()
+
+        nameLabel = Label(createUserWindows, text='Nombre', bg='#CCEEFF')
+        nameLabel.grid()
+        nameEntry = Entry(createUserWindows)
+        nameEntry.grid()
+
+        last_nameLabel = Label(createUserWindows, text='Apellido', bg='#CCEEFF')
+        last_nameLabel.grid()
+        last_nameEntry = Entry(createUserWindows)
+        last_nameEntry.grid()
+
+        emailLabel = Label(createUserWindows, text='Email', bg='#CCEEFF')
+        emailLabel.grid()
+        emailEntry = Entry(createUserWindows)
+        emailEntry.grid()
+
+        create = Button(createUserWindows, text='Crear', bg='#CCEEFF')
+        create.grid()
+
+        exitButton = Button(createUserWindows, text="Cerrar", command=lambda:exitTk(createUserWindows))
+        exitButton.grid()
+    
+    def updateUserTk(userManagement):
+        updateUserWindows = Toplevel(userManagement)
+        updateUserWindows.resizable(False,False)
+        updateUserWindows.title("Gestion de usuarios")
+        # updateUserWindows.overrideredirect(True)
+        updateUserWindows.geometry('800x600')
+        updateUserWindows.config(bg='#CCEEFF')
+
+        usernameLabel = Label(updateUserWindows, text='Nombre de usuario', bg='#CCEEFF')
+        usernameLabel.grid()
+        usernameEntry = Entry(updateUserWindows)
+        # # userEntry.bind("<1>", handle_click)
+        usernameEntry.grid()
+
+        nameLabel = Label(updateUserWindows, text='Nombre', bg='#CCEEFF')
+        nameLabel.grid()
+        nameEntry = Entry(updateUserWindows)
+        nameEntry.grid()
+
+        last_nameLabel = Label(updateUserWindows, text='Apellido', bg='#CCEEFF')
+        last_nameLabel.grid()
+        last_nameEntry = Entry(updateUserWindows)
+        last_nameEntry.grid()
+
+        emailLabel = Label(updateUserWindows, text='Email', bg='#CCEEFF')
+        emailLabel.grid()
+        emailEntry = Entry(updateUserWindows)
+        emailEntry.grid()
+
+        create = Button(updateUserWindows, text='Modificar', bg='#CCEEFF')
+        create.grid()
+
+        exitButton = Button(updateUserWindows, text="Cerrar Sesion", command=lambda:exitTk(updateUserWindows))
+        exitButton.grid()
+
+    def deleteUserTk(userManagement):
+        # deleteUserWindow = Toplevel(userManagement)
+        # deleteUserWindow.resizable(False,False)
+        # deleteUserWindow.title("Gestion de usuarios")
+        # # userManagement.overrideredirect(True)
+        # deleteUserWindow.geometry('800x600')
+        # deleteUserWindow.config(bg='#CCEEFF')
+
+        # exitButton = Button(deleteUserWindow, text="Cerrar Sesion", command=lambda:exitTk(deleteUserWindow))
+        # exitButton.grid()
+        # varThreshold = simpledialog.Dialog(userManagement, title='dfdsf')
+        answerMessagebox = messagebox.askokcancel(title='Eliminar usuario', message='Desea eliminar el usuario')
+        if answerMessagebox:
+            print('Usuario eliminado')
+        else:
+            print('Acción cancelada')
+
+    def logout(user):
+        del user
+        userManagement.destroy()
+
+    def exitTk(windowsTk):
+        windowsTk.destroy()
+    
+    # Frame Principal
+    mainFrame = Frame(userManagement, width=800, height=600, bg='#CCEEFF')
+    mainFrame.grid()
+
+    # Create left and right frames
+    left_frame = Frame(mainFrame, width=round(mainFrame.winfo_reqwidth()*0.5), height=round(mainFrame.winfo_reqheight()), bg='#CCEEFF')
+    left_frame.grid(row=0, column=0)
+
+    right_frame = Frame(mainFrame, width=round(mainFrame.winfo_reqwidth()*0.5), height=round(mainFrame.winfo_reqheight()), bg='#CCEEFF')
+    right_frame.grid(row=0, column=1)
+
+    # Buttons right_frame
+    createUser = Button(right_frame, text='Crear', command=lambda:createUserTk(userManagement))
+    createUser.grid()
+
+    updateUser = Button(right_frame, text='Modificar/Actualizar', command=lambda:updateUserTk(userManagement))
+    updateUser.grid()
+
+    deleteUserButton = Button(right_frame, text='Bloquear/Eliminar', command=lambda:deleteUserTk(userManagement))
+    deleteUserButton.grid()
+
+    # ListBox
+    langs = {'Java': 1, 'C#': 2, 'C': 3, 'C++': 4, 'Python': 5, 'Go': 6, 'JavaScript': 7, 'PHP' : 8, 'Swift': 9}
+    listBox = Listbox(left_frame)
+    listBox.grid()
+
+    for key in langs:
+        listBox.insert(END, '{}: {}'.format(key, langs[key]))
+
+
+    exitButton = Button(right_frame, text="Cerrar Sesion", command=lambda:logout(user))
+    exitButton.grid()
+
 def openConfigurationTk(user, adminConfigTk):
     # Config tk
     configurationTk = Toplevel()
@@ -1385,7 +1520,7 @@ def adminConfigTk(user):
     testButton = Button(adminConfigTk, text='Test NFC',command=nfc_identifyTk, fg='red').grid()
     testButton = Button(adminConfigTk, text='Test POPUP',command=popupIdentificationTk, fg='red').grid()
 
-    createUser = Button(adminConfigTk, text='Gestion de usuario')
+    createUser = Button(adminConfigTk, text='Gestion de usuario', command=lambda:userManagementTk(user))
     createUser.grid()
 
     configButton = Button(adminConfigTk, command=lambda:openConfigurationTk(user, adminConfigTk), text='Configuraciones')
@@ -1427,8 +1562,6 @@ def handle_click(event):
     print("clicked!")
     global boolCounter
     boolCounter = False
-    identificationButton = Button(root, command=lambda:nfc_identifyTk(), text='Iniciar Identificación', bg='#c2eaff')
-    identificationButton.pack()
 
 def counter(endTime):
     if boolCounter:
@@ -1468,6 +1601,7 @@ passwordEntry = Entry(show='*')
 passwordEntry.pack()
 
 loginButton = Button(root, command=lambda:verification(), text='Iniciar Sesión', bg='#c2eaff').pack()
+identificationButton = Button(root, command=lambda:nfc_identifyTk(), text='Iniciar Identificación', bg='#c2eaff').pack()
 
 closeButton = Button(root, text='Salir', command=closeLogin, bg='#c2eaff').pack()
 
