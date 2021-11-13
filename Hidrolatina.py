@@ -1263,9 +1263,14 @@ def counter(endTime):
             time.sleep(1)
             root.after(10000, counter, endTime)
     else:
-        print('f')
+        print('counter detenido')
 
     return
+
+def iniciarIdentificacionNFC():
+    global boolCounter
+    boolCounter = False
+    NFC(nfc_identifyTk, showPytorchCameraTk)
 
 # Var
 startTime = datetime.now()
@@ -1290,7 +1295,7 @@ passwordEntry.pack()
 
 loginButton = Button(root, command=lambda:verification(), text='Iniciar Sesión', bg='#c2eaff').pack()
 # identificationButton = Button(root, command=lambda:nfc_identifyTk(), text='Iniciar Identificación', bg='#c2eaff').pack()
-identificationButton = Button(root, command=lambda:NFC(nfc_identifyTk, showPytorchCameraTk), text='Iniciar Identificación', bg='#c2eaff').pack()
+identificationButton = Button(root, command=lambda:iniciarIdentificacionNFC(), text='Iniciar Identificación', bg='#c2eaff').pack()
 
 closeButton = Button(root, text='Salir', command=closeLogin, bg='#c2eaff').pack()
 
