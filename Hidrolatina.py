@@ -1,6 +1,4 @@
 from datetime import datetime, timedelta
-from glob import glob
-import queue
 from sys import path
 from tkinter import *
 from PIL import Image, ImageTk
@@ -9,7 +7,6 @@ import cv2
 import os
 import platform
 import time
-from multiprocessing import Queue
 from threading import Thread, Lock
 from effdet.utils.inference import init_effdet_model,inference_effdet_model
 
@@ -20,8 +17,6 @@ from NFCClass import NFC
 
 from numpy import CLIP
 from imagenClipClass import imageClip
-
-
 
 import torch
 
@@ -55,16 +50,9 @@ def downloadEfficientDet():
     return
 
 def importMDETER():
-    from PIL import Image
     import requests
     import torchvision.transforms as T
-    import matplotlib.pyplot as plt
     from collections import defaultdict
-    import torch.nn.functional as F
-    import numpy as np
-    from skimage.measure import find_contours
-    from matplotlib import patches,  lines
-    from matplotlib.patches import Polygon
     import pathlib
     torch.set_grad_enabled(False);
     temp = pathlib.PosixPath
@@ -98,48 +86,6 @@ def importMDETER():
     # colors for visualization
     COLORS = [[0.000, 0.447, 0.741], [0.850, 0.325, 0.098], [0.929, 0.694, 0.125],
             [0.494, 0.184, 0.556], [0.466, 0.674, 0.188], [0.301, 0.745, 0.933]]
-
-    def apply_mask(image, mask, color, alpha=0.5):
-        """Apply the given mask to the image.
-        """
-        for c in range(3):
-            image[:, :, c] = np.where(mask == 1,
-                                    image[:, :, c] *
-                                    (1 - alpha) + alpha * color[c] * 255,
-                                    image[:, :, c])
-        return image
-
-    def plot_results(pil_img, scores, boxes, labels, masks=None):
-        plt.figure(figsize=(16,10))
-        np_image = np.array(pil_img)
-        ax = plt.gca()
-        colors = COLORS * 100
-        if masks is None:
-            masks = [None for _ in range(len(scores))]
-        assert len(scores) == len(boxes) == len(labels) == len(masks)
-        for s, (xmin, ymin, xmax, ymax), l, mask, c in zip(scores, boxes.tolist(), labels, masks, colors):
-            ax.add_patch(plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin,
-                                    fill=False, color=c, linewidth=3))
-            text = f'{l}: {s:0.2f}'
-            ax.text(xmin, ymin, text, fontsize=15, bbox=dict(facecolor='white', alpha=0.8))
-
-            if mask is None:
-                continue
-            np_image = apply_mask(np_image, mask, c)
-
-            padded_mask = np.zeros((mask.shape[0] + 2, mask.shape[1] + 2), dtype=np.uint8)
-            padded_mask[1:-1, 1:-1] = mask
-            contours = find_contours(padded_mask, 0.5)
-            for verts in contours:
-                # Subtract the padding and flip (y, x) to (x, y)
-                verts = np.fliplr(verts) - 1
-                p = Polygon(verts, facecolor="none", edgecolor=c)
-                ax.add_patch(p)
-
-
-        plt.imshow(np_image)
-        plt.axis('off')
-        plt.show()
 
     import json
     answer2id_by_type = json.load(requests.get("https://nyu.box.com/shared/static/j4rnpo8ixn6v0iznno2pim6ffj3jyaj8.json", stream=True).raw)
@@ -233,9 +179,6 @@ def loadEfficient():
     print('EfficientDET Cargado')
 
 def MDETR(im):
-    import cv2
-    # im = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
-    # im = Image.fromarray(imagencamera)
     plot_inference(im, "a hand")
     im_hand=im.crop((bboxes[argmax(probas[keep])]))
     plot_inference(im, "a head")
@@ -244,17 +187,6 @@ def MDETR(im):
     plot_inference(im, "a boot")
     global im_boot
     im_boot=im.crop((bboxes[argmax(probas[keep])]))
-    # cropPersonHead = imageClip(im_head, "")
-    # listImagenClip.append(cropPersonHead)
-    # im_head.save('clip/cropped_head.jpg')
-    # plot_inference_qa(im_hand, "what color are the fingers?")
-    # if answer =='purple' or answer =='blue':
-    #     gloves= 'Yes'
-
-    # else:
-    #     gloves= 'No'
-    # cropPersonHand = imageClip(ImageTk.PhotoImage(im_hand), 'Gloves: '+gloves)
-    # listImagenClip.append(cropPersonHand)
 
     objectListMDETR= {'im_head':im_head, 'im_hand': im_hand, 'im_boot': im_boot}
     return objectListMDETR
@@ -292,11 +224,8 @@ def loadClip():
     print('Clip Cargado')
 
 def clip(bodypart):
-    # head=Image.open('E:/Softmaking/Proyectos/Hidrolatina/valorant.jpg')
     pred_clip=[]
     for i in range(len(candidate_captions[bodypart])):
-        # head=Image.open('E:/Users/darkb/OneDrive/Documentos/EIE/Tesis/Pruebas_de_codigos/Bases_de_datos/Implementos seguridad/others/goggles_headphones/head (99).jpg')
-        # print(candidate_captions[nstr(bodypart)][i])
         text = clipit.tokenize(candidate_captions[bodypart][i]).to(device)
         image = process(mdetr_list[bodypart]).unsqueeze(0).to(device)
 
@@ -312,58 +241,28 @@ def clip(bodypart):
                 pred_clip.append('OK')
             else:
                 pred_clip.append('NO DETECTADO')
-        #     np_image = np.array(head)
-        # plt.imshow(np_image)
+
     return pred_clip
+
+# def librerias():
+    # importMDETER()
+    # loadClip()
+    # loadEfficient()
+    # messagebox.showinfo(message="Dependencias cargadas")
+    # thread.join()
+
 
 def loadALL():
     # from threading import Thread
-    # thread= Thread(target=librerias, args=())
-    # thread.start()
-
+    # libThread= Thread(target=librerias, args=(),daemon=True)
+    # libThread.start()
     importMDETER()
     loadClip()
     loadEfficient()
     messagebox.showinfo(message="Dependencias cargadas")
 
+
 ########Windows#######
-
-# root = Tk()
-# root.title("Softmaking")
-# root.resizable(False,False)
-# root.config(background="#cceeff")
-# root.resizable(False,False)
-# root.overrideredirect(True)
-# root.geometry(f'{root.winfo_screenwidth()}x{root.winfo_screenheight()}')
-
-# #Frame
-# rootFrame = Frame(root, width=round(root.winfo_screenwidth()), height=round(root.winfo_screenheight()), bg='#cceeff')
-# rootFrame.grid()
-
-# topFrame = Frame(rootFrame, width=round(rootFrame.winfo_reqwidth()), height=rootFrame.winfo_reqheight()*0.4, bg='#cceeff')
-# topFrame.grid(row=0, column=0)
-
-# bottomFrame = Frame(rootFrame, width=round(rootFrame.winfo_reqwidth()), height=rootFrame.winfo_reqheight()*0.6, bg='#cceeff')
-# bottomFrame.grid(row=1, column=0)
-
-# imageLogoRoot = Image.open('images/logo_hidrolatina.png')
-# imageLogoRoot = imageLogoRoot.resize((round(topFrame.winfo_reqwidth()), round(topFrame.winfo_reqheight())), Image.ANTIALIAS)
-# imageLogoRoot = ImageTk.PhotoImage(imageLogoRoot)
-
-# imageLabelLeft_Frame = Label(topFrame, image=imageLogoRoot, bg='#cceeff', borderwidth=0)
-# imageLabelLeft_Frame.grid(row=0, column=0)
-
-#Center windows
-# app_width = 300
-# app_height = 300
-
-# screen_width = root.winfo_screenwidth()
-# screen_height = root.winfo_screenheight()
-
-# x = (screen_width/2) - (app_width/2)
-# y = (screen_height/2) - (app_height/2)
-
-# root.geometry(f'{app_width}x{app_height}+{int(x)}+{int(y)}')
 
 #Def
 def popup(message):
@@ -482,10 +381,6 @@ def showPytorchCameraTk():
     # ####Label dataBootFrame Sub frame lvl 2 bootFrame
     Label(dataBootFrame, text="Botas", width=8).grid(row=0, column=0, padx=5, pady=5)
     Label(dataBootFrame, width=10).grid(row=0, column=1, padx=5, pady=5)
-    
-    #Slider window (slider controls stage position)
-    # sliderFrame = Frame(pytorchCameraTk, width=600, height=100)
-    # sliderFrame.grid(row = 600, column=0, padx=10, pady=2)
 
     #Capture video frames
     labelVideo = Label(cameraFrame)
@@ -634,7 +529,7 @@ def showPytorchCameraTk():
         #             booleanAnswer = False
         #             break
 
-        # thread = Thread(target=timePop,args=(booleanAnswer,))
+        # thread = Thread(target=timePop,args=(booleanAnswer,), daemon=True)
         # thread.start()
 
     # testFrame()
@@ -1095,16 +990,6 @@ def userManagementTk(user):
         exitButton.grid()
 
     def deleteUserTk(userManagement):
-        # deleteUserWindow = Toplevel(userManagement)
-        # deleteUserWindow.resizable(False,False)
-        # deleteUserWindow.title("Gestion de usuarios")
-        # # userManagement.overrideredirect(True)
-        # deleteUserWindow.geometry('800x600')
-        # deleteUserWindow.config(bg='#CCEEFF')
-
-        # exitButton = Button(deleteUserWindow, text="Cerrar Sesion", command=lambda:exitTk(deleteUserWindow))
-        # exitButton.grid()
-        # varThreshold = simpledialog.Dialog(userManagement, title='dfdsf')
         answerMessagebox = messagebox.askokcancel(title='Eliminar usuario', message='Desea eliminar el usuario')
         if answerMessagebox:
             print('Usuario eliminado')
