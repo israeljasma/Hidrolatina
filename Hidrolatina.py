@@ -10,16 +10,17 @@ import os
 import platform
 import time
 from multiprocessing import Queue
-from threading import Thread
+from threading import Thread, Lock
+from effdet.utils.inference import init_effdet_model,inference_effdet_model
 
 from Services import API_Services
 from UserClass import Person
 from FileManagementClass import FileManagement
-# from varname import varname, nameof
+from NFCClass import NFC
 
 from numpy import CLIP
 from imagenClipClass import imageClip
-from NFCClass import NFC
+
 
 
 import torch
@@ -68,9 +69,7 @@ def importMDETER():
     torch.set_grad_enabled(False);
     temp = pathlib.PosixPath
     pathlib.PosixPath = pathlib.WindowsPath
-    # model_qa = torch.hub.load('ashkamath/mdetr:main', 'mdetr_efficientnetB5_gqa', pretrained=True, return_postprocessor=False)
-    # model_qa = model_qa.cuda()
-    # model_qa.eval();
+
     model, postprocessor = torch.hub.load('ashkamath/mdetr:main', 'mdetr_efficientnetB5', pretrained=True, return_postprocessor=True)
     model = model.cuda()
     model.eval();
@@ -180,99 +179,17 @@ def importMDETER():
         # print('boxes: ', bboxes)
         # plot_results(im, probas[keep], bboxes_scaled, labels)
 
-    # def plot_inference_qa(im, caption):
-    #     # mean-std normalize the input image (batch-size: 1)
-    #     img = transform(im).unsqueeze(0).cuda()
-
-    #     # propagate through the model
-    #     memory_cache = model_qa(img, [caption], encode_and_save=True)
-    #     outputs = model_qa(img, [caption], encode_and_save=False, memory_cache=memory_cache)
-
-    #     # keep only predictions with 0.7+ confidence
-    #     probas = 1 - outputs['pred_logits'].softmax(-1)[0, :, -1].cpu()
-    #     keep = (probas > 0.7).cpu()
-
-    #     # convert boxes from [0; 1] to image scales
-    #     bboxes_scaled = rescale_bboxes(outputs['pred_boxes'].cpu()[0, keep], im.size)
-
-    #     # Extract the text spans predicted by each box
-    #     positive_tokens = (outputs["pred_logits"].cpu()[0, keep].softmax(-1) > 0.1).nonzero().tolist()
-    #     predicted_spans = defaultdict(str)
-    #     for tok in positive_tokens:
-    #         item, pos = tok
-    #         if pos < 255:
-    #             span = memory_cache["tokenized"].token_to_chars(0, pos)
-    #             predicted_spans [item] += " " + caption[span.start:span.end]
-
-    #     labels = [predicted_spans [k] for k in sorted(list(predicted_spans .keys()))]
-    #     # plot_results(im, probas[keep], bboxes_scaled, labels)
-
-    #     # Classify the question type
-    #     type_conf, type_pred = outputs["pred_answer_type"].softmax(-1).max(-1)
-    #     ans_type = type_pred.item()
-    #     types = ["obj", "attr", "rel", "global", "cat"]
-
-    #     ans_conf, ans = outputs[f"pred_answer_{types[ans_type]}"][0].softmax(-1).max(-1)
-    #     global answer
-    #     answer = id2answerbytype[f"answer_{types[ans_type]}"][ans.item()]
-    #     print(f"Predicted answer: {answer}\t confidence={round(100 * type_conf.item() * ans_conf.item(), 2)}")
     print("MDETR cargado")
 
 def clearCacheMDETR():
     torch.cuda.empty_cache()
 
 def loadEfficient():
-    ### Arreglar directorio
-    import sys
-    sys.path.append("C:/Users/Doravan/Desktop/Hidrolatina/torchtest/Yet-Another-EfficientDet-Pytorch")
-    import torch
-    from torch.backends import cudnn
-    from threading import Thread, Lock
-
-    from backbone import EfficientDetBackbone
-    import cv2
-    import matplotlib.pyplot as plt
-    import numpy as np
-
-    from efficientdet.utils import BBoxTransform, ClipBoxes
-    from utils.utils import preprocess, invert_affine, postprocess
-
-    global preprocess, invert_affine, postprocess, BBoxTransform, ClipBoxes
-
-    compound_coef = 2
-    force_input_size = None  # set None to use default size
-
-    global use_cuda, use_float16
-    use_cuda = True
-    use_float16 = False                                                 
-    cudnn.fastest = True
-    cudnn.benchmark = True
-
+    weigths_effdet = 'C:/hidrolatina/EfficientDetVandV-main/effdet/logs/person_coco/efficientdet-d2_58_8260_best.pth'
     global obj_list
     obj_list = ['person']
-
-    global input_size
-
-    input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536]
-    input_size = input_sizes[compound_coef] if force_input_size is None else force_input_size
-    global model_ed
-
-    model_ed = EfficientDetBackbone(compound_coef=compound_coef, num_classes=len(obj_list),
-
-                                # replace this part with your project's anchor config
-                                ratios=[(1.0, 1.0), (1.4, 0.7), (0.7, 1.4)],
-                                scales=[2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)])
-
-    model_ed.load_state_dict(torch.load('C:/Users/Doravan/Desktop/Hidrolatina/torchtest/Yet-Another-EfficientDet-Pytorch/efficientdet-d2_65_9200.pth'))
-    # model_ed.load_state_dict(torch.load('E:/Users/darkb/OneDrive/Documentos/EIE/Tesis/Pruebas_de_codigos/Yet-Another-EfficientDet-Pytorch/weights/efficientdet-d3_206_34776_best.pth'))
-    model_ed.requires_grad_(False)
-    model_ed.eval()
-
-    if use_cuda:
-        model_ed = model_ed.cuda()
-    if use_float16:
-        model_ed = model_ed.half()
-
+    global model_effdet
+    model_effdet = init_effdet_model(weigths_effdet, obj_list)
     ##Class CameraStream
     global CameraStream
     class CameraStream(object):
@@ -315,136 +232,16 @@ def loadEfficient():
 
     print('EfficientDET Cargado')
 
-def pytorchCamera():
-    ###REAL##
-    import cv2
-    cap = cv2.VideoCapture(0)
-
-    import numpy as np
-    import datetime
-    import matplotlib.pyplot as plt
-
-    det=0
-
-    while True:
-        # Read frame from camera
-        cap.set(cv2.CAP_PROP_FPS,16)
-        ret, image_np = cap.read()
-        image_path=[image_np]
-
-        
-        threshold = 0.6
-        iou_threshold = 0.1
-
-        # # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
-        # image_np_expanded = np.expand_dims(image_np, axis=0)
-        ori_imgs, framed_imgs, framed_metas = preprocess(image_path, max_size=input_size)
-
-        if use_cuda:
-            x = torch.stack([torch.from_numpy(fi).cuda() for fi in framed_imgs], 0)
-        else:
-            x = torch.stack([torch.from_numpy(fi) for fi in framed_imgs], 0)
-
-        x = x.to(torch.float32 if not use_float16 else torch.float16).permute(0, 3, 1, 2)
-
-        with torch.no_grad():
-            features, regression, classification, anchors = model_ed(x)
-
-            regressBoxes = BBoxTransform()
-            clipBoxes = ClipBoxes()
-
-            out = postprocess(x,
-                            anchors, regression, classification,
-                            regressBoxes, clipBoxes,
-                            threshold, iou_threshold)
-
-        out = invert_affine(framed_metas, out)
-
-
-        # if len(out[0]['rois']) == 0:
-
-        ori_img = ori_imgs[0].copy()
-        for j in range(len(out[0]['rois'])):
-            (x1, y1, x2, y2) = out[0]['rois'][j].astype(np.int)
-            cv2.rectangle(ori_img, (x1, y1), (x2, y2), (255, 255, 0), 2)
-            obj = obj_list[out[0]['class_ids'][j]]
-            score = float(out[0]['scores'][j])
-
-            cv2.putText(ori_img, '{}, {:.3f}'.format(obj, score),
-                        (x1, y1 + 10), cv2.FONT_HERSHEY_SIMPLEX, .5,
-                        (255, 255, 0), 2)
-
-        cv2.imshow('object_detection', cv2.resize(ori_img, (800, 600)))
-        if cv2.waitKey(25) & 0xFF == ord('q'):
-            cap.release()
-            cv2.destroyAllWindows()
-            break
-   
-
-        if len(out[0]['scores']) > 0:
-            det += 1
-            if det==20:     #break in det-1
-                global date_hour
-                now = datetime.datetime.now()
-                date_hour='%d/%d/%d-%d:%d:%d'%( now.day, now.month, now.year, now.hour, now.minute, now.second )
-                print(date_hour)
-                cap.release()
-                cv2.destroyAllWindows()
-                break
-
-        if len(out[0]['scores'])==0:
-            det=0
-
-
-        
-        # Save Bounding Boxes
-
-        for i in range((out[0]['scores']).size):
-            detected_boxes= out[0]['rois'][i]
-              
-
-
-        # Crop and save detedtec bounding box image
-
-            xmin = int((detected_boxes[0]))
-            ymin = int((detected_boxes[1]))
-            xmax = int((detected_boxes[2]))
-            ymax = int((detected_boxes[3]))
-            cropped_img = image_np[ymin:ymax,xmin:xmax]
-
-            if cropped_img.size != 0:
-                imagencamera = cropped_img
-                global im
-                im = Image.fromarray(cv2.cvtColor(imagencamera, cv2.COLOR_BGR2RGB))
-                print(im)
-            # imgplot = plt.imshow(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
-            # plt.show()
-            # print(imgplot)
-            # print('ymin',ymin)
-            # print('fdsfssdfdsf')
-            # print('detected_boxes',detected_boxes)
-            # print('cropped_img',cropped_img)
-            # if cropped_img.size == 0:
-            #     continue
-            # else:
-            #     #cv2.imwrite('cropped_image_{}.jpg'.format(i), cropped_img)
-            #     print('cropped_img')
-            # imagencamera = Image.fromarray(cropped_img, 'RGB')
-    ################################Borrar###########################################
-    cropPerson =  imageClip(ImageTk.PhotoImage(im), 'Person detected on '+date_hour)
-    listImagenClip.append(cropPerson)
-
-
 def MDETR(im):
     import cv2
     # im = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
     # im = Image.fromarray(imagencamera)
     plot_inference(im, "a hand")
     im_hand=im.crop((bboxes[argmax(probas[keep])]))
-    plot_inference(im, "a tiny head")
+    plot_inference(im, "a head")
     global im_head
     im_head=im.crop((bboxes[argmax(probas[keep])]))
-    plot_inference(im, "a rain boot")
+    plot_inference(im, "a boot")
     global im_boot
     im_boot=im.crop((bboxes[argmax(probas[keep])]))
     # cropPersonHead = imageClip(im_head, "")
@@ -468,12 +265,12 @@ def loadClip():
     import glob
 
     global candidate_captions
-    # class_names={'im_head': [['helmet','no_helmet'], ['mask', 'no_mask'], ['goggles', 'no_goggles'], ['headphones', 'no_headphones']],
-    #             'im_hand':[['gloves', 'no_gloves']],
-    #             'im_boot': [['boots', 'no boots']]}
-    candidate_captions={'im_head': [['a white hat','A head'], ['big black headphone', 'A head'],['head with glasses', 'A face'],['Mask', 'Just a head']],
+    candidate_captions={'im_head': [['a head with a yellow helmet','Just a head'], ['Head with headphones', 'Just a head'],['a Head with goggles', 'Just a head'],['Head with a medical mask', 'Just a head']],
                 'im_hand':[['A blue hand', 'A pink hand']],
-                'im_boot':[['a large boot', 'a small shoe']]}
+                'im_boot':[['A black boot', 'A shoe']]}
+    # candidate_captions={'im_head': [['a white hat','A head'], ['a big headset', 'a face'],['a face with glasses', 'A head'],['Mask', 'Just a head']],
+    #             'im_hand':[['A blue hand', 'A pink hand']],
+    #             'im_boot':[['a large boot', 'a small shoe']]}
 
     global argmax
     def argmax(iterable):
@@ -575,6 +372,11 @@ def popup(message):
 def folderSelect():
     folder_selected = filedialog.askdirectory()
     print(folder_selected)
+
+def folderframeSelect():
+    global frame_selected
+    frame_selected = filedialog.askopenfilename()
+    print(frame_selected)
 
 def checkListImagenClip():
     if len(listImagenClip) == 0 :
@@ -688,8 +490,8 @@ def showPytorchCameraTk():
     #Capture video frames
     labelVideo = Label(cameraFrame)
     labelVideo.grid(row=0, column=0)
-    # cap = CameraStream(varCamera).start()
-    cap = cv2.VideoCapture(0)
+    cap = CameraStream().start()
+    # cap = cv2.VideoCapture(0)
 
     camWidth = round(cameraFrame.winfo_reqwidth())
     camHeight = round(cameraFrame.winfo_reqheight()*0.85)
@@ -721,42 +523,19 @@ def showPytorchCameraTk():
     def showFrame():
         # _, frame = cap.read()
         # frame = cv2.flip(frame, 1)
-        frame = cap.read()
+        try:
+            frame=cv2.imread(frame_selected)
+        except:
+            frame = cap.read()
 
-        threshold = 0.4
-        iou_threshold = 0.1
+        out = inference_effdet_model(model_effdet, frame)
+        ori_img = frame.copy()
 
-        image_path= [frame]
-        ori_imgs, framed_imgs, framed_metas = preprocess(image_path, max_size=input_size)
-
-        if use_cuda:
-            x = torch.stack([torch.from_numpy(fi).cuda() for fi in framed_imgs], 0)
-        else:
-            x = torch.stack([torch.from_numpy(fi) for fi in framed_imgs], 0)
-
-        x = x.to(torch.float32 if not use_float16 else torch.float16).permute(0, 3, 1, 2)
-
-        with torch.no_grad():
-            features, regression, classification, anchors = model_ed(x)
-
-            regressBoxes = BBoxTransform()
-            clipBoxes = ClipBoxes()
-
-            out = postprocess(x,
-                            anchors, regression, classification,
-                            regressBoxes, clipBoxes,
-                            threshold, iou_threshold)
-
-        out = invert_affine(framed_metas, out)
-
-        # if len(out[0]['rois']) == 0:
-
-        ori_img = ori_imgs[0].copy()
-        for j in range(len(out[0]['rois'])):
-            (x1, y1, x2, y2) = out[0]['rois'][j].astype(np.int)
+        for j in range(len(out['bbox'])):
+            (x1, y1, x2, y2) = out['bbox'][j].astype(np.int)
             cv2.rectangle(ori_img, (x1, y1), (x2, y2), (255, 255, 0), 2)
-            obj = obj_list[out[0]['class_ids'][j]]
-            score = float(out[0]['scores'][j])
+            obj = obj_list[out['class_ids'][j]]
+            score = float(out['scores'][j])
 
             cv2.putText(ori_img, '{}, {:.3f}'.format(obj, score),
                         (x1, y1 + 10), cv2.FONT_HERSHEY_SIMPLEX, .5,
@@ -770,15 +549,15 @@ def showPytorchCameraTk():
 
         global det
         print(det)
-        if len(out[0]['class_ids']) == 0:
+        if len(out['class_ids']) == 0:
             det = 0
-        if len(out[0]['class_ids']) > 0:
+        if len(out['class_ids']) > 0:
             det += 1
             if det==20:
 
                 print("Reset")
-                for i in range((out[0]['scores']).size):
-                    detected_boxes= out[0]['rois'][i]
+                for i in range((out['scores']).size):
+                    detected_boxes= out['bbox'][i]
 
                 # Crop and save detedtec bounding box image
 
@@ -846,20 +625,20 @@ def showPytorchCameraTk():
         Label(imageBootFrame, image=(listImagenClip[2].getImage())).grid(row=1, column=0, padx=5, pady=5)
         Label(dataBootFrame, text=(listImagenClip[2].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
 
-        booleanAnswer = None
-        for i in range(len(listImagenClip)):
-            for j in range(len(listImagenClip[i])):
-                if listImagenClip[i].getAnswer()[j] == 'OK':
-                    booleanAnswer = True
-                else:
-                    booleanAnswer = False
-                    break
+        # booleanAnswer = None
+        # for i in range(len(listImagenClip)):
+        #     for j in range(len(listImagenClip[i])):
+        #         if listImagenClip[i].getAnswer()[j] == 'OK':
+        #             booleanAnswer = True
+        #         else:
+        #             booleanAnswer = False
+        #             break
 
-        thread = Thread(target=timePop,args=(booleanAnswer,))
-        thread.start()
+        # thread = Thread(target=timePop,args=(booleanAnswer,))
+        # thread.start()
 
-    testFrame()
-    # showFrame()
+    # testFrame()
+    showFrame()
 
     exitButton = Button(pytorchCameraTk, text='Cerrar ventana', command=closeTk)
     exitButton.grid(row=1, column=0)
@@ -989,8 +768,8 @@ def configCameraTk(configurationTk):
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
 
-    x = (screen_width/2) - (app_width/2)
-    y = (screen_height/2) - (app_height/2)
+    x = (screen_width/2) - (width/2)
+    y = (screen_height/2) - (height/2)
 
     configCameraTk.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
 
@@ -1485,6 +1264,9 @@ def openConfigurationTk(user, adminConfigTk):
     buttonClass = Button(configurationTk, text="Configurar Camaras", command=lambda:configCameraTk(configurationTk))
     buttonClass.pack()
 
+    buttonfDirectory = Button(configurationTk, text="ImagenTest", command=lambda:folderframeSelect())
+    buttonfDirectory.pack()
+
     closeWindow = Button(configurationTk, text="Cerrar Ventana", command=lambda:closeTk())
     closeWindow.pack()
 
@@ -1539,6 +1321,7 @@ def adminConfigTk(user):
     testButton = Button(adminConfigTk, text='Test download',command=downloadEfficientDet, fg='red').grid()
     testButton = Button(adminConfigTk, text='Test NFC',command=nfc_identifyTk, fg='red').grid()
     testButton = Button(adminConfigTk, text='Test POPUP',command=popupIdentificationTk, fg='red').grid()
+    testButton = Button(adminConfigTk, text='Cargar Dependencias',command=loadALL, fg='red').grid()
 
     createUser = Button(adminConfigTk, text='Gestion de usuario', command=lambda:userManagementTk(user))
     createUser.grid()
