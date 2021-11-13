@@ -1112,7 +1112,7 @@ def openConfigurationTk(user, adminConfigTk):
                 break
 
     #Hide Root Window
-    root.withdraw()
+    # root.withdraw()
 
     #Labels Tk
     # labelimagen = Label(configurationTk, image=imagen)
