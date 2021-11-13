@@ -1063,11 +1063,12 @@ def identify():
     # showPytorchCameraTk()
 
 def nfc_identifyTk():
+    # import concurrent.futures
     # Config tk
     NFC_Tk = Toplevel()
-    NFC_Tk.resizable(False,False)
+    # NFC_Tk.resizable(False,False)
     NFC_Tk.title("Identificación")
-    NFC_Tk.overrideredirect(True)
+    # NFC_Tk.overrideredirect(True)
     NFC_Tk.geometry(f'{NFC_Tk.winfo_screenwidth()}x{NFC_Tk.winfo_screenheight()}')
 
     #Def
@@ -1079,12 +1080,20 @@ def nfc_identifyTk():
         # Recursive
         timeLabel.after(1000, update)
 
-    def thread_identify():
-        while True:
-            NFC.testnfc()
-        # thread = Thread(target=NFC.identify, args=(q,))
+    # def thread_identify():
+    #     test = NFC.identify()
+    #     print(test)
+    #     time.sleep(1)
+    #     thread_identify()
+
+        # while True:
+        # NFC.identify()
+        # thread = Thread(target=NFC.identify, args=())
         # thread.start()
-        return True
+        # var = thread.join()
+        # print(var)
+        # thread.start()
+        # return True
 
     def closeTk():
         NFC_Tk.destroy()
@@ -1131,6 +1140,15 @@ def nfc_identifyTk():
     
     timeLabel.after(1000, update)
 
+    # thread= Thread(target=identify, args=())
+    # thread.start()
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #         future = executor.submit(NFC.identify)
+            # return_value = future.result()
+            # print(return_value)
+
+    # NFC_Tk.after(3000, thread_identify)
+
     #Buttons Tk
     # Button(NFC_Tk, text="Cerrar Ventana", command=lambda:closeTk()).pack(pady=10)
 
@@ -1138,6 +1156,8 @@ def nfc_identifyTk():
     # thread.start()
 
     # thread.join()
+
+    return NFC_Tk
 
 def popupIdentificationTk(booleanAnswer=False):
     # Config tk
@@ -1601,7 +1621,8 @@ passwordEntry = Entry(show='*')
 passwordEntry.pack()
 
 loginButton = Button(root, command=lambda:verification(), text='Iniciar Sesión', bg='#c2eaff').pack()
-identificationButton = Button(root, command=lambda:nfc_identifyTk(), text='Iniciar Identificación', bg='#c2eaff').pack()
+# identificationButton = Button(root, command=lambda:nfc_identifyTk(), text='Iniciar Identificación', bg='#c2eaff').pack()
+identificationButton = Button(root, command=lambda:NFC(nfc_identifyTk, showPytorchCameraTk), text='Iniciar Identificación', bg='#c2eaff').pack()
 
 closeButton = Button(root, text='Salir', command=closeLogin, bg='#c2eaff').pack()
 
