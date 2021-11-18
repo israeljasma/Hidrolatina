@@ -2,8 +2,11 @@ from smartcard.CardRequest import CardRequest
 from smartcard.Exceptions import CardRequestTimeoutException
 from smartcard.CardType import AnyCardType
 from smartcard import util
-import time
+
 from threading import Thread
+from tkinter import messagebox
+from Services import API_Services
+from UserClass import Person
 
 class NFC():
     def __init__(self, ventana, ventanaNext):
@@ -39,20 +42,28 @@ class NFC():
                 get_uid = util.toBytes("FF CA 00 00 00")
                 data, sw1, sw2 = conn.transmit(get_uid)
                 uid = util.toHexString(data)
-                uid2 = uid
-                status = util.toHexString([sw1, sw2])
-                # if uid == "44 CE 4A 0B":
-                if uid is not None:
+                try:
+                    loginNFC = API_Services.loginNFC(uid)
+                except:
+                    print('no hay servidor')
+                    self.stop()
+                    messagebox.showerror(title='Error de conexión', message='No se ha podido establecer una conexión con el servidor. Comuníquese con su encargado de TI.')
                     break
-                # # print the ATR and UID of the card
-                # # print("ATR = {}".format(util.toHexString(conn.getATR())))
-                #     print("Operador Reconocido")
+                # status = util.toHexString([sw1, sw2])
+                # if uid == "44 CE 4A 0B":
+                if 'token' in loginNFC:
+                    user = Person(loginNFC['user']['username'], loginNFC['user']['name'], loginNFC['user']['last_name'], loginNFC['user']['email'], loginNFC['token'])
+                    print(user)
+                    break
+                    #Hide Root Window
+                    # root.withdraw()
+                else:
+                    messagebox.showinfo(message=loginNFC['error'], title="Login")
             except:
                 pass
 
         # time.sleep(2)
-        print(uid)
-        ventanaNext()
+        ventanaNext(user)
         self.stop()
 
 
