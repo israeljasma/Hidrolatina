@@ -12,5 +12,4 @@ class API_Services():
         credentials = {'nfc':nfc}
         request = requests.post('http://127.0.0.1:8000/nfclogin/',data = credentials)
         request_dictionary = request.json()
-        print(request_dictionary)
         return request_dictionary
