@@ -182,7 +182,7 @@ def MDETR(im):
 
     plot_inference(im, "a head")
     im_head=im.crop((bboxes[argmax(probas[keep])]))
-    
+
     plot_inference(im, "a boot")
     im_boot=im.crop((bboxes[argmax(probas[keep])]))
 
@@ -223,7 +223,7 @@ def loadClip():
         return [name for name in globals() if globals()[name] is obj][0]
     print('Clip Cargado')
 
-def clip(bodypart):
+def clip(bodypart, mdetr_list):
     pred_clip=[]
     for i in range(len(candidate_captions[bodypart])):
         text = clipit.tokenize(candidate_captions[bodypart][i]).to(device)
@@ -460,7 +460,6 @@ def showPytorchCameraTk(user):
                 cap.stop()
                 copy_imgtk = imgtk
                 labelVideo.imgtk = copy_imgtk
-                global mdetr_list
                 mdetr_list=MDETR(im)
 ################################################ CORRERGIR ###############################################
 ################################################ CORRERGIR ###############################################
@@ -469,7 +468,7 @@ def showPytorchCameraTk(user):
                 global listImagenClip
                 listImagenClip = []
                 for bodypart in mdetr_list.keys():
-                    listImagenClip.append(imageClip(names_ppe[bodypart], ImageTk.PhotoImage(mdetr_list[bodypart].resize((150,150))), clip(bodypart)))
+                    listImagenClip.append(imageClip(names_ppe[bodypart], ImageTk.PhotoImage(mdetr_list[bodypart].resize((150,150))), clip(bodypart, mdetr_list)))
                     # print(bodypart)
                 
                 updateLabel()
