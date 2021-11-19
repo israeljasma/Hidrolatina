@@ -1,10 +1,10 @@
 class imageClip:
     def __init__(self, image, answer):
         self.image = image
-        self.aswer = answer
+        self.answer = answer
 
     def getImage(self):
         return self.image
 
     def getAnswer(self):
-        return self.aswer
+        return self.answer
