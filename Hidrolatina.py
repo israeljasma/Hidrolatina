@@ -1153,28 +1153,6 @@ def openConfigurationTk(user, adminConfigTk):
     closeWindow = Button(configurationTk, text="Cerrar Ventana", command=lambda:closeTk())
     closeWindow.pack()
 
-#Buttons
-# clearMDETRyButton = Button(bottomFrame, text='Limpiar Cache', command=clearCacheMDETR).grid()
-# loadALLButton=  Button(bottomFrame, text='Cargar Dependencias', command=loadALL).grid()
-# # # MDETRButton = Button(root, text='MDETR', command=MDETR).pack()
-# # # clipButton = Button(root, text='Clip', command=clip).pack()
-# # # showImageClipButton = Button(root, text='Resultados', command=checkListImagenClip).pack()
-# configButton = Button(bottomFrame, text='Configuraciones', command=openConfigurationTk, fg='blue').grid()
-
-# testButton = Button(bottomFrame, text='Test Camara',command=showPytorchCameraTk, fg='red').grid()
-# testButton = Button(bottomFrame, text='Test download',command=downloadEfficientDet, fg='red').grid()
-# testButton = Button(bottomFrame, text='Test NFC',command=nfc_identifyTk, fg='red').grid()
-# testButton = Button(bottomFrame, text='Test POPUP',command=popupIdentificationTk, fg='red').grid()
-
-# exitImageButton = Image.open('images/exit2.png')
-# # exitImageButton = imageLogoRoot.resize((round(topFrame.winfo_reqwidth()), round(topFrame.winfo_reqheight())), Image.ANTIALIAS)
-# exitImageButton = ImageTk.PhotoImage(exitImageButton)
-
-# exitButton = Button(bottomFrame, text="Salir", image=exitImageButton, command=root.quit, bg='#cceeff', activebackground='#cceeff', borderwidth=0)
-# exitButton.grid()
-
-# root.mainloop()
-
 def adminConfigTk(user):
     adminConfigTk = Toplevel()
     adminConfigTk.title("Admin panel")
