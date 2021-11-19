@@ -2,11 +2,20 @@ from smartcard.CardRequest import CardRequest
 from smartcard.Exceptions import CardRequestTimeoutException
 from smartcard.CardType import AnyCardType
 from smartcard import util
-import time
+from threading import Thread
+from tkinter import messagebox
+from Services import API_Services
+from UserClass import Person
 
-class NFC:
+class NFC():
+    def __init__(self, ventana, ventanaNext):
+        self.tktest = ventana()
+        self.thread = Thread(target=self.identify, args=(ventanaNext,))
+        self.thread.start()
 
-    def identify():
+    
+    def identify(self, ventanaNext):
+        uid = None
         WAIT_FOR_SECONDS = 60
         # respond to the insertion of any type of smart card
         card_type = AnyCardType()
@@ -32,53 +41,76 @@ class NFC:
                 get_uid = util.toBytes("FF CA 00 00 00")
                 data, sw1, sw2 = conn.transmit(get_uid)
                 uid = util.toHexString(data)
-                status = util.toHexString([sw1, sw2])
-                if uid == "44 CE 4A 0B":
-
-                # print the ATR and UID of the card
-                # print("ATR = {}".format(util.toHexString(conn.getATR())))
-                    print("Operador Reconocido")
+                try:
+                    loginNFC = API_Services.loginNFC(uid)
+                except:
+                    print('no hay servidor')
+                    self.stop()
+                    messagebox.showerror(title='Error de conexión', message='No se ha podido establecer una conexión con el servidor. Comuníquese con su encargado de TI.')
                     break
+                # status = util.toHexString([sw1, sw2])
+                # if uid == "44 CE 4A 0B":
+                if 'token' in loginNFC:
+                    user = Person(loginNFC['user']['username'], loginNFC['user']['name'], loginNFC['user']['last_name'], loginNFC['user']['email'], loginNFC['token'])
+                    print(user)
+                    break
+                    #Hide Root Window
+                    # root.withdraw()
+                else:
+                    messagebox.showinfo(message=loginNFC['error'], title="Login")
             except:
                 pass
-        time.sleep(2)
-        return
+
+        # time.sleep(2)
+        # ventana.after(5000, ventanaNext, user)
+        # ventanaNext(user)
+        self.stop()
+        ventanaNext(user)
 
 
-    def getuid():
-        WAIT_FOR_SECONDS = 60
-        # respond to the insertion of any type of smart card
-        card_type = AnyCardType()
+    def stop(self):
+        self.tktest.destroy()
 
-        # create the request. Wait for up to x seconds for a card to be attached
-        request = CardRequest(timeout=WAIT_FOR_SECONDS, cardType=card_type)
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.thread.join()
 
-        while True:
-            # listen for the card
-            service = None
-            try:
-                service = request.waitforcard()
-            except CardRequestTimeoutException:
-                print("Tarjeta no detectada")
-                # could add "exit(-1)" to make code terminate
 
-            # when a card is attached, open a connection
-            try:
-                conn = service.connection
-                conn.connect()
+    # def getuid():
+    #     WAIT_FOR_SECONDS = 60
+    #     # respond to the insertion of any type of smart card
+    #     card_type = AnyCardType()
 
-                # get the ATR and UID of the card
-                get_uid = util.toBytes("FF CA 00 00 00")
-                data, sw1, sw2 = conn.transmit(get_uid)
-                uid = util.toHexString(data)
-                status = util.toHexString([sw1, sw2])
-                print(uid)
-                break
-            except:
-                pass
-        time.sleep(2)
-        return
+    #     # create the request. Wait for up to x seconds for a card to be attached
+    #     request = CardRequest(timeout=WAIT_FOR_SECONDS, cardType=card_type)
 
+    #     while True:
+    #         # listen for the card
+    #         service = None
+    #         try:
+    #             service = request.waitforcard()
+    #         except CardRequestTimeoutException:
+    #             print("Tarjeta no detectada")
+    #             # could add "exit(-1)" to make code terminate
+
+    #         # when a card is attached, open a connection
+    #         try:
+    #             conn = service.connection
+    #             conn.connect()
+
+    #             # get the ATR and UID of the card
+    #             get_uid = util.toBytes("FF CA 00 00 00")
+    #             data, sw1, sw2 = conn.transmit(get_uid)
+    #             uid = util.toHexString(data)
+    #             status = util.toHexString([sw1, sw2])
+    #             print(uid)
+    #             break
+    #         except:
+    #             pass
+    #     time.sleep(2)
+    #     return
+        
+
+# NFC.identify()
 # from multiprocessing import Queue
 # from threading import Thread
 

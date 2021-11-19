@@ -1,28 +1,24 @@
-from glob import glob
-import queue
+from datetime import datetime, timedelta
 from sys import path
 from tkinter import *
-from tkinter import ttk
 from PIL import Image, ImageTk
-from tkinter import messagebox
-from tkinter import filedialog
-from tkinter import simpledialog
+from tkinter import messagebox, filedialog, simpledialog, Listbox
 import cv2
 import os
 import platform
 import time
-from multiprocessing import Queue
-from threading import Thread
-# from varname import varname, nameof
+from threading import Thread, Lock
+from effdet.utils.inference import init_effdet_model,inference_effdet_model
+
+from Services import API_Services
+from UserClass import Person
+from FileManagementClass import FileManagement
+from NFCClass import NFC
 
 from numpy import CLIP
 from imagenClipClass import imageClip
-from NFCClass import NFC
-from FileManagementClass import FileManagement
 
 import torch
-
-listImagenClip = []
 
 ##Path
 if platform.system() == "Darwin":
@@ -52,23 +48,14 @@ def downloadEfficientDet():
     return
 
 def importMDETER():
-    from PIL import Image
     import requests
     import torchvision.transforms as T
-    import matplotlib.pyplot as plt
     from collections import defaultdict
-    import torch.nn.functional as F
-    import numpy as np
-    from skimage.measure import find_contours
-    from matplotlib import patches,  lines
-    from matplotlib.patches import Polygon
     import pathlib
     torch.set_grad_enabled(False);
     temp = pathlib.PosixPath
     pathlib.PosixPath = pathlib.WindowsPath
-    # model_qa = torch.hub.load('ashkamath/mdetr:main', 'mdetr_efficientnetB5_gqa', pretrained=True, return_postprocessor=False)
-    # model_qa = model_qa.cuda()
-    # model_qa.eval();
+
     model, postprocessor = torch.hub.load('ashkamath/mdetr:main', 'mdetr_efficientnetB5', pretrained=True, return_postprocessor=True)
     model = model.cuda()
     model.eval();
@@ -98,48 +85,6 @@ def importMDETER():
     COLORS = [[0.000, 0.447, 0.741], [0.850, 0.325, 0.098], [0.929, 0.694, 0.125],
             [0.494, 0.184, 0.556], [0.466, 0.674, 0.188], [0.301, 0.745, 0.933]]
 
-    def apply_mask(image, mask, color, alpha=0.5):
-        """Apply the given mask to the image.
-        """
-        for c in range(3):
-            image[:, :, c] = np.where(mask == 1,
-                                    image[:, :, c] *
-                                    (1 - alpha) + alpha * color[c] * 255,
-                                    image[:, :, c])
-        return image
-
-    def plot_results(pil_img, scores, boxes, labels, masks=None):
-        plt.figure(figsize=(16,10))
-        np_image = np.array(pil_img)
-        ax = plt.gca()
-        colors = COLORS * 100
-        if masks is None:
-            masks = [None for _ in range(len(scores))]
-        assert len(scores) == len(boxes) == len(labels) == len(masks)
-        for s, (xmin, ymin, xmax, ymax), l, mask, c in zip(scores, boxes.tolist(), labels, masks, colors):
-            ax.add_patch(plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin,
-                                    fill=False, color=c, linewidth=3))
-            text = f'{l}: {s:0.2f}'
-            ax.text(xmin, ymin, text, fontsize=15, bbox=dict(facecolor='white', alpha=0.8))
-
-            if mask is None:
-                continue
-            np_image = apply_mask(np_image, mask, c)
-
-            padded_mask = np.zeros((mask.shape[0] + 2, mask.shape[1] + 2), dtype=np.uint8)
-            padded_mask[1:-1, 1:-1] = mask
-            contours = find_contours(padded_mask, 0.5)
-            for verts in contours:
-                # Subtract the padding and flip (y, x) to (x, y)
-                verts = np.fliplr(verts) - 1
-                p = Polygon(verts, facecolor="none", edgecolor=c)
-                ax.add_patch(p)
-
-
-        plt.imshow(np_image)
-        plt.axis('off')
-        plt.show()
-
     import json
     answer2id_by_type = json.load(requests.get("https://nyu.box.com/shared/static/j4rnpo8ixn6v0iznno2pim6ffj3jyaj8.json", stream=True).raw)
     id2answerbytype = {}                                                       
@@ -156,6 +101,7 @@ def importMDETER():
         memory_cache = model(img, [caption], encode_and_save=True)
         outputs = model(img, [caption], encode_and_save=False, memory_cache=memory_cache)
 
+        global probas, keep
         # keep only predictions with 0.7+ confidence
         probas = 1 - outputs['pred_logits'].softmax(-1)[0, :, -1].cpu()
         keep = (probas > 0.7).cpu()
@@ -177,99 +123,17 @@ def importMDETER():
         # print('boxes: ', bboxes)
         # plot_results(im, probas[keep], bboxes_scaled, labels)
 
-    # def plot_inference_qa(im, caption):
-    #     # mean-std normalize the input image (batch-size: 1)
-    #     img = transform(im).unsqueeze(0).cuda()
-
-    #     # propagate through the model
-    #     memory_cache = model_qa(img, [caption], encode_and_save=True)
-    #     outputs = model_qa(img, [caption], encode_and_save=False, memory_cache=memory_cache)
-
-    #     # keep only predictions with 0.7+ confidence
-    #     probas = 1 - outputs['pred_logits'].softmax(-1)[0, :, -1].cpu()
-    #     keep = (probas > 0.7).cpu()
-
-    #     # convert boxes from [0; 1] to image scales
-    #     bboxes_scaled = rescale_bboxes(outputs['pred_boxes'].cpu()[0, keep], im.size)
-
-    #     # Extract the text spans predicted by each box
-    #     positive_tokens = (outputs["pred_logits"].cpu()[0, keep].softmax(-1) > 0.1).nonzero().tolist()
-    #     predicted_spans = defaultdict(str)
-    #     for tok in positive_tokens:
-    #         item, pos = tok
-    #         if pos < 255:
-    #             span = memory_cache["tokenized"].token_to_chars(0, pos)
-    #             predicted_spans [item] += " " + caption[span.start:span.end]
-
-    #     labels = [predicted_spans [k] for k in sorted(list(predicted_spans .keys()))]
-    #     # plot_results(im, probas[keep], bboxes_scaled, labels)
-
-    #     # Classify the question type
-    #     type_conf, type_pred = outputs["pred_answer_type"].softmax(-1).max(-1)
-    #     ans_type = type_pred.item()
-    #     types = ["obj", "attr", "rel", "global", "cat"]
-
-    #     ans_conf, ans = outputs[f"pred_answer_{types[ans_type]}"][0].softmax(-1).max(-1)
-    #     global answer
-    #     answer = id2answerbytype[f"answer_{types[ans_type]}"][ans.item()]
-    #     print(f"Predicted answer: {answer}\t confidence={round(100 * type_conf.item() * ans_conf.item(), 2)}")
     print("MDETR cargado")
 
 def clearCacheMDETR():
     torch.cuda.empty_cache()
 
 def loadEfficient():
-    ### Arreglar directorio
-    import sys
-    sys.path.append("C:/Users/Doravan/Desktop/Hidrolatina/torchtest/Yet-Another-EfficientDet-Pytorch")
-    import torch
-    from torch.backends import cudnn
-    from threading import Thread, Lock
-
-    from backbone import EfficientDetBackbone
-    import cv2
-    import matplotlib.pyplot as plt
-    import numpy as np
-
-    from efficientdet.utils import BBoxTransform, ClipBoxes
-    from utils.utils import preprocess, invert_affine, postprocess
-
-    global preprocess, invert_affine, postprocess, BBoxTransform, ClipBoxes
-
-    compound_coef = 2
-    force_input_size = None  # set None to use default size
-
-    global use_cuda, use_float16
-    use_cuda = True
-    use_float16 = False                                                 
-    cudnn.fastest = True
-    cudnn.benchmark = True
-
+    weigths_effdet = 'C:/hidrolatina/EfficientDetVandV-main/effdet/logs/person_coco/efficientdet-d2_58_8260_best.pth'
     global obj_list
     obj_list = ['person']
-
-    global input_size
-
-    input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536]
-    input_size = input_sizes[compound_coef] if force_input_size is None else force_input_size
-    global model_ed
-
-    model_ed = EfficientDetBackbone(compound_coef=compound_coef, num_classes=len(obj_list),
-
-                                # replace this part with your project's anchor config
-                                ratios=[(1.0, 1.0), (1.4, 0.7), (0.7, 1.4)],
-                                scales=[2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)])
-
-    model_ed.load_state_dict(torch.load('C:/Users/Doravan/Desktop/Hidrolatina/torchtest/Yet-Another-EfficientDet-Pytorch/efficientdet-d2_65_9200.pth'))
-    # model_ed.load_state_dict(torch.load('E:/Users/darkb/OneDrive/Documentos/EIE/Tesis/Pruebas_de_codigos/Yet-Another-EfficientDet-Pytorch/weights/efficientdet-d3_206_34776_best.pth'))
-    model_ed.requires_grad_(False)
-    model_ed.eval()
-
-    if use_cuda:
-        model_ed = model_ed.cuda()
-    if use_float16:
-        model_ed = model_ed.half()
-
+    global model_effdet
+    model_effdet = init_effdet_model(weigths_effdet, obj_list)
     ##Class CameraStream
     global CameraStream
     class CameraStream(object):
@@ -312,151 +176,17 @@ def loadEfficient():
 
     print('EfficientDET Cargado')
 
-def pytorchCamera():
-    ###REAL##
-    import cv2
-    cap = cv2.VideoCapture(0)
-
-    import numpy as np
-    import datetime
-    import matplotlib.pyplot as plt
-
-    det=0
-
-    while True:
-        # Read frame from camera
-        cap.set(cv2.CAP_PROP_FPS,16)
-        ret, image_np = cap.read()
-        image_path=[image_np]
-
-        
-        threshold = 0.6
-        iou_threshold = 0.1
-
-        # # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
-        # image_np_expanded = np.expand_dims(image_np, axis=0)
-        ori_imgs, framed_imgs, framed_metas = preprocess(image_path, max_size=input_size)
-
-        if use_cuda:
-            x = torch.stack([torch.from_numpy(fi).cuda() for fi in framed_imgs], 0)
-        else:
-            x = torch.stack([torch.from_numpy(fi) for fi in framed_imgs], 0)
-
-        x = x.to(torch.float32 if not use_float16 else torch.float16).permute(0, 3, 1, 2)
-
-        with torch.no_grad():
-            features, regression, classification, anchors = model_ed(x)
-
-            regressBoxes = BBoxTransform()
-            clipBoxes = ClipBoxes()
-
-            out = postprocess(x,
-                            anchors, regression, classification,
-                            regressBoxes, clipBoxes,
-                            threshold, iou_threshold)
-
-        out = invert_affine(framed_metas, out)
-
-
-        # if len(out[0]['rois']) == 0:
-
-        ori_img = ori_imgs[0].copy()
-        for j in range(len(out[0]['rois'])):
-            (x1, y1, x2, y2) = out[0]['rois'][j].astype(np.int)
-            cv2.rectangle(ori_img, (x1, y1), (x2, y2), (255, 255, 0), 2)
-            obj = obj_list[out[0]['class_ids'][j]]
-            score = float(out[0]['scores'][j])
-
-            cv2.putText(ori_img, '{}, {:.3f}'.format(obj, score),
-                        (x1, y1 + 10), cv2.FONT_HERSHEY_SIMPLEX, .5,
-                        (255, 255, 0), 2)
-
-        cv2.imshow('object_detection', cv2.resize(ori_img, (800, 600)))
-        if cv2.waitKey(25) & 0xFF == ord('q'):
-            cap.release()
-            cv2.destroyAllWindows()
-            break
-   
-
-        if len(out[0]['scores']) > 0:
-            det += 1
-            if det==20:     #break in det-1
-                global date_hour
-                now = datetime.datetime.now()
-                date_hour='%d/%d/%d-%d:%d:%d'%( now.day, now.month, now.year, now.hour, now.minute, now.second )
-                print(date_hour)
-                cap.release()
-                cv2.destroyAllWindows()
-                break
-
-        if len(out[0]['scores'])==0:
-            det=0
-
-
-        
-        # Save Bounding Boxes
-
-        for i in range((out[0]['scores']).size):
-            detected_boxes= out[0]['rois'][i]
-              
-
-
-        # Crop and save detedtec bounding box image
-
-            xmin = int((detected_boxes[0]))
-            ymin = int((detected_boxes[1]))
-            xmax = int((detected_boxes[2]))
-            ymax = int((detected_boxes[3]))
-            cropped_img = image_np[ymin:ymax,xmin:xmax]
-
-            if cropped_img.size != 0:
-                imagencamera = cropped_img
-                global im
-                im = Image.fromarray(cv2.cvtColor(imagencamera, cv2.COLOR_BGR2RGB))
-                print(im)
-            # imgplot = plt.imshow(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
-            # plt.show()
-            # print(imgplot)
-            # print('ymin',ymin)
-            # print('fdsfssdfdsf')
-            # print('detected_boxes',detected_boxes)
-            # print('cropped_img',cropped_img)
-            # if cropped_img.size == 0:
-            #     continue
-            # else:
-            #     #cv2.imwrite('cropped_image_{}.jpg'.format(i), cropped_img)
-            #     print('cropped_img')
-            # imagencamera = Image.fromarray(cropped_img, 'RGB')
-    ################################Borrar###########################################
-    cropPerson =  imageClip(ImageTk.PhotoImage(im), 'Person detected on '+date_hour)
-    listImagenClip.append(cropPerson)
-
-
 def MDETR(im):
-    import cv2
-    # im = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
-    # im = Image.fromarray(imagencamera)
     plot_inference(im, "a hand")
-    im_hand=im.crop((bboxes[len(bboxes)-1]))
-    plot_inference(im, "a tiny head")
-    global im_head
-    im_head=im.crop((bboxes[len(bboxes)-1]))
-    plot_inference(im, "a rain boot")
-    global im_boot
-    im_boot=im.crop((bboxes[len(bboxes)-1]))
-    # cropPersonHead = imageClip(im_head, "")
-    # listImagenClip.append(cropPersonHead)
-    # im_head.save('clip/cropped_head.jpg')
-    # plot_inference_qa(im_hand, "what color are the fingers?")
-    # if answer =='purple' or answer =='blue':
-    #     gloves= 'Yes'
+    im_hand=im.crop((bboxes[argmax(probas[keep])]))
 
-    # else:
-    #     gloves= 'No'
-    # cropPersonHand = imageClip(ImageTk.PhotoImage(im_hand), 'Gloves: '+gloves)
-    # listImagenClip.append(cropPersonHand)
+    plot_inference(im, "a head")
+    im_head=im.crop((bboxes[argmax(probas[keep])]))
 
-    objectListMDETR= {'im_head':im_head.resize((150,150)), 'im_hand': im_hand.resize((150,150)), 'im_boot': im_boot.resize((150,150))}
+    plot_inference(im, "a boot")
+    im_boot=im.crop((bboxes[argmax(probas[keep])]))
+
+    objectListMDETR= {'im_head':im_head, 'im_hand': im_hand, 'im_boot': im_boot}
     return objectListMDETR
 
 def loadClip():
@@ -465,12 +195,14 @@ def loadClip():
     import glob
 
     global candidate_captions
-    # class_names={'im_head': [['helmet','no_helmet'], ['mask', 'no_mask'], ['goggles', 'no_goggles'], ['headphones', 'no_headphones']],
-    #             'im_hand':[['gloves', 'no_gloves']],
-    #             'im_boot': [['boots', 'no boots']]}
-    candidate_captions={'im_head': [['a head with a helmet','Just a head'], ['Head with headphones', 'Just a head'],['a Head with a goggle', 'Just a head'],['Head with a medical mask', 'Just a head']],
+    candidate_captions={'im_head': [['a head with a yellow helmet','Just a head'], ['Head with headphones', 'Just a head'],['a Head with goggles', 'Just a head'],['Head with a medical mask', 'Just a head']],
                 'im_hand':[['A blue hand', 'A pink hand']],
-                'im_boot':[['A large black boot', 'Just a thing']]}
+                'im_boot':[['A black boot', 'A shoe']]}
+    # candidate_captions={'im_head': [['a white hat','A head'], ['a big headset', 'a face'],['a face with glasses', 'A head'],['Mask', 'Just a head']],
+    #             'im_hand':[['A blue hand', 'A pink hand']],
+    #             'im_boot':[['a large boot', 'a small shoe']]}
+    global names_ppe
+    names_ppe = {'im_head': ['Casco', 'Audífonos', 'Antiparras', 'Mascarilla'], 'im_hand': ['Guantes'], 'im_boot': ['Botas']}
 
     global argmax
     def argmax(iterable):
@@ -491,12 +223,9 @@ def loadClip():
         return [name for name in globals() if globals()[name] is obj][0]
     print('Clip Cargado')
 
-def clip(bodypart):
-    # head=Image.open('E:/Softmaking/Proyectos/Hidrolatina/valorant.jpg')
+def clip(bodypart, mdetr_list):
     pred_clip=[]
     for i in range(len(candidate_captions[bodypart])):
-        # head=Image.open('E:/Users/darkb/OneDrive/Documentos/EIE/Tesis/Pruebas_de_codigos/Bases_de_datos/Implementos seguridad/others/goggles_headphones/head (99).jpg')
-        # print(candidate_captions[nstr(bodypart)][i])
         text = clipit.tokenize(candidate_captions[bodypart][i]).to(device)
         image = process(mdetr_list[bodypart]).unsqueeze(0).to(device)
 
@@ -512,38 +241,28 @@ def clip(bodypart):
                 pred_clip.append('OK')
             else:
                 pred_clip.append('NO DETECTADO')
-        #     np_image = np.array(head)
-        # plt.imshow(np_image)
+
     return pred_clip
+
+# def librerias():
+    # importMDETER()
+    # loadClip()
+    # loadEfficient()
+    # messagebox.showinfo(message="Dependencias cargadas")
+    # thread.join()
+
 
 def loadALL():
     # from threading import Thread
-    # thread= Thread(target=librerias, args=())
-    # thread.start()
-
+    # libThread= Thread(target=librerias, args=(),daemon=True)
+    # libThread.start()
     importMDETER()
     loadClip()
     loadEfficient()
     messagebox.showinfo(message="Dependencias cargadas")
 
+
 ########Windows#######
-
-root = Tk()
-root.title("Softmaking")
-root.resizable(False,False)
-#root.iconbitmap("logo-sm.ico")
-
-#Center windows
-app_width = 300
-app_height = 300
-
-screen_width = root.winfo_screenwidth()
-screen_height = root.winfo_screenheight()
-
-x = (screen_width/2) - (app_width/2)
-y = (screen_height/2) - (app_height/2)
-
-root.geometry(f'{app_width}x{app_height}+{int(x)}+{int(y)}')
 
 #Def
 def popup(message):
@@ -553,19 +272,15 @@ def folderSelect():
     folder_selected = filedialog.askdirectory()
     print(folder_selected)
 
-def checkListImagenClip():
-    if len(listImagenClip) == 0 :
-        popup('No hay datos que mostrar')
-    else:
-        showImageClipTk
-
+def folderframeSelect():
+    global frame_selected
+    frame_selected = filedialog.askopenfilename()
+    print(frame_selected)
 
 ###################Def Windows's###################
 
-def showPytorchCameraTk():
-    #Import
-    import matplotlib.pyplot as plt
-    import datetime
+def showPytorchCameraTk(user):
+    # import datetime
     import numpy as np
 
     #Var/Global
@@ -578,8 +293,8 @@ def showPytorchCameraTk():
     #Tkinter config
     pytorchCameraTk = Toplevel()
     pytorchCameraTk.title('Camara')
-    pytorchCameraTk.resizable(False,False)
-    pytorchCameraTk.config(background="#FFFFFF")
+    # pytorchCameraTk.resizable(False,False)
+    pytorchCameraTk.config(background="#cceeff")
     pytorchCameraTk.overrideredirect(True)
     pytorchCameraTk.geometry(f'{pytorchCameraTk.winfo_screenwidth()}x{pytorchCameraTk.winfo_screenheight()}')
     # pytorchCameraTk.geometry(f'{1280}x{720}')
@@ -590,42 +305,42 @@ def showPytorchCameraTk():
     original_image = image.subsample(1,1)
 
     #Frame Camera
-    cameraFrame = Frame(pytorchCameraTk, width=pytorchCameraTk.winfo_screenwidth()*0.7, height=pytorchCameraTk.winfo_screenheight())
+    cameraFrame = Frame(pytorchCameraTk, width=pytorchCameraTk.winfo_screenwidth()*0.7, height=pytorchCameraTk.winfo_screenheight(), bg='#cceeff')
     cameraFrame.grid(row=0, column=0)
 
     # #Frame detections
-    detectionFrame = Frame(pytorchCameraTk, bg="red", width=pytorchCameraTk.winfo_screenwidth()*0.3, height=pytorchCameraTk.winfo_screenheight())
+    detectionFrame = Frame(pytorchCameraTk, bg="#cceeff", width=pytorchCameraTk.winfo_screenwidth()*0.3, height=pytorchCameraTk.winfo_screenheight())
     detectionFrame.grid(row=0, column=1)
 
     # ##Subs frames lvl 1 detections
-    headFrame = Frame(detectionFrame, bg="blue", width=detectionFrame.winfo_reqwidth(), height=detectionFrame.winfo_reqheight()*0.334)
+    headFrame = Frame(detectionFrame, bg="#b5e6ff", width=detectionFrame.winfo_reqwidth(), height=detectionFrame.winfo_reqheight()*0.334)
     headFrame.grid(row=0, column=0)
 
-    handFrame = Frame(detectionFrame, bg="blue", width=detectionFrame.winfo_reqwidth(), height=detectionFrame.winfo_reqheight()*0.334)
+    handFrame = Frame(detectionFrame, bg="#b5e6ff", width=detectionFrame.winfo_reqwidth(), height=detectionFrame.winfo_reqheight()*0.334)
     handFrame.grid(row=1, column=0)
 
-    bootFrame = Frame(detectionFrame, bg="blue", width=detectionFrame.winfo_reqwidth(), height=detectionFrame.winfo_reqheight()*0.334)
+    bootFrame = Frame(detectionFrame, bg="#b5e6ff", width=detectionFrame.winfo_reqwidth(), height=detectionFrame.winfo_reqheight()*0.334)
     bootFrame.grid(row=2, column=0)
 
     # ###Subs frames lvl 2 headFrame
-    imageHeadFrame = Frame(headFrame, bg="green", width=headFrame.winfo_reqwidth()*0.5, height=headFrame.winfo_reqheight())
+    imageHeadFrame = Frame(headFrame, bg="#b5e6ff", width=headFrame.winfo_reqwidth()*0.5, height=headFrame.winfo_reqheight())
     imageHeadFrame.grid(row=0, column=0)
 
-    dataHeadFrame = Frame(headFrame, bg="green", width=headFrame.winfo_reqwidth()*0.5, height=headFrame.winfo_reqheight())
+    dataHeadFrame = Frame(headFrame, bg="#b5e6ff", width=headFrame.winfo_reqwidth()*0.5, height=headFrame.winfo_reqheight())
     dataHeadFrame.grid(row=0, column=1)
 
     # ###Subs frames lvl 2 handFrame
-    imageHandFrame = Frame(handFrame, bg="green", width=handFrame.winfo_reqwidth()*0.5, height=handFrame.winfo_reqheight())
+    imageHandFrame = Frame(handFrame, bg="#b5e6ff", width=handFrame.winfo_reqwidth()*0.5, height=handFrame.winfo_reqheight())
     imageHandFrame.grid(row=0, column=0)
 
-    dataHandFrame = Frame(handFrame, bg="green", width=handFrame.winfo_reqwidth()*0.5, height=handFrame.winfo_reqheight())
+    dataHandFrame = Frame(handFrame, bg="#b5e6ff", width=handFrame.winfo_reqwidth()*0.5, height=handFrame.winfo_reqheight())
     dataHandFrame.grid(row=0, column=1)
 
     # ###Subs frames lvl 2 bootFrame
-    imageBootFrame = Frame(bootFrame, bg="green", width=bootFrame.winfo_reqwidth()*0.5, height=bootFrame.winfo_reqheight())
+    imageBootFrame = Frame(bootFrame, bg="#b5e6ff", width=bootFrame.winfo_reqwidth()*0.5, height=bootFrame.winfo_reqheight())
     imageBootFrame.grid(row=0, column=0)
 
-    dataBootFrame = Frame(bootFrame, bg="green", width=bootFrame.winfo_reqwidth()*0.5, height=bootFrame.winfo_reqheight())
+    dataBootFrame = Frame(bootFrame, bg="#b5e6ff", width=bootFrame.winfo_reqwidth()*0.5, height=bootFrame.winfo_reqheight())
     dataBootFrame.grid(row=0, column=1)
 
     # ###Label imageHeadFrame Sub frame lvl 2 headFrame
@@ -657,16 +372,12 @@ def showPytorchCameraTk():
     # ####Label dataBootFrame Sub frame lvl 2 bootFrame
     Label(dataBootFrame, text="Botas", width=8).grid(row=0, column=0, padx=5, pady=5)
     Label(dataBootFrame, width=10).grid(row=0, column=1, padx=5, pady=5)
-    
-    #Slider window (slider controls stage position)
-    # sliderFrame = Frame(pytorchCameraTk, width=600, height=100)
-    # sliderFrame.grid(row = 600, column=0, padx=10, pady=2)
 
     #Capture video frames
     labelVideo = Label(cameraFrame)
     labelVideo.grid(row=0, column=0)
-    # cap = CameraStream(varCamera).start()
-    cap = cv2.VideoCapture(0)
+    cap = CameraStream().start()
+    # cap = cv2.VideoCapture(0)
 
     camWidth = round(cameraFrame.winfo_reqwidth())
     camHeight = round(cameraFrame.winfo_reqheight()*0.85)
@@ -674,7 +385,7 @@ def showPytorchCameraTk():
     #Def into tk
     def closeTk():
         #Destroy window
-        cap.release()
+        cap.stop()
         pytorchCameraTk.destroy()
         # root.deiconify()
 
@@ -698,42 +409,19 @@ def showPytorchCameraTk():
     def showFrame():
         # _, frame = cap.read()
         # frame = cv2.flip(frame, 1)
-        frame = cap.read()
+        try:
+            frame=cv2.imread(frame_selected)
+        except:
+            frame = cap.read()
 
-        threshold = 0.4
-        iou_threshold = 0.1
+        out = inference_effdet_model(model_effdet, frame)
+        ori_img = frame.copy()
 
-        image_path= [frame]
-        ori_imgs, framed_imgs, framed_metas = preprocess(image_path, max_size=input_size)
-
-        if use_cuda:
-            x = torch.stack([torch.from_numpy(fi).cuda() for fi in framed_imgs], 0)
-        else:
-            x = torch.stack([torch.from_numpy(fi) for fi in framed_imgs], 0)
-
-        x = x.to(torch.float32 if not use_float16 else torch.float16).permute(0, 3, 1, 2)
-
-        with torch.no_grad():
-            features, regression, classification, anchors = model_ed(x)
-
-            regressBoxes = BBoxTransform()
-            clipBoxes = ClipBoxes()
-
-            out = postprocess(x,
-                            anchors, regression, classification,
-                            regressBoxes, clipBoxes,
-                            threshold, iou_threshold)
-
-        out = invert_affine(framed_metas, out)
-
-        # if len(out[0]['rois']) == 0:
-
-        ori_img = ori_imgs[0].copy()
-        for j in range(len(out[0]['rois'])):
-            (x1, y1, x2, y2) = out[0]['rois'][j].astype(np.int)
+        for j in range(len(out['bbox'])):
+            (x1, y1, x2, y2) = out['bbox'][j].astype(np.int)
             cv2.rectangle(ori_img, (x1, y1), (x2, y2), (255, 255, 0), 2)
-            obj = obj_list[out[0]['class_ids'][j]]
-            score = float(out[0]['scores'][j])
+            obj = obj_list[out['class_ids'][j]]
+            score = float(out['scores'][j])
 
             cv2.putText(ori_img, '{}, {:.3f}'.format(obj, score),
                         (x1, y1 + 10), cv2.FONT_HERSHEY_SIMPLEX, .5,
@@ -747,15 +435,15 @@ def showPytorchCameraTk():
 
         global det
         print(det)
-        if len(out[0]['class_ids']) == 0:
+        if len(out['class_ids']) == 0:
             det = 0
-        if len(out[0]['class_ids']) > 0:
+        if len(out['class_ids']) > 0:
             det += 1
             if det==20:
 
                 print("Reset")
-                for i in range((out[0]['scores']).size):
-                    detected_boxes= out[0]['rois'][i]
+                for i in range((out['scores']).size):
+                    detected_boxes= out['bbox'][i]
 
                 # Crop and save detedtec bounding box image
 
@@ -772,30 +460,35 @@ def showPytorchCameraTk():
                 cap.stop()
                 copy_imgtk = imgtk
                 labelVideo.imgtk = copy_imgtk
-                global mdetr_list
                 mdetr_list=MDETR(im)
-
+    ################################################ CORRERGIR ###############################################
+    ################################################ CORRERGIR ###############################################
+    ################################################ CORRERGIR ###############################################
                 # print(mdetr_list)
                 global listImagenClip
+                listImagenClip = []
                 for bodypart in mdetr_list.keys():
-                    listImagenClip.append(imageClip(ImageTk.PhotoImage(mdetr_list[bodypart]), clip(bodypart)))
+                    listImagenClip.append(imageClip(names_ppe[bodypart], ImageTk.PhotoImage(mdetr_list[bodypart].resize((150,150))), clip(bodypart, mdetr_list)))
                     # print(bodypart)
                 
-                updateLabelTest()
-                
+                updateLabel()
+    ################################################ CORRERGIR ###############################################
+    ################################################ CORRERGIR ###############################################
+    ################################################ CORRERGIR ###############################################
                 
         if det<20:
             labelVideo.after(10, showFrame)
-    
-    def timePop(booleanAnswer):
-        ContinueExecuting = True
-        starting_point = time.time()
-        while ContinueExecuting:
-            elapsed_time = time.time () - starting_point
-            elapsed_time_int = int(elapsed_time)
-            if elapsed_time_int >= 10:
-                popupIdentificationTk(booleanAnswer)
-                ContinueExecuting = False
+
+    def counterPopUp(endTime, booleanAnswer):
+        if datetime.now() > endTime:
+            print('si')
+            print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
+            print('funciona')
+            popupIdentificationTk(booleanAnswer)
+        else:
+            print('no')
+            print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
+            pytorchCameraTk.after(5000, counterPopUp, endTime, booleanAnswer)
 
     def updateLabel():
         global image
@@ -820,133 +513,28 @@ def showPytorchCameraTk():
         Label(dataBootFrame, text=(listImagenClip[2].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
 
         booleanAnswer = None
-        for i in range(len(listImagenClip)):
-            for j in range(len(listImagenClip[i])):
-                if listImagenClip[i].getAnswer()[j] == 'OK':
+        for list in listImagenClip:
+            for j in range(len(list.getAnswer())):
+                if list.getAnswer()[j] == 'OK':
+                    print(list.getName()[j])
+                    print(list.getAnswer()[j])
                     booleanAnswer = True
                 else:
                     booleanAnswer = False
-                    break
+                print(booleanAnswer)
 
-        thread = Thread(target=timePop,args=(booleanAnswer,))
-        thread.start()
+        endTime = datetime.now() + timedelta(seconds=15)
+        if len(listImagenClip) > 0:
+            counterPopUp(endTime, booleanAnswer)
+        # pytorchCameraTk.after(1, counterPopUp, endTime, booleanAnswer)
 
-    testFrame()
-    # showFrame()
-
+    # testFrame()
     exitButton = Button(pytorchCameraTk, text='Cerrar ventana', command=closeTk)
     exitButton.grid(row=1, column=0)
 
     testButtonUpdate = Button(pytorchCameraTk, text='Test Update', command=updateLabel)
     testButtonUpdate.grid(row=1, column=1)
-
-def showImageClipTk():
-    #Config Tk
-    imageClipTk = Toplevel()
-    imageClipTk.title('Imagenes')
-    imageClipTk.resizable(False,False)
-    imageClipTk.protocol("WM_DELETE_WINDOW", exit)
-    imageClipTk.overrideredirect(True)
-    x = root.winfo_x()
-    y = root.winfo_y()
-    imageClipTk.geometry("+%d+%d" % (x, y))
-
-    #Global Declarations
-    global imagenlist0
-    global imagenList
-    global labelimage
-    global buttonBack
-    global buttonForward
-    global labelText
-    global listImagenClip
-
-
-    #Def into tk
-    def closeTk():
-        #Destroy window
-        imageClipTk.destroy()
-        root.deiconify()
-
-    def forward(imageNumber):
-        #Global Declarations into Def tk
-        global labelimage
-        global buttonBack
-        global buttonForward
-        global labelText
-        global listImagenClip
-
-        #Image
-        labelimage.grid_forget()
-        labelimage = Label(imageClipTk, image=listImagenClip[imageNumber].getImage())
-        buttonForward = Button(imageClipTk, text='>>', command=lambda:forward(imageNumber+1))
-        buttonBack = Button(imageClipTk, text='<<', command=lambda:back(imageNumber-1))
-
-        #Text
-        labelText.grid_forget()
-        labelText = Label(imageClipTk, text=listImagenClip[imageNumber].getAnswer())
-
-        if imageNumber == len(listImagenClip)-1:
-            buttonForward = Button(imageClipTk, text='>>', state=DISABLED)
-        
-        labelimage.grid(row=0, column=0, columnspan=3)
-        buttonBack.grid(row=2, column=0)
-        buttonForward.grid(row=2, column=2)
-
-        labelText.grid(row=1, column=1)
-
-        return
-
-    def back(imageNumber):
-        #Global Declarations into Def tk
-        global labelimage
-        global buttonBack
-        global buttonForward
-        global labelText
-        global listImagenClip
-
-        #Image
-        labelimage.grid_forget()
-        labelimage = Label(imageClipTk, image=listImagenClip[imageNumber].getImage())
-        buttonForward = Button(imageClipTk, text='>>', command=lambda:forward(imageNumber+1))
-        buttonBack = Button(imageClipTk, text='<<', command=lambda:back(imageNumber-1))
-
-        #Text
-        labelText.grid_forget()
-        labelText = Label(imageClipTk, text=listImagenClip[imageNumber].getAnswer())
-
-        if imageNumber == 0:
-            buttonBack = Button(imageClipTk, text='<<', state=DISABLED)
-        
-        labelimage.grid(row=0, column=0, columnspan=3)
-        buttonBack.grid(row=2, column=0)
-        buttonForward.grid(row=2, column=2)
-
-        labelText.grid(row=1, column=1)
-        
-        return
-
-    #Hide Root Window
-    root.withdraw()
-
-    #Label Tk
-    labelimage = Label(imageClipTk, image=listImagenClip[0].getImage())
-    labelimage.grid(row=0, column=0, columnspan=3)
-    labelText = Label(imageClipTk, text=listImagenClip[0].getAnswer())
-    labelText.grid(row=1, column=1)
-
-    #Buttons Tk
-    buttonBack = Button(imageClipTk, text='<<', command=lambda:back, state=DISABLED)
-    buttonBack.grid(row=2, column=0)
-
-    exitButton = Button(imageClipTk, text="Cerrar ventana", command=closeTk)
-    exitButton.grid(row=2, column=1)
-
-    if len(listImagenClip) == 1:
-        buttonForward = Button(imageClipTk, text='>>', command=lambda:forward(1), state=DISABLED)
-        buttonForward.grid(row=2, column=2)
-    else:
-        buttonForward = Button(imageClipTk, text='>>', command=lambda:forward(1))
-        buttonForward.grid(row=2, column=2)
+    showFrame()
 
 
 def configCameraTk(configurationTk):
@@ -962,8 +550,8 @@ def configCameraTk(configurationTk):
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
 
-    x = (screen_width/2) - (app_width/2)
-    y = (screen_height/2) - (app_height/2)
+    x = (screen_width/2) - (width/2)
+    y = (screen_height/2) - (height/2)
 
     configCameraTk.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
 
@@ -993,36 +581,37 @@ def configCameraTk(configurationTk):
     closeWindow.pack()
 
 def nfc_identifyTk():
+    # import concurrent.futures
     # Config tk
     NFC_Tk = Toplevel()
-    NFC_Tk.resizable(False,False)
-    # NFC_Tk.protocol("WM_DELETE_WINDOW", exit)
+    # NFC_Tk.resizable(False,False)
     NFC_Tk.title("Identificación")
     # NFC_Tk.overrideredirect(True)
-
-    # width = 300
-    # height = 300
-    # screen_width = root.winfo_screenwidth()
-    # screen_height = root.winfo_screenheight()
-
-    # x = (screen_width/2) - (app_width/2)
-    # y = (screen_height/2) - (app_height/2)
-
-    # NFC_Tk.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
-
-    #Dimensions
-    print(NFC_Tk.winfo_screenwidth())
-    print(NFC_Tk.winfo_screenheight())
-    # NFC_Tk.geometry(f'{NFC_Tk.winfo_screenwidth()}x{NFC_Tk.winfo_screenheight()}')
-    NFC_Tk.geometry("1280x720")
+    NFC_Tk.geometry(f'{NFC_Tk.winfo_screenwidth()}x{NFC_Tk.winfo_screenheight()}')
 
     #Def
-    def thread_identify(que):
-        thread = Thread(target=NFC.identify,args=(que,))
-        thread.start()
-        time.sleep(2)
-        showPytorchCameraTk()
-        return True
+    def time_string():
+        return time.strftime('%H:%M:%S')
+
+    def update():
+        timeLabel.configure(text=time_string())
+        # Recursive
+        timeLabel.after(1000, update)
+
+    # def thread_identify():
+    #     test = NFC.identify()
+    #     print(test)
+    #     time.sleep(1)
+    #     thread_identify()
+
+        # while True:
+        # NFC.identify()
+        # thread = Thread(target=NFC.identify, args=())
+        # thread.start()
+        # var = thread.join()
+        # print(var)
+        # thread.start()
+        # return True
 
     def closeTk():
         NFC_Tk.destroy()
@@ -1031,55 +620,62 @@ def nfc_identifyTk():
     #Hide Root Window
     # root.withdraw()
 
+    # Frame
+    NFCFrame = Frame(NFC_Tk, width=NFC_Tk.winfo_screenwidth(), height=NFC_Tk.winfo_screenheight(), bg='#CCEEFF')
+    NFCFrame.grid()
+
     # Create left and right frames
-    left_frame = Frame(NFC_Tk, width=1280*0.6, height=720, bg='grey')
+    left_frame = Frame(NFCFrame, width=round(NFCFrame.winfo_reqwidth()*0.5), height=round(NFCFrame.winfo_reqheight()), bg='#CCEEFF')
     left_frame.grid(row=0, column=0)
 
-    right_frame = Frame(NFC_Tk, width=1280*0.4, height=720, bg='red')
+    right_frame = Frame(NFCFrame, width=round(NFCFrame.winfo_reqwidth()*0.5), height=round(NFCFrame.winfo_reqheight()), bg='#CCEEFF')
     right_frame.grid(row=0, column=1)
 
     # Divide right frame
-    up_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.7, bg='green')
+    up_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.15, bg='#CCEEFF')
     up_frame_right_frame.grid(row=0, column=0)
 
-    down_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.3, bg='blue')
+    down_frame_right_frame = Frame(right_frame, width=right_frame.winfo_reqwidth(), height=right_frame.winfo_reqheight()*0.85, bg='#CCEEFF')
     down_frame_right_frame.grid(row=1, column=0)
 
-    # Labels up_frame_right_frame
-    print(right_frame.winfo_reqheight()*0.3)
-    labelText = Label(up_frame_right_frame, text='Esperando Identificación ....')
-    labelText.config(font=('Helvatical bold',20))
-    labelText.grid(pady=(right_frame.winfo_reqheight()*0.7-labelText.winfo_reqheight())/2)
+    # Labels left_frame
+    global imageWaitDetectionLeft
+    imageWaitDetectionLeft = Image.open('images/waiting_identification_left.png')
+    imageWaitDetectionLeft = imageWaitDetectionLeft.resize((round(NFCFrame.winfo_reqwidth()*0.5), round(NFCFrame.winfo_reqheight())), Image.ANTIALIAS)
+    imageWaitDetectionLeft = ImageTk.PhotoImage(imageWaitDetectionLeft)
+    imageLabelLeft_Frame = Label(left_frame, image=imageWaitDetectionLeft, borderwidth=0)
+    imageLabelLeft_Frame.grid(row=0, column=0)
 
-    print((right_frame.winfo_reqheight()*0.3-labelText.winfo_reqheight())/2)
-    # labelText = Label(down_frame_right_frame, text='dsdsd ....')
-    # labelText.grid()
+    global imageWaitDetectionRight
+    imageWaitDetectionRight = Image.open('images/waiting_identification_right.png')
+    imageWaitDetectionRight = imageWaitDetectionRight.resize((round(down_frame_right_frame.winfo_reqwidth()), round(down_frame_right_frame.winfo_reqheight())), Image.ANTIALIAS)
+    imageWaitDetectionRight = ImageTk.PhotoImage(imageWaitDetectionRight)
+    imageLabelRight_frameDown = Label(right_frame, image=imageWaitDetectionRight, borderwidth=0)
+    imageLabelRight_frameDown.grid(row=1, column=0)
 
+    timeLabel = Label(up_frame_right_frame, text=time_string(), bg='#CCEEFF', font=('Digital-7', up_frame_right_frame.winfo_reqheight()))
+    timeLabel.grid()
+    
+    timeLabel.after(1000, update)
 
-    #Labels Tk
-    # labelText = Label(NFC_Tk, text='Esperando Identificación ....', size=14)
-    # labelText.pack()
+    # thread= Thread(target=identify, args=())
+    # thread.start()
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #         future = executor.submit(NFC.identify)
+            # return_value = future.result()
+            # print(return_value)
 
+    # NFC_Tk.after(3000, thread_identify)
 
     #Buttons Tk
     # Button(NFC_Tk, text="Cerrar Ventana", command=lambda:closeTk()).pack(pady=10)
-
-    que = Queue()
-    #Code
-    thread_identify(que)
-    
-    # thre = Thread(thread_identify, args=(que,))
-    # thre.start()
-    # thread = Thread(target=lambda q, arg1: q.put(foo(arg1)), args=(que, 'world!'))
-    # thread = Thread(target=NFC.identify,args=(que,))
-    # thread.start()
-    # result = queue.get()
-    # print(result)
 
     # thread= Thread(target=NFC.identify, args=())
     # thread.start()
 
     # thread.join()
+
+    return NFC_Tk
 
 def popupIdentificationTk(booleanAnswer):
     # Config tk
@@ -1089,87 +685,224 @@ def popupIdentificationTk(booleanAnswer):
     popupIdentificationTk.overrideredirect(True)
     popupIdentificationTk.geometry(f'{popupIdentificationTk.winfo_screenwidth()}x{popupIdentificationTk.winfo_screenheight()}')
     # popupIdentificationTk.geometry("1280x720")
-    
-    #Globals
-    global detecctions
-
-    #Def
 
     #Code
+
+    PopUpIdentificationFrame = Frame(popupIdentificationTk, width=popupIdentificationTk.winfo_screenwidth(), height=popupIdentificationTk.winfo_screenheight(), bg='#CCEEFF')
+    PopUpIdentificationFrame.grid()
+
     if booleanAnswer:
-        detecctions = Image.open('images/approved_detections.png')
-        detecctions = detecctions.resize((popupIdentificationTk.winfo_screenwidth(), popupIdentificationTk.winfo_screenheight()), Image.ANTIALIAS)
-        detecctions = ImageTk.PhotoImage(detecctions)
+        global detections
+        detections = Image.open('images/approved_detections.png')
+        detections = detections.resize((PopUpIdentificationFrame.winfo_reqwidth(), PopUpIdentificationFrame.winfo_reqheight()), Image.ANTIALIAS)
+        detections = ImageTk.PhotoImage(detections)
+
+        imageFrame = Frame(PopUpIdentificationFrame, width=PopUpIdentificationFrame.winfo_reqwidth(), height=PopUpIdentificationFrame.winfo_reqheight())
+        imageFrame.grid(row=0, column=0)
+        imageLabel = Label(imageFrame, image=detections)
+        imageLabel.pack()
+    
     else:
-        detecctions = Image.open('images/unapproved_detections.png')
-        detecctions = detecctions.resize((popupIdentificationTk.winfo_screenwidth(), popupIdentificationTk.winfo_screenheight()), Image.ANTIALIAS)
-        detecctions = ImageTk.PhotoImage(detecctions)
-
-    imageFrame = Frame(popupIdentificationTk, width=popupIdentificationTk.winfo_screenwidth(), height=popupIdentificationTk.winfo_screenheight())
-    imageFrame.grid(row=0, column=0)
-    imageLabel = Label(imageFrame, image=detecctions)
-    imageLabel.pack()
-
-    # Create top, middle and bottom frames
-    # top_frame = Frame(popupIdentificationTk, width=1280, height=720*0.2, bg='grey')
-    # top_frame.grid(row=0, column=0)
+        global imageTop, imageMiddleLeft, imageMiddleRight, imageBottom
+        # Create top, middle and bottom frames
+        top_frame = Frame(PopUpIdentificationFrame, width=round(PopUpIdentificationFrame.winfo_reqwidth()), height=round(PopUpIdentificationFrame.winfo_reqheight()*0.19), bg='#CCEEFF')
+        top_frame.grid(row=0, column=0)
     
+        middle_frame = Frame(PopUpIdentificationFrame, width=round(PopUpIdentificationFrame.winfo_reqwidth()), height=round(PopUpIdentificationFrame.winfo_reqheight()*0.51), bg='#CCEEFF')
+        middle_frame.grid(row=1, column=0)
 
-    # middle_frame = Frame(popupIdentificationTk, width=1280, height=720*0.6, bg='green')
-    # middle_frame.grid(row=1, column=0)
+        bottom_frame = Frame(PopUpIdentificationFrame, width=round(PopUpIdentificationFrame.winfo_reqwidth()), height=round(PopUpIdentificationFrame.winfo_reqheight()*0.3), bg='#CCEEFF')
+        bottom_frame.grid(row=2, column=0)
 
-    # bottom_frame = Frame(popupIdentificationTk, width=1280, height=720*0.2, bg='blue')
-    # bottom_frame.grid(row=2, column=0)
+        # # Divide middle frame
+        left_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.4, height=middle_frame.winfo_reqheight(), bg='#CCEEFF')
+        left_middle_frame.grid(row=0, column=0)
 
-    # # # Divide top frame
-    # left_top_frame = Frame(top_frame, width=top_frame.winfo_reqwidth()*0.5, height=top_frame.winfo_reqheight(), bg='green')
-    # left_top_frame.grid(row=0, column=0)
+        right_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.6, height=middle_frame.winfo_reqheight(), bg='#CCEEFF')
+        right_middle_frame.grid(row=0, column=1)
 
-    # right_top_frame = Frame(top_frame, width=top_frame.winfo_reqwidth()*0.5, height=top_frame.winfo_reqheight(), bg='orange')
-    # right_top_frame.grid(row=0, column=1)
+        # Labels Top Frame
+        imageTop = Image.open('images/unapproved_detections_top.png')
+        imageTop = imageTop.resize((top_frame.winfo_reqwidth(), top_frame.winfo_reqheight()), Image.ANTIALIAS)
+        imageTop = ImageTk.PhotoImage(imageTop)
 
-    # # # Divide middle frame
-    # left_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.32, height=middle_frame.winfo_reqheight(), bg='purple')
-    # left_middle_frame.grid(row=0, column=0)
+        imageMiddleLeft = Image.open('images/unapproved_detections_middle_left.png')
+        imageMiddleLeft = imageMiddleLeft.resize((left_middle_frame.winfo_reqwidth(), left_middle_frame.winfo_reqheight()), Image.ANTIALIAS)
+        imageMiddleLeft = ImageTk.PhotoImage(imageMiddleLeft)
 
-    # middle_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.36, height=middle_frame.winfo_reqheight(), bg='red')
-    # middle_middle_frame.grid(row=0, column=2)
+        imageMiddleRight = Image.open('images/unapproved_detections_middle_right.png')
+        imageMiddleRight = imageMiddleRight.resize((right_middle_frame.winfo_reqwidth(), right_middle_frame.winfo_reqheight()), Image.ANTIALIAS)
+        imageMiddleRight = ImageTk.PhotoImage(imageMiddleRight)
 
-    # right_middle_frame = Frame(middle_frame, width=middle_frame.winfo_reqwidth()*0.32, height=middle_frame.winfo_reqheight(), bg='purple')
-    # right_middle_frame.grid(row=0, column=3)
+        imageBottom = Image.open('images/unapproved_detections_bottom.png')
+        imageBottom = imageBottom.resize((bottom_frame.winfo_reqwidth(), bottom_frame.winfo_reqheight()), Image.ANTIALIAS)
+        imageBottom = ImageTk.PhotoImage(imageBottom)
 
-    # # # Divide bottom frame
-    # left_top_frame = Frame(bottom_frame, width=bottom_frame.winfo_reqwidth()*0.5, height=bottom_frame.winfo_reqheight(), bg='orange')
-    # left_top_frame.grid(row=0, column=0)
-    
-    # right_top_frame = Frame(bottom_frame, width=bottom_frame.winfo_reqwidth()*0.5, height=bottom_frame.winfo_reqheight(), bg='green')
-    # right_top_frame.grid(row=0, column=1)
+        imageTopLabel = Label(top_frame, image=imageTop, width=top_frame.winfo_reqwidth(), height=top_frame.winfo_reqheight(), borderwidth=0)
+        imageTopLabel.grid(row=0, column=0)
+
+        imageMiddleLeftLabel = Label(left_middle_frame, image=imageMiddleLeft, width=left_middle_frame.winfo_reqwidth(), height=left_middle_frame.winfo_reqheight(), borderwidth=0)
+        imageMiddleLeftLabel.grid(row=0, column=0)
+
+        imageMiddleRightLabel = Label(right_middle_frame, image=imageMiddleRight, width=right_middle_frame.winfo_reqwidth(), height=right_middle_frame.winfo_reqheight(), borderwidth=0)
+        imageMiddleRightLabel.grid(row=0, column=0)
+
+        imageBottomLabel = Label(bottom_frame, image=imageBottom, width=bottom_frame.winfo_reqwidth(), height=bottom_frame.winfo_reqheight(), borderwidth=0)
+        imageBottomLabel.grid(row=0, column=0)
 
     #Buttons Tk
     # Button(NFC_Tk, text="Cerrar Ventana", command=lambda:closeTk()).pack(pady=10)
 
-def openConfigurationTk():
+def userManagementTk(user):
+    # Config tk
+    userManagement = Toplevel()
+    userManagement.resizable(False,False)
+    userManagement.title("Gestion de usuarios")
+    # userManagement.overrideredirect(True)
+    userManagement.geometry('800x600')
+    userManagement.config(bg='#CCEEFF')
+
+    # def Windows tk
+    def createUserTk(userManagement):
+        createUserWindows = Toplevel(userManagement)
+        createUserWindows.resizable(False,False)
+        createUserWindows.title("Gestion de usuarios")
+        # updateUserWindows.overrideredirect(True)
+        createUserWindows.geometry('800x600')
+        createUserWindows.config(bg='#CCEEFF')
+
+        usernameLabel = Label(createUserWindows, text='Nombre de usuario', bg='#CCEEFF')
+        usernameLabel.grid()
+        usernameEntry = Entry(createUserWindows)
+        # # userEntry.bind("<1>", handle_click)
+        usernameEntry.grid()
+
+        nameLabel = Label(createUserWindows, text='Nombre', bg='#CCEEFF')
+        nameLabel.grid()
+        nameEntry = Entry(createUserWindows)
+        nameEntry.grid()
+
+        last_nameLabel = Label(createUserWindows, text='Apellido', bg='#CCEEFF')
+        last_nameLabel.grid()
+        last_nameEntry = Entry(createUserWindows)
+        last_nameEntry.grid()
+
+        emailLabel = Label(createUserWindows, text='Email', bg='#CCEEFF')
+        emailLabel.grid()
+        emailEntry = Entry(createUserWindows)
+        emailEntry.grid()
+
+        create = Button(createUserWindows, text='Crear', bg='#CCEEFF')
+        create.grid()
+
+        exitButton = Button(createUserWindows, text="Cerrar", command=lambda:exitTk(createUserWindows))
+        exitButton.grid()
+    
+    def updateUserTk(userManagement):
+        updateUserWindows = Toplevel(userManagement)
+        updateUserWindows.resizable(False,False)
+        updateUserWindows.title("Gestion de usuarios")
+        # updateUserWindows.overrideredirect(True)
+        updateUserWindows.geometry('800x600')
+        updateUserWindows.config(bg='#CCEEFF')
+
+        usernameLabel = Label(updateUserWindows, text='Nombre de usuario', bg='#CCEEFF')
+        usernameLabel.grid()
+        usernameEntry = Entry(updateUserWindows)
+        # # userEntry.bind("<1>", handle_click)
+        usernameEntry.grid()
+
+        nameLabel = Label(updateUserWindows, text='Nombre', bg='#CCEEFF')
+        nameLabel.grid()
+        nameEntry = Entry(updateUserWindows)
+        nameEntry.grid()
+
+        last_nameLabel = Label(updateUserWindows, text='Apellido', bg='#CCEEFF')
+        last_nameLabel.grid()
+        last_nameEntry = Entry(updateUserWindows)
+        last_nameEntry.grid()
+
+        emailLabel = Label(updateUserWindows, text='Email', bg='#CCEEFF')
+        emailLabel.grid()
+        emailEntry = Entry(updateUserWindows)
+        emailEntry.grid()
+
+        create = Button(updateUserWindows, text='Modificar', bg='#CCEEFF')
+        create.grid()
+
+        exitButton = Button(updateUserWindows, text="Cerrar Sesion", command=lambda:exitTk(updateUserWindows))
+        exitButton.grid()
+
+    def deleteUserTk(userManagement):
+        answerMessagebox = messagebox.askokcancel(title='Eliminar usuario', message='Desea eliminar el usuario')
+        if answerMessagebox:
+            print('Usuario eliminado')
+        else:
+            print('Acción cancelada')
+
+    def logout(user):
+        del user
+        userManagement.destroy()
+
+    def exitTk(windowsTk):
+        windowsTk.destroy()
+    
+    # Frame Principal
+    mainFrame = Frame(userManagement, width=800, height=600, bg='#CCEEFF')
+    mainFrame.grid()
+
+    # Create left and right frames
+    left_frame = Frame(mainFrame, width=round(mainFrame.winfo_reqwidth()*0.5), height=round(mainFrame.winfo_reqheight()), bg='#CCEEFF')
+    left_frame.grid(row=0, column=0)
+
+    right_frame = Frame(mainFrame, width=round(mainFrame.winfo_reqwidth()*0.5), height=round(mainFrame.winfo_reqheight()), bg='#CCEEFF')
+    right_frame.grid(row=0, column=1)
+
+    # Buttons right_frame
+    createUser = Button(right_frame, text='Crear', command=lambda:createUserTk(userManagement))
+    createUser.grid()
+
+    updateUser = Button(right_frame, text='Modificar/Actualizar', command=lambda:updateUserTk(userManagement))
+    updateUser.grid()
+
+    deleteUserButton = Button(right_frame, text='Bloquear/Eliminar', command=lambda:deleteUserTk(userManagement))
+    deleteUserButton.grid()
+
+    # ListBox
+    langs = {'Java': 1, 'C#': 2, 'C': 3, 'C++': 4, 'Python': 5, 'Go': 6, 'JavaScript': 7, 'PHP' : 8, 'Swift': 9}
+    listBox = Listbox(left_frame)
+    listBox.grid()
+
+    for key in langs:
+        listBox.insert(END, '{}: {}'.format(key, langs[key]))
+
+
+    exitButton = Button(right_frame, text="Cerrar Sesion", command=lambda:logout(user))
+    exitButton.grid()
+
+def openConfigurationTk(user, adminConfigTk):
     # Config tk
     configurationTk = Toplevel()
     configurationTk.resizable(False,False)
     configurationTk.protocol("WM_DELETE_WINDOW", exit)
     configurationTk.title("Configuraciones")
     # configurationTk.overrideredirect(True)
+    configurationTk.geometry('200x300')
 
-    width = 200
-    height = 300
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
+    # width = 200
+    # height = 300
+    # screen_width = root.winfo_screenwidth()
+    # screen_height = root.winfo_screenheight()
 
-    x = (screen_width/2) - (app_width/2)
-    y = (screen_height/2) - (app_height/2)
+    # x = (screen_width/2) - (app_width/2)
+    # y = (screen_height/2) - (app_height/2)
 
-    configurationTk.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
+    # configurationTk.geometry(f'{width}x{height}+{int(x)}+{int(y)}')
 
     #Def
     def closeTk():
         configurationTk.destroy()
-        root.deiconify()
+        # adminConfigTk.deiconify()
 
     def changeThreshold():
         while True:
@@ -1223,7 +956,7 @@ def openConfigurationTk():
                 break
 
     #Hide Root Window
-    root.withdraw()
+    # root.withdraw()
 
     #Labels Tk
     # labelimagen = Label(configurationTk, image=imagen)
@@ -1260,23 +993,135 @@ def openConfigurationTk():
     buttonClass = Button(configurationTk, text="Configurar Camaras", command=lambda:configCameraTk(configurationTk))
     buttonClass.pack()
 
+    buttonfDirectory = Button(configurationTk, text="ImagenTest", command=lambda:folderframeSelect())
+    buttonfDirectory.pack()
+
     closeWindow = Button(configurationTk, text="Cerrar Ventana", command=lambda:closeTk())
     closeWindow.pack()
 
-#Buttons
-clearMDETRyButton = Button(root, text='Limpiar Cache', command=clearCacheMDETR).pack()
-loadALLButton=  Button(root, text='Cargar Dependencias', command=loadALL).pack()
-# MDETRButton = Button(root, text='MDETR', command=MDETR).pack()
-# clipButton = Button(root, text='Clip', command=clip).pack()
-# showImageClipButton = Button(root, text='Resultados', command=checkListImagenClip).pack()
-configButton = Button(root, text='Configuraciones', command=openConfigurationTk, fg='blue').pack()
+def adminConfigTk(user):
+    adminConfigTk = Toplevel()
+    adminConfigTk.title("Admin panel")
+    adminConfigTk.resizable(False,False)
+    adminConfigTk.config(background="#cceeff")
+    adminConfigTk.resizable(False,False)
+    # adminConfigTk.overrideredirect(True)
+    # adminConfigTk.geometry(f'{root.winfo_screenwidth()}x{root.winfo_screenheight()}')
+    adminConfigTk.geometry('300x300')
 
-testButton = Button(root, text='Test Camara',command=showPytorchCameraTk, fg='red').pack()
-testButton = Button(root, text='Test download',command=downloadEfficientDet, fg='red').pack()
-testButton = Button(root, text='Test NFC',command=nfc_identifyTk, fg='red').pack()
-testButton = Button(root, text='Test POPUP',command=popupIdentificationTk, fg='red').pack()
+    def logout(user):
+        del user
+        adminConfigTk.destroy()
 
-exitButton = Button(root, text="Salir", command=root.quit)
-exitButton.pack()
+    #Labels
+
+    usernameLabel = Label(adminConfigTk, text=user.getUsername())
+    usernameLabel.grid()
+
+    nameLabel = Label(adminConfigTk, text=user.getName())
+    nameLabel.grid()
+
+    Last_nameLabel = Label(adminConfigTk, text=user.getLast_name())
+    Last_nameLabel.grid()
+
+    testButton = Button(adminConfigTk, text='Test Camara',command=showPytorchCameraTk, fg='red').grid()
+    testButton = Button(adminConfigTk, text='Test download',command=downloadEfficientDet, fg='red').grid()
+    testButton = Button(adminConfigTk, text='Test NFC',command=nfc_identifyTk, fg='red').grid()
+    testButton = Button(adminConfigTk, text='Test POPUP',command=popupIdentificationTk, fg='red').grid()
+    testButton = Button(adminConfigTk, text='Cargar Dependencias',command=loadALL, fg='red').grid()
+
+    createUser = Button(adminConfigTk, text='Gestion de usuario', command=lambda:userManagementTk(user))
+    createUser.grid()
+
+    configButton = Button(adminConfigTk, command=lambda:openConfigurationTk(user, adminConfigTk), text='Configuraciones')
+    configButton.grid()
+
+    exitButton = Button(adminConfigTk, text="Cerrar Sesion", command=lambda:logout(user))
+    exitButton.grid()
+
+
+############ Start App ############
+root = Tk()
+root.geometry('350x500+500+50')
+root.resizable(0,0)
+root.config(bg='#CCEEFF')
+root.title('Hidrolatina')
+
+# Def
+def verification():
+    user = userEntry.get()
+    password = passwordEntry.get()
+    try:
+        person = API_Services.login(user, password)
+        if 'token' in person:
+            user = Person(person['user']['username'], person['user']['name'], person['user']['last_name'], person['user']['email'], person['token'])
+            #Hide Root Window
+            # root.withdraw()
+            adminConfigTk(user)
+        else:
+            messagebox.showinfo(message=person['error'], title="Login")
+    except:
+        messagebox.showerror(title='Error de conexión', message='No se ha podido establecer una conexión con el servidor. Comuníquese con su encargado de TI.')
+    
+
+def closeLogin():
+    root.destroy()
+    root.quit()
+
+def handle_click(event):
+    print("clicked!")
+    global boolCounter
+    boolCounter = False
+
+def counter(endTime):
+    if boolCounter:
+        if datetime.now() > endTime:
+            print('si')
+            print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
+            nfc_identifyTk()
+        else:
+            print('no')
+            print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
+            time.sleep(1)
+            root.after(10000, counter, endTime)
+    else:
+        print('counter detenido')
+
+    return
+
+def iniciarIdentificacionNFC():
+    global boolCounter
+    boolCounter = False
+    NFC(nfc_identifyTk, showPytorchCameraTk)
+
+# Var
+startTime = datetime.now()
+endTime = datetime.now() + timedelta(seconds=120)
+boolCounter = True
+
+# Labels and Buttons
+logo = Image.open('images/logo_hidrolatina.png')
+logo = logo.resize((325, 97), Image.ANTIALIAS)
+logo = ImageTk.PhotoImage(logo)
+logoLabel = Label(root, image=logo, width=325, height=97, bg='#CCEEFF')
+logoLabel.pack(pady=30)
+
+userLabel = Label(root, text='Usuario', bg='#CCEEFF').pack()
+userEntry = Entry()
+userEntry.bind("<1>", handle_click)
+userEntry.pack()
+
+passwordLabel = Label(root, text='Contraseña', bg='#CCEEFF').pack()
+passwordEntry = Entry(show='*')
+passwordEntry.pack()
+
+loginButton = Button(root, command=lambda:verification(), text='Iniciar Sesión', bg='#c2eaff').pack()
+# identificationButton = Button(root, command=lambda:nfc_identifyTk(), text='Iniciar Identificación', bg='#c2eaff').pack()
+identificationButton = Button(root, command=lambda:iniciarIdentificacionNFC(), text='Iniciar Identificación', bg='#c2eaff').pack()
+
+closeButton = Button(root, text='Salir', command=closeLogin, bg='#c2eaff').pack()
+
+# Call def
+root.after(10000, counter, endTime)
 
 root.mainloop()

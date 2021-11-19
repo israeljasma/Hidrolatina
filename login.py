@@ -1,22 +1,27 @@
 from tkinter import *
 from PIL import Image, ImageTk
+from Services import API_Services
+from tkinter import messagebox
+
+from UserClass import Person
 
 login = Tk()
 login.geometry('350x500+500+50')
-# login.overrideredirect(1)
+# login.overrideredirect(True)
 login.resizable(0,0)
-# login.protocol("WM_DELETE_WINDOW")
+login.config(bg='#CCEEFF')
+login.title('Hidrolatina')
 
 #Def
 def verification():
     user = userEntry.get()
     password = passwordEntry.get()
-    print(user, password)
-    if user == 'hidrolatina' or password == 'password':
-        print("oka")
+    person = API_Services.login(user, password)
+    if 'token' in person:
+        user = Person(person['user']['name'], person['user']['last_name'], person['user']['email'], person['token'])
+        messagebox.showinfo(message=[person['user']['name'], person['user']['last_name']], title="Login")
     else:
-        print("Credenciales incorrectas")
-    return
+        messagebox.showinfo(message=person['error'], title="Login")
 
 def closeLogin():
     login.destroy()
@@ -25,20 +30,20 @@ def closeLogin():
 logo = Image.open('images/logo_hidrolatina.png')
 logo = logo.resize((325, 97), Image.ANTIALIAS)
 logo = ImageTk.PhotoImage(logo)
-logoLabel = Label(login, image=logo, width=325, height=97)
+logoLabel = Label(login, image=logo, width=325, height=97, bg='#CCEEFF')
 logoLabel.pack(pady=30)
 
-userLabel = Label(login, text='Usuario').pack()
+userLabel = Label(login, text='Usuario', bg='#CCEEFF').pack()
 userEntry = Entry()
 userEntry.pack()
 
-passwordLabel = Label(login, text='Contraseña').pack()
+passwordLabel = Label(login, text='Contraseña', bg='#CCEEFF').pack()
 passwordEntry = Entry(show='*')
 passwordEntry.pack()
 
-loginButton = Button(login, command=verification, text='Iniciar Sesión').pack()
+loginButton = Button(login, command=verification, text='Iniciar Sesión', bg='#c2eaff').pack()
 
-closeButton = Button(login, text='Salir', command=closeLogin).pack()
+closeButton = Button(login, text='Salir', command=closeLogin, bg='#c2eaff').pack()
 login.mainloop()
 
 # import tkinter as tk
