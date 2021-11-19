@@ -286,10 +286,10 @@ def checkListImagenClip():
 
 ###################Def Windows's###################
 
-def showPytorchCameraTk():
+def showPytorchCameraTk(user):
     #Import
     import matplotlib.pyplot as plt
-    import datetime
+    # import datetime
     import numpy as np
 
     #Var/Global
@@ -302,7 +302,7 @@ def showPytorchCameraTk():
     #Tkinter config
     pytorchCameraTk = Toplevel()
     pytorchCameraTk.title('Camara')
-    pytorchCameraTk.resizable(False,False)
+    # pytorchCameraTk.resizable(False,False)
     pytorchCameraTk.config(background="#cceeff")
     # pytorchCameraTk.overrideredirect(True)
     pytorchCameraTk.geometry(f'{pytorchCameraTk.winfo_screenwidth()}x{pytorchCameraTk.winfo_screenheight()}')
@@ -487,16 +487,17 @@ def showPytorchCameraTk():
                 
         if det<20:
             labelVideo.after(10, showFrame)
-    
-    def timePop(booleanAnswer):
-        ContinueExecuting = True
-        starting_point = time.time()
-        while ContinueExecuting:
-            elapsed_time = time.time () - starting_point
-            elapsed_time_int = int(elapsed_time)
-            if elapsed_time_int >= 10:
-                popupIdentificationTk(booleanAnswer)
-                ContinueExecuting = False
+
+    def counterPopUp(endTime, booleanAnswer):
+        if datetime.now() > endTime:
+            print('si')
+            print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
+            print('funciona')
+            popupIdentificationTk(booleanAnswer)
+        else:
+            print('no')
+            print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
+            pytorchCameraTk.after(10000, counterPopUp, endTime, booleanAnswer)
 
     def updateLabel():
         global image
@@ -520,7 +521,7 @@ def showPytorchCameraTk():
         Label(imageBootFrame, image=(listImagenClip[2].getImage())).grid(row=1, column=0, padx=5, pady=5)
         Label(dataBootFrame, text=(listImagenClip[2].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
 
-        # booleanAnswer = None
+        booleanAnswer = None
         # for i in range(len(listImagenClip)):
         #     for j in range(len(listImagenClip[i])):
         #         if listImagenClip[i].getAnswer()[j] == 'OK':
@@ -528,9 +529,8 @@ def showPytorchCameraTk():
         #         else:
         #             booleanAnswer = False
         #             break
-
-        # thread = Thread(target=timePop,args=(booleanAnswer,), daemon=True)
-        # thread.start()
+        endTime = datetime.now() + timedelta(seconds=30)
+        pytorchCameraTk.after(10000, counterPopUp, endTime, booleanAnswer)
 
     # testFrame()
     showFrame()
