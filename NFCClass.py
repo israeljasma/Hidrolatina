@@ -2,7 +2,6 @@ from smartcard.CardRequest import CardRequest
 from smartcard.Exceptions import CardRequestTimeoutException
 from smartcard.CardType import AnyCardType
 from smartcard import util
-
 from threading import Thread
 from tkinter import messagebox
 from Services import API_Services
@@ -63,8 +62,10 @@ class NFC():
                 pass
 
         # time.sleep(2)
-        ventanaNext(user)
+        # ventana.after(5000, ventanaNext, user)
+        # ventanaNext(user)
         self.stop()
+        ventanaNext(user)
 
 
     def stop(self):
