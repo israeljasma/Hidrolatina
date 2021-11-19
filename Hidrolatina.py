@@ -20,8 +20,6 @@ from imagenClipClass import imageClip
 
 import torch
 
-listImagenClip = []
-
 ##Path
 if platform.system() == "Darwin":
     print("MacOS")
@@ -181,11 +179,11 @@ def loadEfficient():
 def MDETR(im):
     plot_inference(im, "a hand")
     im_hand=im.crop((bboxes[argmax(probas[keep])]))
+
     plot_inference(im, "a head")
-    global im_head
     im_head=im.crop((bboxes[argmax(probas[keep])]))
+    
     plot_inference(im, "a boot")
-    global im_boot
     im_boot=im.crop((bboxes[argmax(probas[keep])]))
 
     objectListMDETR= {'im_head':im_head, 'im_hand': im_hand, 'im_boot': im_boot}
