@@ -203,6 +203,8 @@ def loadClip():
     # candidate_captions={'im_head': [['a white hat','A head'], ['a big headset', 'a face'],['a face with glasses', 'A head'],['Mask', 'Just a head']],
     #             'im_hand':[['A blue hand', 'A pink hand']],
     #             'im_boot':[['a large boot', 'a small shoe']]}
+    global names_ppe
+    names_ppe = {'im_head': ['Casco', 'Audífonos', 'Antiparras', 'Mascarilla'], 'im_hand': ['Guantes'], 'im_boot': ['Botas']}
 
     global argmax
     def argmax(iterable):
@@ -277,18 +279,9 @@ def folderframeSelect():
     frame_selected = filedialog.askopenfilename()
     print(frame_selected)
 
-def checkListImagenClip():
-    if len(listImagenClip) == 0 :
-        popup('No hay datos que mostrar')
-    else:
-        showImageClipTk
-
-
 ###################Def Windows's###################
 
 def showPytorchCameraTk(user):
-    #Import
-    import matplotlib.pyplot as plt
     # import datetime
     import numpy as np
 
@@ -304,7 +297,7 @@ def showPytorchCameraTk(user):
     pytorchCameraTk.title('Camara')
     # pytorchCameraTk.resizable(False,False)
     pytorchCameraTk.config(background="#cceeff")
-    # pytorchCameraTk.overrideredirect(True)
+    pytorchCameraTk.overrideredirect(True)
     pytorchCameraTk.geometry(f'{pytorchCameraTk.winfo_screenwidth()}x{pytorchCameraTk.winfo_screenheight()}')
     # pytorchCameraTk.geometry(f'{1280}x{720}')
  
@@ -394,7 +387,7 @@ def showPytorchCameraTk(user):
     #Def into tk
     def closeTk():
         #Destroy window
-        cap.release()
+        cap.stop()
         pytorchCameraTk.destroy()
         # root.deiconify()
 
@@ -476,8 +469,9 @@ def showPytorchCameraTk(user):
 ################################################ CORRERGIR ###############################################
                 # print(mdetr_list)
                 global listImagenClip
+                listImagenClip = []
                 for bodypart in mdetr_list.keys():
-                    listImagenClip.append(imageClip(ImageTk.PhotoImage(mdetr_list[bodypart].resize((150,150))), clip(bodypart)))
+                    listImagenClip.append(imageClip(names_ppe[bodypart], ImageTk.PhotoImage(mdetr_list[bodypart].resize((150,150))), clip(bodypart)))
                     # print(bodypart)
                 
                 updateLabel()
@@ -497,7 +491,7 @@ def showPytorchCameraTk(user):
         else:
             print('no')
             print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
-            pytorchCameraTk.after(10000, counterPopUp, endTime, booleanAnswer)
+            pytorchCameraTk.after(5000, counterPopUp, endTime, booleanAnswer)
 
     def updateLabel():
         global image
@@ -522,24 +516,28 @@ def showPytorchCameraTk(user):
         Label(dataBootFrame, text=(listImagenClip[2].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
 
         booleanAnswer = None
-        # for i in range(len(listImagenClip)):
-        #     for j in range(len(listImagenClip[i])):
-        #         if listImagenClip[i].getAnswer()[j] == 'OK':
-        #             booleanAnswer = True
-        #         else:
-        #             booleanAnswer = False
-        #             break
-        endTime = datetime.now() + timedelta(seconds=30)
-        pytorchCameraTk.after(10000, counterPopUp, endTime, booleanAnswer)
+        for list in listImagenClip:
+            for j in range(len(list.getAnswer())):
+                if list.getAnswer()[j] == 'OK':
+                    print(list.getName()[j])
+                    print(list.getAnswer()[j])
+                    booleanAnswer = True
+                else:
+                    booleanAnswer = False
+                print(booleanAnswer)
+
+        endTime = datetime.now() + timedelta(seconds=15)
+        if len(listImagenClip) > 0:
+            counterPopUp(endTime, booleanAnswer)
+        # pytorchCameraTk.after(1, counterPopUp, endTime, booleanAnswer)
 
     # testFrame()
-    showFrame()
-
     exitButton = Button(pytorchCameraTk, text='Cerrar ventana', command=closeTk)
     exitButton.grid(row=1, column=0)
 
     testButtonUpdate = Button(pytorchCameraTk, text='Test Update', command=updateLabel)
     testButtonUpdate.grid(row=1, column=1)
+    showFrame()
 
 def showImageClipTk():
     #Config Tk
@@ -833,7 +831,7 @@ def nfc_identifyTk():
 
     return NFC_Tk
 
-def popupIdentificationTk(booleanAnswer=False):
+def popupIdentificationTk(booleanAnswer):
     # Config tk
     popupIdentificationTk = Toplevel()
     popupIdentificationTk.resizable(False,False)
