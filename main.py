@@ -58,7 +58,7 @@ if __name__ == '__main__':
             if datetime.now() > endTime:
                 print('si')
                 print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
-                nfc_identifyTk()
+                WindowsTk().nfc_identifyTk()
             else:
                 print('no')
                 print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     def iniciarIdentificacionNFC():
         global boolCounter
         boolCounter = False
-        NFC(nfc_identifyTk, showPytorchCameraTk)
+        NFC(WindowsTk().nfc_identifyTk, WindowsTk().showPytorchCameraTk)
 
     # Var
     startTime = datetime.now()

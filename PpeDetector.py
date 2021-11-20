@@ -101,7 +101,8 @@ class PpeDetector:
         torch.cuda.empty_cache()
 
     def loadEfficient(self):
-        self.weigths_effdet='https://github.com/EquipoVandV/EfficientDetVandV/blob/main/effdet/logs/person_coco/efficientdet-d2_58_8260_best.pth'
+        # self.weigths_effdet='https://github.com/EquipoVandV/EfficientDetVandV/blob/main/effdet/logs/person_coco/efficientdet-d2_58_8260_best.pth'
+        self.weigths_effdet = 'C:/hidrolatina/EfficientDetVandV-main/effdet/logs/person_coco/efficientdet-d2_58_8260_best.pth'
         # global obj_list
         self.obj_list = ['person']
         # global model_effdet

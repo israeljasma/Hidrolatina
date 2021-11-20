@@ -1,13 +1,15 @@
 import time
 from datetime import datetime, timedelta
-from PIL import Image, ImageTk
 from tkinter import *
 from tkinter import messagebox, filedialog, simpledialog, Listbox
+from PIL import ImageTk, Image
 
 from Services import API_Services
 from UserClass import Person
 from FileManagementClass import FileManagement
-import PpeDetector
+from CameraStream import CameraStream
+from PpeDetector import PpeDetector
+import cv2
 
 class WindowsTk:
 
@@ -18,9 +20,9 @@ class WindowsTk:
         # from threading import Thread
         # libThread= Thread(target=librerias, args=(),daemon=True)
         # libThread.start()
-        PpeDetector.importMDETER()
-        PpeDetector.loadClip()
-        PpeDetector.loadEfficient()
+        # PpeDetector.importMDETER()
+        PpeDetector.loadClip(self)
+        PpeDetector.loadEfficient(self)
         messagebox.showinfo(message="Dependencias cargadas")
 
 
@@ -35,7 +37,7 @@ class WindowsTk:
         print(folder_selected)
 
     def folderframeSelect(self):
-        # global frame_selected
+        global frame_selected
         self.frame_selected = filedialog.askopenfilename()
         print(self.frame_selected)
 
@@ -246,7 +248,7 @@ class WindowsTk:
                 print('si')
                 print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
                 print('funciona')
-                popupIdentificationTk(booleanAnswer)
+                self.popupIdentificationTk(booleanAnswer)
             else:
                 print('no')
                 print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
@@ -309,8 +311,10 @@ class WindowsTk:
 
         width = 200
         height = 300
-        screen_width = root.winfo_screenwidth()
-        screen_height = root.winfo_screenheight()
+        screen_width = 200
+        screen_height = 300
+        # screen_width = root.winfo_screenwidth()
+        # screen_height = root.winfo_screenheight()
 
         x = (screen_width/2) - (width/2)
         y = (screen_height/2) - (height/2)
@@ -377,7 +381,7 @@ class WindowsTk:
 
         def closeTk():
             NFC_Tk.destroy()
-            root.deiconify()
+            # root.deiconify()
         
         #Hide Root Window
         # root.withdraw()
@@ -402,7 +406,7 @@ class WindowsTk:
 
         # Labels left_frame
         global imageWaitDetectionLeft
-        imageWaitDetectionLeft = Image.open('images/waiting_identification_left.png')
+        imageWaitDetectionLeft = Image.open("images/waiting_identification_left.png")
         imageWaitDetectionLeft = imageWaitDetectionLeft.resize((round(NFCFrame.winfo_reqwidth()*0.5), round(NFCFrame.winfo_reqheight())), Image.ANTIALIAS)
         imageWaitDetectionLeft = ImageTk.PhotoImage(imageWaitDetectionLeft)
         imageLabelLeft_Frame = Label(left_frame, image=imageWaitDetectionLeft, borderwidth=0)
@@ -737,7 +741,7 @@ class WindowsTk:
         labelDetLimit.pack()
 
         #Buttons Tk
-        buttonDirectory = Button(configurationTk, text="Cambiar directorio", command=folderSelect)
+        buttonDirectory = Button(configurationTk, text="Cambiar directorio", command=lambda:self.folderSelect())
         buttonDirectory.pack()
 
         buttonThreshold = Button(configurationTk, text="Cambiar Threshold", command=lambda:changeThreshold())
@@ -752,10 +756,10 @@ class WindowsTk:
         buttonClass = Button(configurationTk, text="Cambiar clases")
         buttonClass.pack()
 
-        buttonClass = Button(configurationTk, text="Configurar Camaras", command=lambda:configCameraTk(configurationTk))
+        buttonClass = Button(configurationTk, text="Configurar Camaras", command=lambda:self.configCameraTk(configurationTk))
         buttonClass.pack()
 
-        buttonfDirectory = Button(configurationTk, text="ImagenTest", command=lambda:folderframeSelect())
+        buttonfDirectory = Button(configurationTk, text="ImagenTest", command=lambda:self.folderframeSelect())
         buttonfDirectory.pack()
 
         closeWindow = Button(configurationTk, text="Cerrar Ventana", command=lambda:closeTk())
@@ -786,11 +790,10 @@ class WindowsTk:
         Last_nameLabel = Label(adminConfigTk, text=user.getLast_name())
         Last_nameLabel.grid()
 
-        testButton = Button(adminConfigTk, text='Test Camara',command=self.showPytorchCameraTk, fg='red').grid()
         # testButton = Button(adminConfigTk, text='Test download',command=self.downloadEfficientDet, fg='red').grid()
         testButton = Button(adminConfigTk, text='Test NFC',command=self.nfc_identifyTk, fg='red').grid()
         testButton = Button(adminConfigTk, text='Test POPUP',command=self.popupIdentificationTk, fg='red').grid()
-        testButton = Button(adminConfigTk, text='Cargar Dependencias',command=self.loadALL, fg='red').grid()
+        testButton = Button(adminConfigTk, text='test Cargar Dependencias',command=self.loadALL, fg='red').grid()
 
         createUser = Button(adminConfigTk, text='Gestion de usuario', command=lambda:self.userManagementTk(user))
         createUser.grid()
