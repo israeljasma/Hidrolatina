@@ -136,7 +136,7 @@ class PpeDetector:
    
         self.model_effdet = init_effdet_model(self.weigths_effdet, self.obj_list)
         print('EfficientDET Cargado')
-        return self.model_effdet
+        # return self.model_effdet
 
     def MDETR(self, model, transform, im):
         bboxes_body = self.importMDETR.plot_inference(self, model, transform, im, "a hand")
@@ -199,6 +199,6 @@ class PpeDetector:
 
         return pred_clip
 
-    def efficientDet(self, model_effdet, img):
-        self.out = inference_effdet_model(model_effdet, img)
+    def efficientDet(self, img):
+        self.out = inference_effdet_model(self.model_effdet, img)
         return self.out

@@ -25,7 +25,7 @@ class WindowsTk:
         # libThread.start()
         self.model_mdetr, self.transform = self.ppedet.importMDETR().init()
         self.ppedet.loadClip()
-        self.model_effdet = self.ppedet.loadEfficientDet()
+        self.ppedet.loadEfficientDet()
         messagebox.showinfo(message="Dependencias cargadas")
 
 
@@ -163,7 +163,7 @@ class WindowsTk:
             except:
                 frame = cap.read()
 
-            out = self.ppedet.efficientDet(self.model_effdet, frame)
+            out = self.ppedet.efficientDet(frame)
             ori_img = frame.copy()
 
             for j in range(len(out['bbox'])):
