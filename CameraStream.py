@@ -2,8 +2,8 @@ import time
 from threading import Thread, Lock
 import cv2
 
-class CameraStream(object):
-    def _init_(self, src=0, delay=0):
+class CameraStream():
+    def __init__(self, src=0, delay=0):
         self.stream = cv2.VideoCapture(src)
         self.delay=delay
         (self.grabbed, self.frame) = self.stream.read()
@@ -38,5 +38,5 @@ class CameraStream(object):
         self.stream.release()
     
 
-    def _exit_(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback):
         self.thread.join()
