@@ -23,7 +23,7 @@ class WindowsTk:
         # from threading import Thread
         # libThread= Thread(target=librerias, args=(),daemon=True)
         # libThread.start()
-        self.ppedet.importMDETR()
+        self.model_mdetr, self.transform = self.ppedet.importMDETR().init()
         self.ppedet.loadClip()
         self.model_effdet = self.ppedet.loadEfficientDet()
         messagebox.showinfo(message="Dependencias cargadas")
@@ -40,7 +40,7 @@ class WindowsTk:
         print(folder_selected)
 
     def folderframeSelect(self):
-        global frame_selected
+        # global frame_selected
         self.frame_selected = filedialog.askopenfilename()
         print(self.frame_selected)
 
@@ -205,12 +205,13 @@ class WindowsTk:
                     cap.stop()
                     copy_imgtk = imgtk
                     labelVideo.imgtk = copy_imgtk
-                    mdetr_list=self.ppedet.MDETR(im)
+                    mdetr_list=self.ppedet.MDETR(self.model_mdetr, self.transform, im)
+                    print(mdetr_list)
                     self.listImagenClip = []
-                    for bodypart in mdetr_list.keys():
+                    for bodypart in mdetr_list.keys(): 
                         self.listImagenClip.append(imageClip(self.ppedet.names_ppe[bodypart], ImageTk.PhotoImage(mdetr_list[bodypart].resize((150,150))), self.ppedet.clip(bodypart, mdetr_list)))
                     
-                    self.updateLabel()
+                    updateLabel(self)
                     return self
         ################################################ CORRERGIR ###############################################
         ################################################ CORRERGIR ###############################################
@@ -228,7 +229,7 @@ class WindowsTk:
             else:
                 print('no')
                 print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
-                pytorchCameraTk.after(5000, counterPopUp, endTime, booleanAnswer)
+                pytorchCameraTk.after(5000, counterPopUp, self, endTime, booleanAnswer)
 
         def updateLabel(self):
             #Head Frame
@@ -257,15 +258,15 @@ class WindowsTk:
                         booleanAnswer = False
                     print(booleanAnswer)
 
-            endTime = datetime.now() + timedelta(seconds=15)
+            endTime = datetime.now() + timedelta(seconds=10)
             if len(self.listImagenClip) > 0:
-                counterPopUp(endTime, booleanAnswer)
+                counterPopUp(self, endTime, booleanAnswer)
             # pytorchCameraTk.after(1, counterPopUp, endTime, booleanAnswer)
 
-        exitButton = Button(pytorchCameraTk, text='Cerrar ventana', command=closeTk)
+        exitButton = Button(pytorchCameraTk, text='Cerrar ventana', command=lambda:closeTk(self))
         exitButton.grid(row=1, column=0)
 
-        testButtonUpdate = Button(pytorchCameraTk, text='Test Update', command=updateLabel)
+        testButtonUpdate = Button(pytorchCameraTk, text='Test Update', command=lambda:updateLabel(self))
         testButtonUpdate.grid(row=1, column=1)
         showFrame(self)
 
