@@ -26,6 +26,8 @@ if __name__ == '__main__':
     root.config(bg='#CCEEFF')
     root.title('Hidrolatina')
 
+    instanceWindowsTk = WindowsTk()
+
     # Def
     def verification():
         user = userEntry.get()
@@ -37,7 +39,7 @@ if __name__ == '__main__':
             #Hide Root Window
             # root.withdraw()
             # adminConfigTk(user)
-            WindowsTk().adminConfigTk(user)
+            instanceWindowsTk.adminConfigTk(user)
         else:
             messagebox.showinfo(message=person['error'], title="Login")
         # except:
@@ -58,7 +60,7 @@ if __name__ == '__main__':
             if datetime.now() > endTime:
                 print('si')
                 print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
-                WindowsTk().nfc_identifyTk()
+                instanceWindowsTk.nfc_identifyTk()
             else:
                 print('no')
                 print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
@@ -72,7 +74,7 @@ if __name__ == '__main__':
     def iniciarIdentificacionNFC():
         global boolCounter
         boolCounter = False
-        NFC(WindowsTk().nfc_identifyTk, WindowsTk().showPytorchCameraTk)
+        NFC(instanceWindowsTk.nfc_identifyTk, instanceWindowsTk.showPytorchCameraTk)
 
     # Var
     startTime = datetime.now()
