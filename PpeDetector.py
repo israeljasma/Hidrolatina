@@ -1,41 +1,68 @@
 import re
+from PIL.Image import init
 import requests
 import pathlib
+import json
 from collections import defaultdict
 
 import torch
 import torchvision.transforms as T
 import clip as clipit
 
+
 from effdet.utils.inference import init_effdet_model,inference_effdet_model
 
 class PpeDetector:
 
     def __init__(self):
-        self.importMDETR = self.importMDETR()
+        self.weigths_effdet = 'C:/hidrolatina/EfficientDetVandV-main/effdet/logs/person_coco/efficientdet-d2_58_8260_best.pth'
+        self.obj_list = ['person']
+        self.names_ppe = {'im_head': ['Casco', 'Audífonos', 'Antiparras', 'Mascarilla'], 'im_hand': ['Guantes'], 'im_boot': ['Botas']}
+        self.candidate_captions={'im_head': [['a head with a yellow helmet','Just a head'], ['Head with headphones', 'Just a head'],['a Head with goggles', 'Just a head'],['Head with a medical mask', 'Just a head']],
+                    'im_hand':[['A blue hand', 'A pink hand']],
+                    'im_boot':[['A black boot', 'A shoe']]}
+        # self.importMDETR = self.importMDETR()
     
-    def argmax(iterable):
+    def argmax(self, iterable):
             return max(enumerate(iterable), key=lambda x: x[1])[0]
 
-    class importMDETR:
+    class importMDETR():
 
-        def __init__(self):
+        # def __init__(self):
+           
+            # torch.set_grad_enabled(False);
+            # temp = pathlib.PosixPath
+            # pathlib.PosixPath = pathlib.WindowsPath
+            # self.init()
+            # model, postprocessor = torch.hub.load('ashkamath/mdetr:main', 'mdetr_efficientnetB5', pretrained=True, return_postprocessor=True)
+            # self.model = model.cuda()
+            # self.model.eval();
 
+            # # global transform, box_cxcywh_to_xyxy, rescale_bboxes, COLORS, plot_results, id2answerbytype, plot_inference, plot_inference_qa
+            # # standard PyTorch mean-std input image normalization
+            # self.transform = T.Compose([
+            #     T.Resize(800),
+            #     T.ToTensor(),
+            #     T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            # ])
+            # print("MDETR cargado")
+
+        def init(self):
             torch.set_grad_enabled(False);
             temp = pathlib.PosixPath
             pathlib.PosixPath = pathlib.WindowsPath
-
             model, postprocessor = torch.hub.load('ashkamath/mdetr:main', 'mdetr_efficientnetB5', pretrained=True, return_postprocessor=True)
             self.model = model.cuda()
             self.model.eval();
 
-            # global transform, box_cxcywh_to_xyxy, rescale_bboxes, COLORS, plot_results, id2answerbytype, plot_inference, plot_inference_qa
-            # standard PyTorch mean-std input image normalization
             self.transform = T.Compose([
                 T.Resize(800),
                 T.ToTensor(),
                 T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             ])
+            print("MDETR cargado")
+            return self.model, self.transform
+
 
         # for output bounding box post-processing
         def box_cxcywh_to_xyxy(self, x):
@@ -51,24 +78,24 @@ class PpeDetector:
             return b
 
         # colors for visualization
-        COLORS = [[0.000, 0.447, 0.741], [0.850, 0.325, 0.098], [0.929, 0.694, 0.125],
-                [0.494, 0.184, 0.556], [0.466, 0.674, 0.188], [0.301, 0.745, 0.933]]
+        # COLORS = [[0.000, 0.447, 0.741], [0.850, 0.325, 0.098], [0.929, 0.694, 0.125],
+        #         [0.494, 0.184, 0.556], [0.466, 0.674, 0.188], [0.301, 0.745, 0.933]]
 
-        import json
-        answer2id_by_type = json.load(requests.get("https://nyu.box.com/shared/static/j4rnpo8ixn6v0iznno2pim6ffj3jyaj8.json", stream=True).raw)
-        id2answerbytype = {}                                                       
-        for ans_type in answer2id_by_type.keys():                        
-            curr_reversed_dict = {v: k for k, v in answer2id_by_type[ans_type].items()}
-            id2answerbytype[ans_type] = curr_reversed_dict 
+        # import json
+        # answer2id_by_type = json.load(requests.get("https://nyu.box.com/shared/static/j4rnpo8ixn6v0iznno2pim6ffj3jyaj8.json", stream=True).raw)
+        # id2answerbytype = {}                                                       
+        # for ans_type in answer2id_by_type.keys():                        
+        #     curr_reversed_dict = {v: k for k, v in answer2id_by_type[ans_type].items()}
+        #     id2answerbytype[ans_type] = curr_reversed_dict 
 
 
-        def plot_inference(self, im, caption):
+        def plot_inference(self, model, transform, im, caption):
         # mean-std normalize the input image (batch-size: 1)
-            img = self.transform(im).unsqueeze(0).cuda()
+            img = transform(im).unsqueeze(0).cuda()
 
             # propagate through the model
-            memory_cache = self.model(img, [caption], encode_and_save=True)
-            outputs = self.model(img, [caption], encode_and_save=False, memory_cache=memory_cache)
+            memory_cache = model(img, [caption], encode_and_save=True)
+            outputs = model(img, [caption], encode_and_save=False, memory_cache=memory_cache)
 
             # global probas, keep
             # keep only predictions with 0.7+ confidence
@@ -76,7 +103,7 @@ class PpeDetector:
             self.keep = (self.probas > 0.7).cpu()
 
             # convert boxes from [0; 1] to image scales
-            bboxes_scaled = self.rescale_bboxes(outputs['pred_boxes'].cpu()[0, self.keep], im.size)
+            bboxes_scaled = PpeDetector.importMDETR().rescale_bboxes(outputs['pred_boxes'].cpu()[0, self.keep], im.size)
 
             # Extract the text spans predicted by each box
             positive_tokens = (outputs["pred_logits"].cpu()[0, self.keep].softmax(-1) > 0.1).nonzero().tolist()
@@ -92,33 +119,35 @@ class PpeDetector:
             # print('boxes: ', bboxes)
             # plot_results(im, probas[keep], bboxes_scaled, labels)
 
-            return (self.bboxes[PpeDetector.argmax(self.probas[self.keep])])
+            return (self.bboxes[PpeDetector().argmax(self.probas[self.keep])])
+        
+        def __exit__(self):
+            print("MDETR cargado")
 
-        print("MDETR cargado")
     
 
     def clearCacheMDETR(self):
         torch.cuda.empty_cache()
 
-    def loadEfficient(self):
-        self.weigths_effdet='https://github.com/EquipoVandV/EfficientDetVandV/blob/main/effdet/logs/person_coco/efficientdet-d2_58_8260_best.pth'
-        # global obj_list
-        self.obj_list = ['person']
-        # global model_effdet
+    def loadEfficientDet(self):
+        # self.weigths_effdet='https://github.com/EquipoVandV/EfficientDetVandV/blob/main/effdet/logs/person_coco/efficientdet-d2_58_8260_best.pth'
+        # self.weigths_effdet = 'C:/hidrolatina/EfficientDetVandV-main/effdet/logs/person_coco/efficientdet-d2_58_8260_best.pth'
+        # self.obj_list = ['person']
+   
         self.model_effdet = init_effdet_model(self.weigths_effdet, self.obj_list)
-
         print('EfficientDET Cargado')
+        # return self.model_effdet
 
-    def MDETR(self, im):
-        bboxes_body = self.importMDETR.plot_inference(im, "a hand")
+    def MDETR(self, model, transform, im):
+        bboxes_body = self.importMDETR.plot_inference(self, model, transform, im, "a hand")
         # plot_inference(im, "a hand")
         im_hand=im.crop(bboxes_body)
 
-        bboxes_body = self.importMDETR.plot_inference(im, "a head")
+        bboxes_body = self.importMDETR.plot_inference(self, model, transform, im, "a head")
         # plot_inference(im, "a head")
-        im_head=im.im.crop(bboxes_body)
+        im_head=im.crop(bboxes_body)
         
-        bboxes_body = self.importMDETR.plot_inference(im, "a boot")
+        bboxes_body = self.importMDETR.plot_inference(self, model, transform, im, "a boot")
         im_boot=im.crop(bboxes_body)
 
         objectListMDETR= {'im_head':im_head, 'im_hand': im_hand, 'im_boot': im_boot}
@@ -128,14 +157,14 @@ class PpeDetector:
         # global clipit
 
         # global candidate_captions
-        self.candidate_captions={'im_head': [['a head with a yellow helmet','Just a head'], ['Head with headphones', 'Just a head'],['a Head with goggles', 'Just a head'],['Head with a medical mask', 'Just a head']],
-                    'im_hand':[['A blue hand', 'A pink hand']],
-                    'im_boot':[['A black boot', 'A shoe']]}
+        # self.candidate_captions={'im_head': [['a head with a yellow helmet','Just a head'], ['Head with headphones', 'Just a head'],['a Head with goggles', 'Just a head'],['Head with a medical mask', 'Just a head']],
+        #             'im_hand':[['A blue hand', 'A pink hand']],
+        #             'im_boot':[['A black boot', 'A shoe']]}
         # candidate_captions={'im_head': [['a white hat','A head'], ['a big headset', 'a face'],['a face with glasses', 'A head'],['Mask', 'Just a head']],
         #             'im_hand':[['A blue hand', 'A pink hand']],
         #             'im_boot':[['a large boot', 'a small shoe']]}
-        # global names_ppe
-        self.names_ppe = {'im_head': ['Casco', 'Audífonos', 'Antiparras', 'Mascarilla'], 'im_hand': ['Guantes'], 'im_boot': ['Botas']}
+
+        # self.names_ppe = {'im_head': ['Casco', 'Audífonos', 'Antiparras', 'Mascarilla'], 'im_hand': ['Guantes'], 'im_boot': ['Botas']}
 
         # global device
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -169,3 +198,7 @@ class PpeDetector:
                     pred_clip.append('NO DETECTADO')
 
         return pred_clip
+
+    def efficientDet(self, img):
+        self.out = inference_effdet_model(self.model_effdet, img)
+        return self.out

@@ -1,26 +1,55 @@
+import queue
 import time
 from datetime import datetime, timedelta
-from PIL import Image, ImageTk
 from tkinter import *
 from tkinter import messagebox, filedialog, simpledialog, Listbox
+from PIL import ImageTk, Image
+from mmpose.core import camera
+import cv2
+from numpy import empty
+import torch.multiprocessing as mp
+import torch
 
 from Services import API_Services
 from UserClass import Person
+from imagenClipClass import imageClip
 from FileManagementClass import FileManagement
-import PpeDetector
+from CameraStream import CameraStream
+from PpeDetector import PpeDetector
+from ActionDetector import ActionDetector
 
 class WindowsTk:
 
-    # def __init__(self):
-    #     pass
+    def __init__(self):
+        self.ppedet = PpeDetector()
+        self.actiondet = ActionDetector()
 
     def loadALL(self):
+
+        # self.ppedet = PpeDetector()
         # from threading import Thread
         # libThread= Thread(target=librerias, args=(),daemon=True)
         # libThread.start()
-        PpeDetector.importMDETER()
-        PpeDetector.loadClip()
-        PpeDetector.loadEfficient()
+
+        self.model_mdetr, self.transform = self.ppedet.importMDETR().init()
+        # self.ppedet.loadClip()
+        # self.ppedet.loadEfficientDet()
+        # self.actiondet.load_effdet()
+        # self.actiondet.load_pose()
+        # self.actiondet.load_zone()
+        self.queue_anno = mp.Queue()
+        self.queue_action = mp.Queue()
+        self.flag_posec3d_init=mp.Queue()
+        p0 = mp.Process(target=self.actiondet.proc_paral, args=(self.queue_anno, self.queue_action, self.flag_posec3d_init,))
+
+        p0.start()
+
+        self.actiondet.load_effdet()
+        self.actiondet.load_pose()
+        self.actiondet.load_zone()
+        while self.flag_posec3d_init.empty():
+            pass
+        torch.cuda.empty_cache()
         messagebox.showinfo(message="Dependencias cargadas")
 
 
@@ -46,11 +75,10 @@ class WindowsTk:
         import numpy as np
 
         #Var/Global
-        global det
-        global image
-        global original_image
-        obj_list = ['person']
-        det=0
+        # global det
+        # global image
+        # global original_image
+        self.det=0
 
         #Tkinter config
         pytorchCameraTk = Toplevel()
@@ -63,8 +91,8 @@ class WindowsTk:
     
         # pytorchCameraTk.geometry("1280x720")
 
-        image = PhotoImage(file="white-image.png")
-        original_image = image.subsample(1,1)
+        self.image = PhotoImage(file="white-image.png")
+        self.original_image = self.image.subsample(1,1)
 
         #Frame Camera
         cameraFrame = Frame(pytorchCameraTk, width=pytorchCameraTk.winfo_screenwidth()*0.7, height=pytorchCameraTk.winfo_screenheight(), bg='#cceeff')
@@ -106,13 +134,13 @@ class WindowsTk:
         dataBootFrame.grid(row=0, column=1)
 
         # ###Label imageHeadFrame Sub frame lvl 2 headFrame
-        Label(imageHeadFrame, image=original_image).grid(row=1, column=0, padx=5, pady=5)
+        Label(imageHeadFrame, image=self.original_image).grid(row=1, column=0, padx=5, pady=5)
 
         # ###Label imageHandFrame Sub frame lvl 2 handFrame
-        Label(imageHandFrame, image=original_image).grid(row=1, column=0, padx=5, pady=5)
+        Label(imageHandFrame, image=self.original_image).grid(row=1, column=0, padx=5, pady=5)
 
         # ###Label imagebootFrame Sub frame lvl 2 bootFrame
-        Label(imageBootFrame, image=original_image).grid(row=1, column=0, padx=5, pady=5)
+        Label(imageBootFrame, image=self.original_image).grid(row=1, column=0, padx=5, pady=5)
 
         # ####Label dataHeadFrame Sub frame lvl 2 headFrame
         Label(dataHeadFrame, text="Casco", width=8).grid(row=0, column=0, padx=5, pady=5)
@@ -145,47 +173,30 @@ class WindowsTk:
         camHeight = round(cameraFrame.winfo_reqheight()*0.85)
 
         #Def into tk
-        def closeTk():
+        def closeTk(self):
             #Destroy window
             cap.stop()
             pytorchCameraTk.destroy()
             # root.deiconify()
-
-        def testFrame():
-            _, frame = cap.read()
-            frame = cv2.flip(frame, 1)
-            cv2image = cv2.cvtColor(cv2.resize(frame, (round(camWidth), round(camHeight))), cv2.COLOR_BGR2RGBA)
-            img = Image.fromarray(cv2image)
-            imgtk = ImageTk.PhotoImage(image=img)
-            labelVideo.imgtk = imgtk
-            labelVideo.configure(image=imgtk)
-            labelVideo.after(10, testFrame)
-
-            global det
-            det = det+1
-            if det > 60:
-                print('Rseset det to 0')
-                # updateLabelTest()
-                det = 0
-
-        def showFrame():
+        
+        def showFrame(self):
             # _, frame = cap.read()
             # frame = cv2.flip(frame, 1)
             try:
-                frame=cv2.imread(frame_selected)
+                frame=cv2.imread(self.frame_selected)
             except:
                 frame = cap.read()
 
-            out = inference_effdet_model(model_effdet, frame)
+            out = self.ppedet.efficientDet(frame)
             ori_img = frame.copy()
 
             for j in range(len(out['bbox'])):
                 (x1, y1, x2, y2) = out['bbox'][j].astype(np.int)
                 cv2.rectangle(ori_img, (x1, y1), (x2, y2), (255, 255, 0), 2)
-                obj = obj_list[out['class_ids'][j]]
+                # obj = obj_list[out['class_ids'][j]]
                 score = float(out['scores'][j])
 
-                cv2.putText(ori_img, '{}, {:.3f}'.format(obj, score),
+                cv2.putText(ori_img, '{:.3f}'.format(score),
                             (x1, y1 + 10), cv2.FONT_HERSHEY_SIMPLEX, .5,
                             (255, 255, 0), 2)
 
@@ -195,13 +206,12 @@ class WindowsTk:
             labelVideo.imgtk = imgtk
             labelVideo.configure(image=imgtk)
 
-            global det
-            print(det)
+            print(self.det)
             if len(out['class_ids']) == 0:
-                det = 0
+                self.det = 0
             if len(out['class_ids']) > 0:
-                det += 1
-                if det==20:
+                self.det += 1
+                if self.det==20:
 
                     print("Reset")
                     for i in range((out['scores']).size):
@@ -215,67 +225,54 @@ class WindowsTk:
                     ymax = int((detected_boxes[3]))
                     cropped_img =frame[ymin:ymax,xmin:xmax]
 
-
-                    global im
                     im = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
-                    print(im)
                     cap.stop()
                     copy_imgtk = imgtk
                     labelVideo.imgtk = copy_imgtk
-                    mdetr_list=MDETR(im)
-        ################################################ CORRERGIR ###############################################
-        ################################################ CORRERGIR ###############################################
-        ################################################ CORRERGIR ###############################################
-                    # print(mdetr_list)
-                    global listImagenClip
-                    listImagenClip = []
-                    for bodypart in mdetr_list.keys():
-                        listImagenClip.append(imageClip(names_ppe[bodypart], ImageTk.PhotoImage(mdetr_list[bodypart].resize((150,150))), clip(bodypart, mdetr_list)))
-                        # print(bodypart)
+                    mdetr_list=self.ppedet.MDETR(self.model_mdetr, self.transform, im)
+                    print(mdetr_list)
+                    self.listImagenClip = []
+                    for bodypart in mdetr_list.keys(): 
+                        self.listImagenClip.append(imageClip(self.ppedet.names_ppe[bodypart], ImageTk.PhotoImage(mdetr_list[bodypart].resize((150,150))), self.ppedet.clip(bodypart, mdetr_list)))
                     
-                    updateLabel()
+                    updateLabel(self)
+                    return self
         ################################################ CORRERGIR ###############################################
         ################################################ CORRERGIR ###############################################
         ################################################ CORRERGIR ###############################################
                     
-            if det<20:
-                labelVideo.after(10, showFrame)
-
-        def counterPopUp(endTime, booleanAnswer):
+            if self.det<20:
+                labelVideo.after(10, showFrame, self)
+        
+        def counterPopUp(self, endTime, booleanAnswer):
             if datetime.now() > endTime:
                 print('si')
                 print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
                 print('funciona')
-                popupIdentificationTk(booleanAnswer)
+                self.popupIdentificationTk(booleanAnswer)
             else:
                 print('no')
                 print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
-                pytorchCameraTk.after(5000, counterPopUp, endTime, booleanAnswer)
+                pytorchCameraTk.after(5000, counterPopUp, self, endTime, booleanAnswer)
 
-        def updateLabel():
-            global image
-            global original_image
-
-            image = PhotoImage(file="logo-sm.png")
-            original_image = image.subsample(1,1)
-
+        def updateLabel(self):
             #Head Frame
-            Label(imageHeadFrame, image=(listImagenClip[0].getImage())).grid(row=1, column=0, padx=5, pady=5)
-            Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
-            Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[1]), width=15).grid(row=1, column=1, padx=5, pady=5)
-            Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[2]), width=15).grid(row=2, column=1, padx=5, pady=5)
-            Label(dataHeadFrame, text=(listImagenClip[0].getAnswer()[3]), width=15).grid(row=3, column=1, padx=5, pady=5)
+            Label(imageHeadFrame, image=(self.listImagenClip[0].getImage())).grid(row=1, column=0, padx=5, pady=5)
+            Label(dataHeadFrame, text=(self.listImagenClip[0].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
+            Label(dataHeadFrame, text=(self.listImagenClip[0].getAnswer()[1]), width=15).grid(row=1, column=1, padx=5, pady=5)
+            Label(dataHeadFrame, text=(self.listImagenClip[0].getAnswer()[2]), width=15).grid(row=2, column=1, padx=5, pady=5)
+            Label(dataHeadFrame, text=(self.listImagenClip[0].getAnswer()[3]), width=15).grid(row=3, column=1, padx=5, pady=5)
 
             #Hand Frame
-            Label(imageHandFrame, image=(listImagenClip[1].getImage())).grid(row=1, column=0, padx=5, pady=5)
-            Label(dataHandFrame,  text=(listImagenClip[1].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
+            Label(imageHandFrame, image=(self.listImagenClip[1].getImage())).grid(row=1, column=0, padx=5, pady=5)
+            Label(dataHandFrame,  text=(self.listImagenClip[1].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
 
             #Boot Frame
-            Label(imageBootFrame, image=(listImagenClip[2].getImage())).grid(row=1, column=0, padx=5, pady=5)
-            Label(dataBootFrame, text=(listImagenClip[2].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
+            Label(imageBootFrame, image=(self.listImagenClip[2].getImage())).grid(row=1, column=0, padx=5, pady=5)
+            Label(dataBootFrame, text=(self.listImagenClip[2].getAnswer()[0]), width=15).grid(row=0, column=1, padx=5, pady=5)
 
             booleanAnswer = None
-            for list in listImagenClip:
+            for list in self.listImagenClip:
                 for j in range(len(list.getAnswer())):
                     if list.getAnswer()[j] == 'OK':
                         print(list.getName()[j])
@@ -285,20 +282,84 @@ class WindowsTk:
                         booleanAnswer = False
                     print(booleanAnswer)
 
-            endTime = datetime.now() + timedelta(seconds=15)
-            if len(listImagenClip) > 0:
-                counterPopUp(endTime, booleanAnswer)
+            endTime = datetime.now() + timedelta(seconds=10)
+            if len(self.listImagenClip) > 0:
+                counterPopUp(self, endTime, booleanAnswer)
             # pytorchCameraTk.after(1, counterPopUp, endTime, booleanAnswer)
 
-        # testFrame()
-        exitButton = Button(pytorchCameraTk, text='Cerrar ventana', command=closeTk)
+        exitButton = Button(pytorchCameraTk, text='Cerrar ventana', command=lambda:closeTk(self))
         exitButton.grid(row=1, column=0)
 
-        testButtonUpdate = Button(pytorchCameraTk, text='Test Update', command=updateLabel)
+        testButtonUpdate = Button(pytorchCameraTk, text='Test Update', command=lambda:updateLabel(self))
         testButtonUpdate.grid(row=1, column=1)
-        showFrame()
+        showFrame(self)
+
+    def showActionsTk(self):
+        showActions = Toplevel()
+        showActions.resizable(False,False)
+        showActions.title("Configuracion camaras")
+        # showActions.protocol("WM_DELETE_WINDOW", exit)
+        showActions.config(background="#cceeff")
+        # showActions.overrideredirect(True)
+        showActions.geometry('1000x600')
+        # showActions.geometry(f'{pytorchCameraTk.winfo_screenwidth()}x{pytorchCameraTk.winfo_screenheight()}')
+
+        #Def into tk
+        def closeTk(self):
+            # try:
+            # except:
+            #     pass
+            showActions.destroy()
+            # root.deiconify()
+
+        # Main Frame
+        mainFrame = Frame(showActions, width=1000, height=600, bg='#cceeff', borderwidth=0)
+        mainFrame.grid()
+        mainFrame.grid_propagate(False)
 
 
+        leftFrame = Frame(mainFrame, width=round(mainFrame.winfo_reqwidth()*0.6), height=round(mainFrame.winfo_reqheight()), bg='red', borderwidth=0)
+        leftFrame.grid(row=0, column=0)
+        leftFrame.grid_propagate(False)
+
+        rightFrame = Frame(mainFrame, width=round(mainFrame.winfo_reqwidth()*0.4), height=round(mainFrame.winfo_reqheight()), bg='blue', borderwidth=0)
+        rightFrame.grid(row=0, column=1)
+        rightFrame.grid_propagate(False)
+
+        #Buttons
+        closeWindow = Button(rightFrame, text="Cerrar", command=lambda:closeTk(self))
+        closeWindow.grid(row=1, column=0)
+
+        #Camera Frame
+        cameraFrame = Frame(rightFrame, width=round(rightFrame.winfo_reqwidth()*0.9), height=round(mainFrame.winfo_reqheight()*0.3), bg='green')
+        cameraFrame.grid(row=0, column=0, padx=round(rightFrame.winfo_reqwidth()*0.05), pady=round(mainFrame.winfo_reqheight()*0.175))
+        cameraFrame.grid_propagate(False)
+
+        #Capture video frames
+        labelVideo = Label(cameraFrame, borderwidth=0)
+        labelVideo.grid(row=0, column=0)
+        labelVideo.grid_propagate(False)
+
+        self.actiondet.inferenceActionDetector(self.queue_anno, self.queue_action, labelVideo, showActions, cameraFrame)
+        # cap = CameraStream('C:/hidrolatina/test_beta2.mp4', delay=0.02).start()
+        
+        # while True:
+        #     self.frame = cap.read()
+
+        #     if self.frame is None or cap.started is False:
+        #         break
+
+        #     cv2image = cv2.cvtColor(cv2.resize(self.frame, (int(cameraFrame.winfo_width()), int(cameraFrame.winfo_height()))), cv2.COLOR_BGR2RGBA)
+        #     img = Image.fromarray(cv2image)
+        #     imgtk = ImageTk.PhotoImage(image=img)
+        #     labelVideo.imgtk = imgtk
+        #     labelVideo.configure(image=imgtk)
+
+        #     showActions.update()
+        #     showActions.update_idletasks()
+
+        # cap.stop()
+        
     def configCameraTk(self, configurationTk):
         # Config tk
         configCameraTk = Toplevel()
@@ -309,8 +370,10 @@ class WindowsTk:
 
         width = 200
         height = 300
-        screen_width = root.winfo_screenwidth()
-        screen_height = root.winfo_screenheight()
+        screen_width = 200
+        screen_height = 300
+        # screen_width = root.winfo_screenwidth()
+        # screen_height = root.winfo_screenheight()
 
         x = (screen_width/2) - (width/2)
         y = (screen_height/2) - (height/2)
@@ -377,7 +440,7 @@ class WindowsTk:
 
         def closeTk():
             NFC_Tk.destroy()
-            root.deiconify()
+            # root.deiconify()
         
         #Hide Root Window
         # root.withdraw()
@@ -402,7 +465,7 @@ class WindowsTk:
 
         # Labels left_frame
         global imageWaitDetectionLeft
-        imageWaitDetectionLeft = Image.open('images/waiting_identification_left.png')
+        imageWaitDetectionLeft = Image.open("images/waiting_identification_left.png")
         imageWaitDetectionLeft = imageWaitDetectionLeft.resize((round(NFCFrame.winfo_reqwidth()*0.5), round(NFCFrame.winfo_reqheight())), Image.ANTIALIAS)
         imageWaitDetectionLeft = ImageTk.PhotoImage(imageWaitDetectionLeft)
         imageLabelLeft_Frame = Label(left_frame, image=imageWaitDetectionLeft, borderwidth=0)
@@ -737,7 +800,7 @@ class WindowsTk:
         labelDetLimit.pack()
 
         #Buttons Tk
-        buttonDirectory = Button(configurationTk, text="Cambiar directorio", command=folderSelect)
+        buttonDirectory = Button(configurationTk, text="Cambiar directorio", command=lambda:self.folderSelect())
         buttonDirectory.pack()
 
         buttonThreshold = Button(configurationTk, text="Cambiar Threshold", command=lambda:changeThreshold())
@@ -752,10 +815,10 @@ class WindowsTk:
         buttonClass = Button(configurationTk, text="Cambiar clases")
         buttonClass.pack()
 
-        buttonClass = Button(configurationTk, text="Configurar Camaras", command=lambda:configCameraTk(configurationTk))
+        buttonClass = Button(configurationTk, text="Configurar Camaras", command=lambda:self.configCameraTk(configurationTk))
         buttonClass.pack()
 
-        buttonfDirectory = Button(configurationTk, text="ImagenTest", command=lambda:folderframeSelect())
+        buttonfDirectory = Button(configurationTk, text="ImagenTest", command=lambda:self.folderframeSelect())
         buttonfDirectory.pack()
 
         closeWindow = Button(configurationTk, text="Cerrar Ventana", command=lambda:closeTk())
@@ -786,11 +849,11 @@ class WindowsTk:
         Last_nameLabel = Label(adminConfigTk, text=user.getLast_name())
         Last_nameLabel.grid()
 
-        testButton = Button(adminConfigTk, text='Test Camara',command=self.showPytorchCameraTk, fg='red').grid()
         # testButton = Button(adminConfigTk, text='Test download',command=self.downloadEfficientDet, fg='red').grid()
         testButton = Button(adminConfigTk, text='Test NFC',command=self.nfc_identifyTk, fg='red').grid()
         testButton = Button(adminConfigTk, text='Test POPUP',command=self.popupIdentificationTk, fg='red').grid()
-        testButton = Button(adminConfigTk, text='Cargar Dependencias',command=self.loadALL, fg='red').grid()
+        testButton = Button(adminConfigTk, text='test Cargar Dependencias',command=self.loadALL, fg='red').grid()
+        testButton = Button(adminConfigTk, text='test acciones', command=self.showActionsTk, fg='red').grid()
 
         createUser = Button(adminConfigTk, text='Gestion de usuario', command=lambda:self.userManagementTk(user))
         createUser.grid()
