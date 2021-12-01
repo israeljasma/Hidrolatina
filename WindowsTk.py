@@ -1,8 +1,14 @@
+import queue
 import time
 from datetime import datetime, timedelta
 from tkinter import *
 from tkinter import messagebox, filedialog, simpledialog, Listbox
 from PIL import ImageTk, Image
+from mmpose.core import camera
+import cv2
+from numpy import empty
+import torch.multiprocessing as mp
+import torch
 
 from Services import API_Services
 from UserClass import Person
@@ -10,12 +16,13 @@ from imagenClipClass import imageClip
 from FileManagementClass import FileManagement
 from CameraStream import CameraStream
 from PpeDetector import PpeDetector
-import cv2
+from ActionDetector import ActionDetector
 
 class WindowsTk:
 
     def __init__(self):
         self.ppedet = PpeDetector()
+        self.actiondet = ActionDetector()
 
     def loadALL(self):
 
@@ -23,9 +30,26 @@ class WindowsTk:
         # from threading import Thread
         # libThread= Thread(target=librerias, args=(),daemon=True)
         # libThread.start()
+
         self.model_mdetr, self.transform = self.ppedet.importMDETR().init()
-        self.ppedet.loadClip()
-        self.ppedet.loadEfficientDet()
+        # self.ppedet.loadClip()
+        # self.ppedet.loadEfficientDet()
+        # self.actiondet.load_effdet()
+        # self.actiondet.load_pose()
+        # self.actiondet.load_zone()
+        self.queue_anno = mp.Queue()
+        self.queue_action = mp.Queue()
+        self.flag_posec3d_init=mp.Queue()
+        p0 = mp.Process(target=self.actiondet.proc_paral, args=(self.queue_anno, self.queue_action, self.flag_posec3d_init,))
+
+        p0.start()
+
+        self.actiondet.load_effdet()
+        self.actiondet.load_pose()
+        self.actiondet.load_zone()
+        while self.flag_posec3d_init.empty():
+            pass
+        torch.cuda.empty_cache()
         messagebox.showinfo(message="Dependencias cargadas")
 
 
@@ -270,7 +294,72 @@ class WindowsTk:
         testButtonUpdate.grid(row=1, column=1)
         showFrame(self)
 
+    def showActionsTk(self):
+        showActions = Toplevel()
+        showActions.resizable(False,False)
+        showActions.title("Configuracion camaras")
+        # showActions.protocol("WM_DELETE_WINDOW", exit)
+        showActions.config(background="#cceeff")
+        # showActions.overrideredirect(True)
+        showActions.geometry('1000x600')
+        # showActions.geometry(f'{pytorchCameraTk.winfo_screenwidth()}x{pytorchCameraTk.winfo_screenheight()}')
 
+        #Def into tk
+        def closeTk(self):
+            # try:
+            # except:
+            #     pass
+            showActions.destroy()
+            # root.deiconify()
+
+        # Main Frame
+        mainFrame = Frame(showActions, width=1000, height=600, bg='#cceeff', borderwidth=0)
+        mainFrame.grid()
+        mainFrame.grid_propagate(False)
+
+
+        leftFrame = Frame(mainFrame, width=round(mainFrame.winfo_reqwidth()*0.6), height=round(mainFrame.winfo_reqheight()), bg='red', borderwidth=0)
+        leftFrame.grid(row=0, column=0)
+        leftFrame.grid_propagate(False)
+
+        rightFrame = Frame(mainFrame, width=round(mainFrame.winfo_reqwidth()*0.4), height=round(mainFrame.winfo_reqheight()), bg='blue', borderwidth=0)
+        rightFrame.grid(row=0, column=1)
+        rightFrame.grid_propagate(False)
+
+        #Buttons
+        closeWindow = Button(rightFrame, text="Cerrar", command=lambda:closeTk(self))
+        closeWindow.grid(row=1, column=0)
+
+        #Camera Frame
+        cameraFrame = Frame(rightFrame, width=round(rightFrame.winfo_reqwidth()*0.9), height=round(mainFrame.winfo_reqheight()*0.3), bg='green')
+        cameraFrame.grid(row=0, column=0, padx=round(rightFrame.winfo_reqwidth()*0.05), pady=round(mainFrame.winfo_reqheight()*0.175))
+        cameraFrame.grid_propagate(False)
+
+        #Capture video frames
+        labelVideo = Label(cameraFrame, borderwidth=0)
+        labelVideo.grid(row=0, column=0)
+        labelVideo.grid_propagate(False)
+
+        self.actiondet.inferenceActionDetector(self.queue_anno, self.queue_action, labelVideo, showActions, cameraFrame)
+        # cap = CameraStream('C:/hidrolatina/test_beta2.mp4', delay=0.02).start()
+        
+        # while True:
+        #     self.frame = cap.read()
+
+        #     if self.frame is None or cap.started is False:
+        #         break
+
+        #     cv2image = cv2.cvtColor(cv2.resize(self.frame, (int(cameraFrame.winfo_width()), int(cameraFrame.winfo_height()))), cv2.COLOR_BGR2RGBA)
+        #     img = Image.fromarray(cv2image)
+        #     imgtk = ImageTk.PhotoImage(image=img)
+        #     labelVideo.imgtk = imgtk
+        #     labelVideo.configure(image=imgtk)
+
+        #     showActions.update()
+        #     showActions.update_idletasks()
+
+        # cap.stop()
+        
     def configCameraTk(self, configurationTk):
         # Config tk
         configCameraTk = Toplevel()
@@ -764,6 +853,7 @@ class WindowsTk:
         testButton = Button(adminConfigTk, text='Test NFC',command=self.nfc_identifyTk, fg='red').grid()
         testButton = Button(adminConfigTk, text='Test POPUP',command=self.popupIdentificationTk, fg='red').grid()
         testButton = Button(adminConfigTk, text='test Cargar Dependencias',command=self.loadALL, fg='red').grid()
+        testButton = Button(adminConfigTk, text='test acciones', command=self.showActionsTk, fg='red').grid()
 
         createUser = Button(adminConfigTk, text='Gestion de usuario', command=lambda:self.userManagementTk(user))
         createUser.grid()
