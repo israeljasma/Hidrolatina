@@ -15,18 +15,18 @@ from effdet.utils.inference import init_effdet_model,inference_effdet_model
 class PpeDetector:
 
     def __init__(self):
-        self.weigths_effdet = 'C:/hidrolatina/EfficientDetVandV-main/effdet/logs/person_coco/efficientdet-d2_58_8260_best.pth'
+        self.weigths_effdet = 'https://github.com/EquipoVandV/EfficientDetVandV/blob/main/effdet/logs/person_coco/efficientdet-d2_58_8260_best.pth'
         self.obj_list = ['person']
         self.names_ppe = {'im_head': ['Casco', 'Audífonos', 'Antiparras', 'Mascarilla'], 'im_hand': ['Guantes'], 'im_boot': ['Botas']}
-        self.candidate_captions={'im_head': [['a head with a yellow helmet','Just a head'], ['Head with headphones', 'Just a head'],['a Head with goggles', 'Just a head'],['Head with a medical mask', 'Just a head']],
+        self.candidate_captions={'im_head': [['A white hat','A head'], ['a big headset', 'a head'],['A face with glasses', 'A head'],['Head with a medical mask', 'Just a head']],
                     'im_hand':[['A blue hand', 'A pink hand']],
-                    'im_boot':[['A black boot', 'A shoe']]}
-        # self.importMDETR = self.importMDETR()
+                    'im_boot':[['A large boot', 'A small shoe']]}
+        self.importMdetr = self.importMDETR()
     
     def argmax(self, iterable):
             return max(enumerate(iterable), key=lambda x: x[1])[0]
 
-    class importMDETR():
+    class importMDETR:
 
         # def __init__(self):
            
@@ -89,13 +89,13 @@ class PpeDetector:
         #     id2answerbytype[ans_type] = curr_reversed_dict 
 
 
-        def plot_inference(self, model, transform, im, caption):
+        def plot_inference(self, im, caption):
         # mean-std normalize the input image (batch-size: 1)
-            img = transform(im).unsqueeze(0).cuda()
+            img = self.transform(im).unsqueeze(0).cuda()
 
             # propagate through the model
-            memory_cache = model(img, [caption], encode_and_save=True)
-            outputs = model(img, [caption], encode_and_save=False, memory_cache=memory_cache)
+            memory_cache = self.model(img, [caption], encode_and_save=True)
+            outputs = self.model(img, [caption], encode_and_save=False, memory_cache=memory_cache)
 
             # global probas, keep
             # keep only predictions with 0.7+ confidence
@@ -125,10 +125,6 @@ class PpeDetector:
             print("MDETR cargado")
 
     
-
-    def clearCacheMDETR(self):
-        torch.cuda.empty_cache()
-
     def loadEfficientDet(self):
         # self.weigths_effdet='https://github.com/EquipoVandV/EfficientDetVandV/blob/main/effdet/logs/person_coco/efficientdet-d2_58_8260_best.pth'
         # self.weigths_effdet = 'C:/hidrolatina/EfficientDetVandV-main/effdet/logs/person_coco/efficientdet-d2_58_8260_best.pth'
@@ -138,16 +134,16 @@ class PpeDetector:
         print('EfficientDET Cargado')
         # return self.model_effdet
 
-    def MDETR(self, model, transform, im):
-        bboxes_body = self.importMDETR.plot_inference(self, model, transform, im, "a hand")
+    def MDETR(self, im):
+        bboxes_body = self.importMdetr.plot_inference( im, "a hand")
         # plot_inference(im, "a hand")
         im_hand=im.crop(bboxes_body)
 
-        bboxes_body = self.importMDETR.plot_inference(self, model, transform, im, "a head")
+        bboxes_body = self.importMdetr.plot_inference( im, "a head")
         # plot_inference(im, "a head")
         im_head=im.crop(bboxes_body)
         
-        bboxes_body = self.importMDETR.plot_inference(self, model, transform, im, "a boot")
+        bboxes_body = self.importMdetr.plot_inference( im, "a boot")
         im_boot=im.crop(bboxes_body)
 
         objectListMDETR= {'im_head':im_head, 'im_hand': im_hand, 'im_boot': im_boot}
@@ -193,12 +189,14 @@ class PpeDetector:
 
                 # pred = class_names[argmax(list(probs)[0])]
                 if self.argmax(list(probs)[0])== 0:
-                    pred_clip.append('OK')
+                    pred_clip.append('Ok')
                 else:
-                    pred_clip.append('NO DETECTADO')
+                    pred_clip.append('No Detectado')
 
         return pred_clip
 
     def efficientDet(self, img):
         self.out = inference_effdet_model(self.model_effdet, img)
+        torch.cuda.empty_cache()
         return self.out
+
