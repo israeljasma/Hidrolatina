@@ -35,8 +35,16 @@ class CameraStream():
 
     def stop(self):
         self.started = False
-        self.stream.release()
+        # self.stream.release()
+        try:
+            self.stream.release()
+            self.thread.join()
+        except:
+            pass
     
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.thread.join()
+        try:
+            self.thread.join()
+        except:
+            pass

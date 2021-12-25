@@ -14,7 +14,7 @@ from FileManagementClass import FileManagement
 from NFCClass import NFC
 from WindowsTk import WindowsTk
 
-from numpy import CLIP
+from numpy import CLIP, trunc
 from imagenClipClass import imageClip
 
 
@@ -23,11 +23,13 @@ from imagenClipClass import imageClip
 if __name__ == '__main__':
     root = Tk()
     # root.geometry('350x500+500+50')
-    root.geometry(f'{root.winfo_screenwidth()}x{root.winfo_screenheight()}')
+    
     # root.resizable(0,0)
-    # root.overrideredirect(True)
+    root.overrideredirect(True)
     root.config(bg='#CCEEFF')
     root.title('Hidrolatina')
+    root.geometry(f'{root.winfo_screenwidth()}x{root.winfo_screenheight()}')
+
       
 
     instanceWindowsTk = WindowsTk(root)
@@ -37,6 +39,8 @@ if __name__ == '__main__':
     def verification():
         user = userEntry.get()
         password = passwordEntry.get()
+        global boolCounter
+        boolCounter = False
         # try:
         person = API_Services.login(user, password)
         if 'token' in person:
@@ -57,6 +61,11 @@ if __name__ == '__main__':
             instanceWindowsTk.p0.join()
         except:
            pass
+        try:
+            instanceWindowsTk.p1.terminate()
+            instanceWindowsTk.p1.join()
+        except:
+           pass
         root.destroy()
         root.quit()
 
@@ -70,7 +79,7 @@ if __name__ == '__main__':
             if datetime.now() > endTime:
                 print('si')
                 print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
-                instanceWindowsTk.nfc_identifyTk()
+                # instanceWindowsTk.nfc_identifyTk()
             else:
                 print('no')
                 print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
@@ -105,12 +114,9 @@ if __name__ == '__main__':
     logo = Image.open('images/logo_hidrolatina.png')
     logo = logo.resize((325, 97), Image.ANTIALIAS)
     logo = ImageTk.PhotoImage(logo)
-    # logoLabel = Canvas(root, borderwidth=0,highlightthickness=0, bg='#FFFFFF', width=logo.width(), height=logo.height())
-    # logoLabel.place(relx=.5, rely=.1)
-    print('tamaño: ', logo.width(), logo.height())
+
     canvas.create_image(root.winfo_screenwidth()/2, logo.height(), image=logo, anchor='center')
-    # logoLabel = Label(root, image=logo, width=325, height=97, bg='#CCEEFF')
-    # logoLabel.pack(pady=30)
+
     
 
     userLabel = Label(root, text='Usuario', bg='white').pack(pady=(200,0))
@@ -125,12 +131,12 @@ if __name__ == '__main__':
     loginButton = Button(root, command=lambda:verification(), text='Iniciar Sesión', bg='#c2eaff').pack(pady=(50,0))
     # identificationButton = Button(root, command=lambda:nfc_identifyTk(), text='Iniciar Identificación', bg='#c2eaff').pack()
     identificationButton = Button(root, command=lambda:iniciarIdentificacionNFC(), text='Iniciar Identificación', bg='#c2eaff').pack()
-
+    # popupButton = Button(root, command=lambda:instanceWindowsTk.popupIdentificationTk(booleanAnswerlist=[False, False, False, False, False, False]), text='POP UP', bg='#c2eaff').pack()
     closeButton = Button(root, text='Salir', command=closeLogin, bg='#c2eaff').pack(pady=(50,0))
 
     def load():
         if messagebox.askyesno(message="Se cargarán dependecias \n ¿Desea continuar?"):
-            instanceWindowsTk.loadALL() 
+            instanceWindowsTk.loadALL()
         root.after(2000,root.deiconify)
         instanceWindowsTk.center_window(root)
     
@@ -139,8 +145,9 @@ if __name__ == '__main__':
     root.after(1, load)  
     # Call def
     root.after(10000, counter, endTime)
-
-
+    root.lift()
+    root.attributes('-topmost', True)
+    root.after_idle(root.attributes,'-topmost',False)
     root.mainloop()
 
     
