@@ -1,4 +1,5 @@
 from datetime import datetime
+from tkinter.constants import FALSE
 import cv2
 import numpy as np
 from mmpose.apis import (inference_top_down_pose_model, init_pose_model,inference_bottom_up_pose_model,
@@ -144,6 +145,8 @@ class ActionDetector:
         fake_anno={'frame_dir': '', 'label': -1, 'img_shape': (10, 10), 'original_shape': (10, 10), 'start_index': 0, 'modality': 'Pose', 'total_frames': 1, 'keypoint': np.zeros((0, 1, 17, 2), dtype=np.float16), 'keypoint_score': np.zeros((0, 1, 17), dtype=np.float16)}
         actions=inference_recognizer(posec3d_model,fake_anno)
         print('Inicializó Modelo Acciones')
+        del actions
+        torch.cuda.empty_cache()
         flag_posec3d_init.put(True)
 
         while True:
@@ -162,26 +165,26 @@ class ActionDetector:
     
 
                 # print(actions)
-    def WriteFrame(self, tv1, df):
+    def WriteFrame(self, tableview, df):
 
-        tv1["column"] = list(df.columns)
-        tv1["show"] = "headings"
-        for column in tv1["columns"]:
-            tv1.heading(column, text=column)
-            tv1.column(column, minwidth=0, width=150, stretch=tkinter.NO)
+        tableview["column"] = list(df.columns)
+        tableview["show"] = "headings"
+        for column in tableview["columns"]:
+            tableview.heading(column, text=column)
+            tableview.column(column, minwidth=0, width=150, stretch=tkinter.NO)
 
-        tv1.delete(*tv1.get_children())
+        tableview.delete(*tableview.get_children())
         df_rows = df.to_numpy().tolist() # turns the dataframe into a list of lists
         for row in df_rows:
-          tv1.insert("", "end", values=row)
+          tableview.insert("", "end", values=row)
 
-    def DownloadpdTk(self):
-        out = filedialog.asksaveasfilename(defaultextension=".xlsx")
-        print('out ', out)
-        self.df.to_excel(out)
-        print(self.df)
+    # def DownloadpdTk(self):
+    #     out = filedialog.asksaveasfilename(defaultextension=".xlsx")
+    #     print('out ', out)
+    #     self.df.to_excel(out, index=False)
+    #     print(self.df)
 
-    def inferenceActionDetector(self, queue_anno, queue_action, labelVideo, showActions, cameraFrame, tv1):
+    def inferenceActionDetector(self, queue_anno, queue_action, labelVideo, showActions, tableview, btaudio):
         just_bboxarea_track=True
         track_flag=False
         wait_for_operator=5
@@ -203,20 +206,22 @@ class ActionDetector:
         result_actions=[0,0,0]
         
         
-        df_data={'Op. Presente':['No'], 'Accion':['No'], 'Riesgo':['No'], 'Hora':[''], 'Fecha':['']}
+        df_data={'Op. Presente':['No'], 'Accion':['No'], 'Riesgo':['No'], 'Hora':[datetime.today().time().isoformat('seconds')], 'Fecha':[datetime.today().date()]}
         self.df = pd.DataFrame(df_data)
+        self.WriteFrame(tableview, self.df)
         old_action= old_op_present= op_present ='No'
         actual_action={'name':'No', 'score': ''}
         risk='No'
         
         torch.cuda.empty_cache()
+        print('Camara de planta es esta: ', self.varCamera) 
         try:
             self.cam = CameraStream(self.actionvideo_selected,delay=0.03).start()    #test
         # cam = CameraStream('C:/Users/Hidrolatina/Downloads/Videos_dataset/2.mp4',delay=0.03).start()  #test
         # cam = CameraStream('C:/Users/Hidrolatina/Downloads/Videos_dataset/CAM02 acciones 60 ciclos 12-10-2021.wmv', delay=0.03).start()    #t
         # cam = CameraStream(0).start() 
         except:
-            self.cam=CameraStream().start()
+            self.cam=CameraStream(self.varCamera).start()
         while True:
             try:
                 img = self.cam.read()
@@ -317,11 +322,12 @@ class ActionDetector:
                         xmax = int((detected_boxes[2]))
                         # ymax = int((detected_boxes[3]))
                         ymax = (int(head_point[1]))
-                        rad=((ymax-ymin)/2)*0.3
+                        rad=((ymax-ymin)/2)
                         # print('Radius: ', rad)
                         try:
                         # cropped_img = img[int(ymin+3*rad):int(ymax-3*rad),(int(head_point[0]-rad)):(int(head_point[0]+rad))]
-                            cropped_img = img[int(ymin+rad):int(ymax-4*rad),(int(head_point[0]+6)):(int(head_point[0]+9))] 
+                            # cropped_img = img[int(ymin+rad):int(ymax-4*rad),(int(head_point[0]+6)):(int(head_point[0]+9))] 
+                            cropped_img = img[int(ymin+rad*.3):int(ymax-rad),(int(head_point[0]+9)):(int(head_point[0]+20))] 
                         
                         
                         # print(len(cropped_img))
@@ -600,8 +606,11 @@ class ActionDetector:
                     result_actions[0]=1
                 if action[0][0]==3 and result_actions[0]==1:
                     risk='Presion en membranas'
+                    btaudio.play('Riesgo de alta presión, porfavor cerrar la rejilla')
+
                 if action[0][0]==4:
                     risk='Electrificación'
+                    btaudio.play('Riesgo de electrificación, porfavor cerrar gabinete')
                   
             
             ################################################Data Frame###########################################################
@@ -614,7 +623,7 @@ class ActionDetector:
             if old_op_present!=op_present or actual_action['name']!='No':
                 
                 self.df=self.df.append(pd.DataFrame({'Op. Presente':[op_present], 'Accion':[actual_action['name']], 'Riesgo': [risk],'Hora':[datetime.today().time().isoformat('seconds')], 'Fecha':[datetime.today().date()]}))
-                self.WriteFrame(tv1, self.df)
+                self.WriteFrame(tableview, self.df)
 
 
             old_op_present=op_present
@@ -632,7 +641,7 @@ class ActionDetector:
 
             ########################################################################################################################3
 
-            cv2image = cv2.cvtColor(cv2.resize(self.vis_result, (int(cameraFrame.winfo_width()), int(cameraFrame.winfo_height()))), cv2.COLOR_BGR2RGBA)
+            cv2image = cv2.cvtColor(cv2.resize(self.vis_result, (int(labelVideo.winfo_width()), int(labelVideo.winfo_height()))), cv2.COLOR_BGR2RGBA)
             img = Image.fromarray(cv2image)
             imgtk = ImageTk.PhotoImage(image=img)
             labelVideo.imgtk = imgtk

@@ -1,9 +1,11 @@
 import re
+from PIL import Image
 from PIL.Image import init
 import requests
 import pathlib
 import json
 from collections import defaultdict
+import numpy as np
 
 import torch
 import torchvision.transforms as T
@@ -17,6 +19,17 @@ class PpeDetector:
     def __init__(self):
         self.weigths_effdet = 'https://github.com/EquipoVandV/EfficientDetVandV/blob/main/effdet/logs/person_coco/efficientdet-d2_58_8260_best.pth'
         self.obj_list = ['person']
+        # self.effdet_weight='https://github.com/zylo117/Yet-Another-Efficient-Pytorch/releases/download/1.0/efficientdet-d4.pth'
+        # self.obj_list= ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
+        #                     'fire hydrant', '', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep',
+        #                 'cow', 'elephant', 'bear', 'zebra', 'giraffe', '', 'backpack', 'umbrella', '', '', 'handbag', 'tie',
+        #                 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove',
+        #                 'skateboard', 'surfboard', 'tennis racket', 'bottle', '', 'wine glass', 'cup', 'fork', 'knife', 'spoon',
+        #                 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut',
+        #                 'cake', 'chair', 'couch', 'potted plant', 'bed', '', 'dining table', '', '', 'toilet', '', 'tv',
+        #                 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink',
+        #                 'refrigerator', '', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier',
+        #                 'toothbrush']
         self.names_ppe = {'im_head': ['Casco', 'Audífonos', 'Antiparras', 'Mascarilla'], 'im_hand': ['Guantes'], 'im_boot': ['Botas']}
         self.candidate_captions={'im_head': [['A white hat','A head'], ['a big headset', 'a head'],['A face with glasses', 'A head'],['Head with a medical mask', 'Just a head']],
                     'im_hand':[['A blue hand', 'A pink hand']],
@@ -60,6 +73,9 @@ class PpeDetector:
                 T.ToTensor(),
                 T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             ])
+            # out=self.plot_inference(Image.fromarray(np.zeros((10,10,3), np.uint8)), 'empty')
+            # del out
+            torch.cuda.empty_cache()
             print("MDETR cargado")
             return self.model, self.transform
 
@@ -131,6 +147,10 @@ class PpeDetector:
         # self.obj_list = ['person']
    
         self.model_effdet = init_effdet_model(self.weigths_effdet, self.obj_list)
+        # out=self.efficientDet(np.zeros((10,10,3), np.uint8))
+        # del out
+        torch.cuda.empty_cache()
+
         print('EfficientDET Cargado')
         # return self.model_effdet
 
@@ -196,7 +216,7 @@ class PpeDetector:
         return pred_clip
 
     def efficientDet(self, img):
-        self.out = inference_effdet_model(self.model_effdet, img)
+        self.out = inference_effdet_model(self.model_effdet, img, threshold=0.8)
         torch.cuda.empty_cache()
         return self.out
 

@@ -6,11 +6,12 @@ from threading import Thread
 from tkinter import messagebox
 from Services import API_Services
 from UserClass import Person
+import time
 
 class NFC():
     def __init__(self, ventana, ventanaNext):
         self.tktest = ventana()
-        self.thread = Thread(target=self.identify, args=(ventanaNext,))
+        self.thread = Thread(target=self.identify, args=(ventanaNext,), daemon=True)
         self.thread.start()
 
     
@@ -62,17 +63,31 @@ class NFC():
                 pass
 
         # time.sleep(2)
-        # ventana.after(5000, ventanaNext, user)
-        # ventanaNext(user)
-        self.stop()
+        # self.tktest.after(4000, self.stop)
+        
         ventanaNext(user)
+        self.stop()
+        # self.tktest.after(2000,self.stop)
+        
+        
+        
+        
+        
+        # ventanaNext(user)
 
 
     def stop(self):
         self.tktest.destroy()
+        try:
+            self.thread.join()
+        except:
+            pass
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.thread.join()
+        try:
+            self.thread.join()
+        except:
+            pass
 
 
     # def getuid():
