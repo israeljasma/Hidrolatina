@@ -245,6 +245,7 @@ class WindowsTk:
         # mainFrame.grid()
         # mainFrame.grid_propagate(False)
         
+        self.PytorchCameraTk.update_idletasks()
 
         canvas = Canvas(mainFrame, borderwidth=0,highlightthickness=0)
         canvas.place(relx=.5, rely=.5, relwidth=1, relheight=1, anchor='center')
@@ -262,6 +263,13 @@ class WindowsTk:
         logo_icon= ImageTk.PhotoImage(logo_icon)
         self.PytorchCameraTk.logo_icon=logo_icon
         canvas.create_image(int(mainFrame.winfo_screenwidth()*.95), int(mainFrame.winfo_screenheight()*.05), image=logo_icon)
+
+        exitImg = Image.open('images/backButton.png')
+        exitImg = exitImg.resize((int(mainFrame.winfo_height()*.05), int(mainFrame.winfo_height()*.05)), Image.ANTIALIAS)
+        exitImg = ImageTk.PhotoImage(exitImg)
+        self.PytorchCameraTk.exitImg=exitImg
+        exitCanvas=canvas.create_image(mainFrame.winfo_width()*.05, mainFrame.winfo_height()*.05, image=exitImg)
+        canvas.tag_bind(exitCanvas, "<Button-1>",  (lambda _:closeTk()))
 
         self.PytorchCameraTk.update_idletasks()
         # ###Label imageHeadFrame Sub frame lvl 2 headFrame
@@ -410,7 +418,9 @@ class WindowsTk:
                 print('si')
                 print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
                 print('funciona')
+                self.PytorchCameraTk.after(1500, closeTk)
                 self.popupIdentificationTk(booleanAnswerlist)
+                
             else:
                 print('no')
                 print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
@@ -480,13 +490,6 @@ class WindowsTk:
             if len(self.listImagenClip) > 0:
                 counterPopUp(endTime, booleanAnswerlist)
 
-        exitImg = Image.open('images/backButton.png')
-        exitImg = exitImg.resize((int(mainFrame.winfo_height()*.05), int(mainFrame.winfo_height()*.05)), Image.ANTIALIAS)
-        exitImg = ImageTk.PhotoImage(exitImg)
-        self.PytorchCameraTk.exitImg=exitImg
-
-        exitCanvas=canvas.create_image(mainFrame.winfo_width()*.05, mainFrame.winfo_height()*.05, image=exitImg)
-        canvas.tag_bind(exitCanvas, "<Button-1>",  (lambda _:closeTk()))
         if hide:
             self.PytorchCameraTk.withdraw()
             self.PytorchCameraTk.after(3000,self.PytorchCameraTk.deiconify())
@@ -535,7 +538,7 @@ class WindowsTk:
         mainFrame.place(x=0, y=0, relwidth=1, relheight=1)
 
 
-        
+        showActions.update_idletasks()
 
         canvas = Canvas(mainFrame, borderwidth=0,highlightthickness=0, bg='blue')
         canvas.place(relx=.5, rely=.5, relwidth=1, relheight=1, anchor='center')
@@ -548,7 +551,7 @@ class WindowsTk:
 
         #Logo
         logo_icon= Image.open('images/logo_hidrolatina_h.png')
-        logo_icon= logo_icon.resize((int(showActions.winfo_screenheight()*.025), int(mainFrame.winfo_screenheight()*.05)), Image.ANTIALIAS)
+        logo_icon= logo_icon.resize((int(mainFrame.winfo_screenheight()*.05), int(mainFrame.winfo_screenheight()*.05)), Image.ANTIALIAS)
         logo_icon= ImageTk.PhotoImage(logo_icon)
         showActions.logo_icon=logo_icon
         canvas.create_image(int(mainFrame.winfo_screenwidth()*.95), int(mainFrame.winfo_screenheight()*.05), image=logo_icon)
@@ -728,18 +731,18 @@ class WindowsTk:
         # Config tk
         popupIdentificationTk = Toplevel()
         popupIdentificationTk.resizable(False,False)
-        popupIdentificationTk.after(5000, popupIdentificationTk.destroy)
+        popupIdentificationTk.after(6000, popupIdentificationTk.destroy)
         popupIdentificationTk.overrideredirect(True)
         popupIdentificationTk.geometry(f'{popupIdentificationTk.winfo_screenwidth()}x{popupIdentificationTk.winfo_screenheight()}')
         # popupIdentificationTk.geometry("1280x720")
 
-        def closeTk():
-            #Destroy window
-            try:
-                self.cap.stop()
-            except:
-                pass
-            self.PytorchCameraTk.destroy()
+        # def closeTk():
+        #     #Destroy window
+        #     try:
+        #         self.cap.stop()
+        #     except:
+        #         pass
+        #     self.PytorchCameraTk.destroy()
 
         #Code
         def no_ppe(boollist):
@@ -776,8 +779,8 @@ class WindowsTk:
             imageLabel = Label(imageFrame, image=detections)
             imageLabel.pack()
             # popupIdentificationTk.after(4000, self.PytorchCameraTk.destroy)
-            popupIdentificationTk.after(4000, closeTk)
-            popupIdentificationTk.after(2000, self.showActionsTk)
+            # popupIdentificationTk.after(4000, closeTk)
+            popupIdentificationTk.after(3000, self.showActionsTk)
 
 
         else:
@@ -832,8 +835,8 @@ class WindowsTk:
             imageBottomLabel.grid(row=0, column=0)
 
             # popupIdentificationTk.after(3500, self.PytorchCameraTk.destroy)
-            popupIdentificationTk.after(3500, closeTk)
-            popupIdentificationTk.after(4000, lambda: NFC(self.nfc_identifyTk, self.showPytorchCameraTk))
+            # popupIdentificationTk.after(3500, closeTk)
+            popupIdentificationTk.after(5000, lambda: NFC(self.nfc_identifyTk, self.showPytorchCameraTk))
             
         #Buttons Tk
         # Button(self.NFC_Tk, text="Cerrar Ventana", command=lambda:closeTk()).pack(pady=10)
