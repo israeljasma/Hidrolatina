@@ -17,9 +17,6 @@ from WindowsTk import WindowsTk
 from numpy import CLIP, trunc
 from imagenClipClass import imageClip
 
-
-
-
 if __name__ == '__main__':
     root = Tk()
     # root.geometry('350x500+500+50')
