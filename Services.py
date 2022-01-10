@@ -19,7 +19,6 @@ class API_Services():
         credentials = {'refresh': refresh}
         request = requests.post(url + 'logout/',data = credentials, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
-        print(request_dictionary)
         return request_dictionary
 
     def ppeDetection(helmet, headphones, goggles, gloves, boots, token):
