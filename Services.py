@@ -3,7 +3,7 @@ import requests
 url = 'http://127.0.0.1:8000/'
 class API_Services():
     
-    def login(username="doravan", password="macdato13"):
+    def login(username, password):
         credentials = {'username':username,'password':password}
         request = requests.post(url + 'login/',data = credentials)
         request_dictionary = request.json()
