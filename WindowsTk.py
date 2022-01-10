@@ -1151,6 +1151,7 @@ class WindowsTk:
         # adminConfigTk.attributes('-topmost', True)
 
         def logout(user):
+            API_Services.logout(user.getToken(), user.getRefreshToken())
             del user
             self.root.deiconify()
             self.root.focus_force()
@@ -1215,7 +1216,7 @@ class WindowsTk:
         adminConfigTk.exitImg=exitImg 
 
         exitCanvas=canvas.create_image(adminConfigTk.winfo_screenwidth()*.7, adminConfigTk.winfo_screenheight()*.3, image=exitImg)
-        canvas.tag_bind(exitCanvas, "<Button-1>",  (lambda _:logout(self)))
+        canvas.tag_bind(exitCanvas, "<Button-1>",  (lambda _:logout(user)))
 
         
         eppImg = Image.open('images/eppdetButton2.png')
