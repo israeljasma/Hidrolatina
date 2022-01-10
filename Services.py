@@ -17,7 +17,7 @@ class API_Services():
 
     def logout(token, refresh):
         credentials = {'refresh': refresh}
-        request = requests.post(url + 'logout/',data = credentials, headers={'Authorization': 'Bearer '+token})
+        request = requests.post(url + 'logout/',data = credentials, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         print(request_dictionary)
         return request_dictionary
