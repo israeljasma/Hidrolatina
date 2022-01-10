@@ -17,8 +17,10 @@ def verification():
     user = userEntry.get()
     password = passwordEntry.get()
     person = API_Services.login(user, password)
+    print(person)
     if 'token' in person:
-        user = Person(person['user']['name'], person['user']['last_name'], person['user']['email'], person['token'])
+        user = Person(person['user']['name'], person['user']['last_name'], person['user']['email'], person['token'], person['refresh-token'])
+        print(user)
         messagebox.showinfo(message=[person['user']['name'], person['user']['last_name']], title="Login")
     else:
         messagebox.showinfo(message=person['error'], title="Login")

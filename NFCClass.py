@@ -52,7 +52,7 @@ class NFC():
                 # status = util.toHexString([sw1, sw2])
                 # if uid == "44 CE 4A 0B":
                 if 'token' in loginNFC:
-                    user = Person(loginNFC['user']['username'], loginNFC['user']['name'], loginNFC['user']['last_name'], loginNFC['user']['email'], loginNFC['token'])
+                    user = Person(loginNFC['user']['username'], loginNFC['user']['name'], loginNFC['user']['last_name'], loginNFC['user']['email'], loginNFC['token'], loginNFC['refresh-token'])
                     print(user)
                     break
                     #Hide Root Window

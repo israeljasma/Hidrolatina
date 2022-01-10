@@ -44,7 +44,7 @@ if __name__ == '__main__':
         # try:
         person = API_Services.login(user, password)
         if 'token' in person:
-            user = Person(person['user']['username'], person['user']['name'], person['user']['last_name'], person['user']['email'], person['token'])
+            user = Person(person['user']['username'], person['user']['name'], person['user']['last_name'], person['user']['email'], person['token'], person['refresh-token'])
             #Hide Root Window
             # root.withdraw()
             # adminConfigTk(user)
