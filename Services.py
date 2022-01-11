@@ -3,6 +3,7 @@ import requests
 url = 'http://127.0.0.1:8000/'
 class API_Services():
     
+    #Login
     def login(username, password):
         credentials = {'username':username,'password':password}
         request = requests.post(url + 'login/',data = credentials)
@@ -11,16 +12,48 @@ class API_Services():
 
     def loginNFC(nfc):
         credentials = {'nfc':nfc}
-        request = requests.post(url + 'nfclogin/',data = credentials)
+        request = requests.post(url + 'nfclogin/', data = credentials)
         request_dictionary = request.json()
         return request_dictionary
 
     def logout(token, refresh):
         credentials = {'refresh': refresh}
-        request = requests.post(url + 'logout/',data = credentials, headers={'Authorization': 'Bearer ' + token})
+        request = requests.post(url + 'logout/', data = credentials, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
 
+    #Users
+    def userCreate(username, password, email, name, last_name, token, refresh=None):
+        DATA  = {'password': password, 'username': username, 'email': email, 'name': name, 'last_name': last_name}
+        request = requests.post(url + 'users/', json = DATA, headers={'Authorization': 'Bearer ' + token})
+        request_dictionary = request.json()
+        return request_dictionary
+
+    def userList(token, refresh=None):
+        credentials = {'refresh': refresh}
+        request = requests.get(url + 'users/', data = credentials, headers={'Authorization': 'Bearer ' + token})
+        request_dictionary = request.json()
+        return request_dictionary
+
+    def userRetrieve(id, token, refresh=None):
+        credentials = {'refresh': refresh}
+        request = requests.get(url + 'users/' + str(id) + '/', data = credentials, headers={'Authorization': 'Bearer ' + token})
+        request_dictionary = request.json()
+        return request_dictionary
+
+    def userUpdate(id, username, email, name, last_name, token, refresh=None):
+        DATA  = {'id': id, 'username': username, 'email': email, 'name': name, 'last_name': last_name}
+        request = requests.put(url + 'users/' + str(id) + '/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request_dictionary = request.json()
+        return request_dictionary
+
+    def userDelete(id, token, refresh=None):
+        DATA  = {'id': id}
+        request = requests.delete(url + 'users/' + str(id) + '/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request_dictionary = request.json()
+        return request_dictionary
+
+    #PpeDetectin
     def ppeDetection(helmet, headphones, goggles, gloves, boots, token, refresh = None):
         credentials = {'helmet':helmet, 'headphones':headphones, 'goggles':goggles, 'gloves':gloves, 'boots':boots}
         request = requests.post(url + 'ppes/ppe/',data = credentials, headers={'Authorization': 'Bearer ' + token})
