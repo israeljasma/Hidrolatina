@@ -90,3 +90,10 @@ class API_Services():
         request = requests.delete(url + 'identifications/nfc/' + str(id) + '/', json = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
+
+    #Estados NFC's
+    def stateNfcList(token, refresh=None):
+        DATA = {'refresh': refresh}
+        request = requests.get(url + 'identifications/active/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request_dictionary = request.json()
+        return request_dictionary
