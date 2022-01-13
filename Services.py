@@ -59,3 +59,36 @@ class API_Services():
         request = requests.post(url + 'ppes/ppe/',data = credentials, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
+
+    #NFC
+    def nfcCreate(nfc, active, token, refresh=None):
+        DATA  = {'NFC': nfc, 'active': active}
+        request = requests.post(url + 'identifications/nfc/', json = DATA, headers={'Authorization': 'Bearer ' + token})
+        request_dictionary = request.json()
+        return request_dictionary
+
+    def nfcList(token, refresh=None):
+        credentials = {'refresh': refresh}
+        request = requests.get(url + 'identifications/nfc/', data = credentials, headers={'Authorization': 'Bearer ' + token})
+        request_dictionary = request.json()
+        return request_dictionary
+
+    def nfcRetrieve(id, token, refresh=None):
+        DATA = {'refresh': refresh}
+        request = requests.get(url + 'identifications/nfc/' + str(id) + '/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request_dictionary = request.json()
+        return request_dictionary
+
+    def nfcUpdate(id, nfc, active, token, refresh=None):
+        DATA  = {'id': id, 'NFC': nfc, 'active': active}
+        request = requests.put(url + 'identifications/nfc/' + str(id) + '/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request_dictionary = request.json()
+        print(request_dictionary)
+        return request_dictionary
+
+    def nfcDelete(id, token, refresh=None):
+        DATA  = {'refresh': refresh}
+        request = requests.delete(url + 'identifications/nfc/' + str(id) + '/', json = DATA, headers={'Authorization': 'Bearer ' + token})
+        request_dictionary = request.json()
+        print(request_dictionary)
+        return request_dictionary
