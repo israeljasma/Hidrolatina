@@ -83,12 +83,10 @@ class API_Services():
         DATA  = {'id': id, 'NFC': nfc, 'active': active}
         request = requests.put(url + 'identifications/nfc/' + str(id) + '/', data = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
-        print(request_dictionary)
         return request_dictionary
 
     def nfcDelete(id, token, refresh=None):
         DATA  = {'refresh': refresh}
         request = requests.delete(url + 'identifications/nfc/' + str(id) + '/', json = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
-        print(request_dictionary)
         return request_dictionary
