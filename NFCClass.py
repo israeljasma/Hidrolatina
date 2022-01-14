@@ -3,6 +3,7 @@ from smartcard.Exceptions import CardRequestTimeoutException
 from smartcard.CardType import AnyCardType
 from smartcard import util
 from threading import Thread
+import concurrent.futures
 from tkinter import messagebox
 from Services import API_Services
 from UserClass import Person
@@ -42,6 +43,7 @@ class NFC():
                 get_uid = util.toBytes("FF CA 00 00 00")
                 data, sw1, sw2 = conn.transmit(get_uid)
                 uid = util.toHexString(data)
+                print(uid)
                 try:
                     loginNFC = API_Services.loginNFC(uid)
                 except:
@@ -89,6 +91,51 @@ class NFC():
         except:
             pass
 
+class adminNFC():
+    def __init__(self):
+
+    #     self.thread = Thread(target=self.readNFC, args=(), daemon=True)
+    #     self.thread.start()
+
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(self.readNFC)
+            return_value = future.result()
+            print(return_value)
+
+    def readNFC(self):
+        uid = None
+        WAIT_FOR_SECONDS = 60
+        # respond to the insertion of any type of smart card
+        card_type = AnyCardType()
+
+        # create the request. Wait for up to x seconds for a card to be attached
+        request = CardRequest(timeout=WAIT_FOR_SECONDS, cardType=card_type)
+
+        while True:
+            # listen for the card
+            service = None
+            try:
+                service = request.waitforcard()
+            except CardRequestTimeoutException:
+                print("Tarjeta no detectada")
+                # could add "exit(-1)" to make code terminate
+
+            # when a card is attached, open a connection
+            try:
+                conn = service.connection
+                conn.connect()
+
+                # get the ATR and UID of the card
+                get_uid = util.toBytes("FF CA 00 00 00")
+                data, sw1, sw2 = conn.transmit(get_uid)
+                uid = util.toHexString(data)
+                break
+            except:
+
+                pass
+
+        return uid
 
     # def getuid():
     #     WAIT_FOR_SECONDS = 60
@@ -123,7 +170,7 @@ class NFC():
     #             pass
     #     time.sleep(2)
     #     return
-        
+
 
 # NFC.identify()
 # from multiprocessing import Queue
