@@ -848,129 +848,141 @@ class WindowsTk:
     def userManagementTk(self, user):
         # Config tk
         userManagement = Toplevel()
-        userManagement.resizable(False,False)
         userManagement.title("Gestion de usuarios")
-        # userManagement.overrideredirect(True)
-        userManagement.geometry('800x600')
-        userManagement.config(bg='#CCEEFF')
+        userManagement.resizable(False,False)
+        userManagement.config(background="#cceeff")
+        # adminConfigTk.resizable(False,False)
+        userManagement.overrideredirect(True)
+        userManagement.geometry(f'{userManagement.winfo_screenwidth()}x{userManagement.winfo_screenheight()}')
+        self.center_window(userManagement)
 
-        # def Windows tk
-        def createUserTk(userManagement):
-            createUserWindows = Toplevel(userManagement)
-            createUserWindows.resizable(False,False)
-            createUserWindows.title("Gestion de usuarios")
-            # updateUserWindows.overrideredirect(True)
-            createUserWindows.geometry('800x600')
-            createUserWindows.config(bg='#CCEEFF')
+        #Canvas
+        canvas = Canvas(userManagement, borderwidth=0,highlightthickness=0)
+        canvas.place(relx=.5, rely=.5, relwidth=1, relheight=1, anchor='center')
 
-            usernameLabel = Label(createUserWindows, text='Nombre de usuario', bg='#CCEEFF')
-            usernameLabel.grid()
-            usernameEntry = Entry(createUserWindows)
-            # # userEntry.bind("<1>", handle_click)
-            usernameEntry.grid()
+        bg = Image.open('images/network_bg.png')
+        bg = bg.resize((userManagement.winfo_screenwidth(), userManagement.winfo_screenheight()), Image.ANTIALIAS)
+        bg = ImageTk.PhotoImage(bg)
+        userManagement.bg=bg
+        canvas.create_image(userManagement.winfo_screenwidth()/2, userManagement.winfo_screenheight()/2, image=bg)
 
-            nameLabel = Label(createUserWindows, text='Nombre', bg='#CCEEFF')
-            nameLabel.grid()
-            nameEntry = Entry(createUserWindows)
-            nameEntry.grid()
+        # # def Windows tk
+        # def createUserTk(userManagement):
+        #     createUserWindows = Toplevel(userManagement)
+        #     createUserWindows.resizable(False,False)
+        #     createUserWindows.title("Gestion de usuarios")
+        #     # updateUserWindows.overrideredirect(True)
+        #     createUserWindows.geometry('800x600')
+        #     createUserWindows.config(bg='#CCEEFF')
 
-            last_nameLabel = Label(createUserWindows, text='Apellido', bg='#CCEEFF')
-            last_nameLabel.grid()
-            last_nameEntry = Entry(createUserWindows)
-            last_nameEntry.grid()
+        #     usernameLabel = Label(createUserWindows, text='Nombre de usuario', bg='#CCEEFF')
+        #     usernameLabel.grid()
+        #     usernameEntry = Entry(createUserWindows)
+        #     # # userEntry.bind("<1>", handle_click)
+        #     usernameEntry.grid()
 
-            emailLabel = Label(createUserWindows, text='Email', bg='#CCEEFF')
-            emailLabel.grid()
-            emailEntry = Entry(createUserWindows)
-            emailEntry.grid()
+        #     nameLabel = Label(createUserWindows, text='Nombre', bg='#CCEEFF')
+        #     nameLabel.grid()
+        #     nameEntry = Entry(createUserWindows)
+        #     nameEntry.grid()
 
-            create = Button(createUserWindows, text='Crear', bg='#CCEEFF')
-            create.grid()
+        #     last_nameLabel = Label(createUserWindows, text='Apellido', bg='#CCEEFF')
+        #     last_nameLabel.grid()
+        #     last_nameEntry = Entry(createUserWindows)
+        #     last_nameEntry.grid()
 
-            exitButton = Button(createUserWindows, text="Cerrar", command=lambda:exitTk(createUserWindows))
-            exitButton.grid()
+        #     emailLabel = Label(createUserWindows, text='Email', bg='#CCEEFF')
+        #     emailLabel.grid()
+        #     emailEntry = Entry(createUserWindows)
+        #     emailEntry.grid()
+
+        #     create = Button(createUserWindows, text='Crear', bg='#CCEEFF')
+        #     create.grid()
+
+        #     exitButton = Button(createUserWindows, text="Cerrar", command=lambda:exitTk(createUserWindows))
+        #     exitButton.grid()
         
-        def updateUserTk(userManagement):
-            updateUserWindows = Toplevel(userManagement)
-            updateUserWindows.resizable(False,False)
-            updateUserWindows.title("Gestion de usuarios")
-            # updateUserWindows.overrideredirect(True)
-            updateUserWindows.geometry('800x600')
-            updateUserWindows.config(bg='#CCEEFF')
+        # def updateUserTk(userManagement):
+        #     updateUserWindows = Toplevel(userManagement)
+        #     updateUserWindows.resizable(False,False)
+        #     updateUserWindows.title("Gestion de usuarios")
+        #     # updateUserWindows.overrideredirect(True)
+        #     updateUserWindows.geometry('800x600')
+        #     updateUserWindows.config(bg='#CCEEFF')
 
-            usernameLabel = Label(updateUserWindows, text='Nombre de usuario', bg='#CCEEFF')
-            usernameLabel.grid()
-            usernameEntry = Entry(updateUserWindows)
-            # # userEntry.bind("<1>", handle_click)
-            usernameEntry.grid()
+        #     usernameLabel = Label(updateUserWindows, text='Nombre de usuario', bg='#CCEEFF')
+        #     usernameLabel.grid()
+        #     usernameEntry = Entry(updateUserWindows)
+        #     # # userEntry.bind("<1>", handle_click)
+        #     usernameEntry.grid()
 
-            nameLabel = Label(updateUserWindows, text='Nombre', bg='#CCEEFF')
-            nameLabel.grid()
-            nameEntry = Entry(updateUserWindows)
-            nameEntry.grid()
+        #     nameLabel = Label(updateUserWindows, text='Nombre', bg='#CCEEFF')
+        #     nameLabel.grid()
+        #     nameEntry = Entry(updateUserWindows)
+        #     nameEntry.grid()
 
-            last_nameLabel = Label(updateUserWindows, text='Apellido', bg='#CCEEFF')
-            last_nameLabel.grid()
-            last_nameEntry = Entry(updateUserWindows)
-            last_nameEntry.grid()
+        #     last_nameLabel = Label(updateUserWindows, text='Apellido', bg='#CCEEFF')
+        #     last_nameLabel.grid()
+        #     last_nameEntry = Entry(updateUserWindows)
+        #     last_nameEntry.grid()
 
-            emailLabel = Label(updateUserWindows, text='Email', bg='#CCEEFF')
-            emailLabel.grid()
-            emailEntry = Entry(updateUserWindows)
-            emailEntry.grid()
+        #     emailLabel = Label(updateUserWindows, text='Email', bg='#CCEEFF')
+        #     emailLabel.grid()
+        #     emailEntry = Entry(updateUserWindows)
+        #     emailEntry.grid()
 
-            create = Button(updateUserWindows, text='Modificar', bg='#CCEEFF')
-            create.grid()
+        #     create = Button(updateUserWindows, text='Modificar', bg='#CCEEFF')
+        #     create.grid()
 
-            exitButton = Button(updateUserWindows, text="Cerrar Sesion", command=lambda:exitTk(updateUserWindows))
-            exitButton.grid()
+        #     exitButton = Button(updateUserWindows, text="Cerrar Sesion", command=lambda:exitTk(updateUserWindows))
+        #     exitButton.grid()
 
-        def deleteUserTk(userManagement):
-            answerMessagebox = messagebox.askokcancel(title='Eliminar usuario', message='Desea eliminar el usuario')
-            if answerMessagebox:
-                print('Usuario eliminado')
-            else:
-                print('Acción cancelada')
+        # def deleteUserTk(userManagement):
+        #     answerMessagebox = messagebox.askokcancel(title='Eliminar usuario', message='Desea eliminar el usuario')
+        #     if answerMessagebox:
+        #         print('Usuario eliminado')
+        #     else:
+        #         print('Acción cancelada')
 
-        def logout(user):
-            del user
-            userManagement.destroy()
+        # def logout(user):
+        #     del user
+        #     userManagement.destroy()
 
-        def exitTk(windowsTk):
-            windowsTk.destroy()
+        # def exitTk(windowsTk):
+        #     windowsTk.destroy()
         
-        # Frame Principal
-        mainFrame = Frame(userManagement, width=800, height=600, bg='#CCEEFF')
-        mainFrame.grid()
+        # # Frame Principal
+        # mainFrame = Frame(userManagement, width=800, height=600, bg='#CCEEFF')
+        # mainFrame.grid()
 
-        # Create left and right frames
-        left_frame = Frame(mainFrame, width=round(mainFrame.winfo_reqwidth()*0.5), height=round(mainFrame.winfo_reqheight()), bg='#CCEEFF')
-        left_frame.grid(row=0, column=0)
+        # # Create left and right frames
+        # left_frame = Frame(mainFrame, width=round(mainFrame.winfo_reqwidth()*0.5), height=round(mainFrame.winfo_reqheight()), bg='#CCEEFF')
+        # left_frame.grid(row=0, column=0)
 
-        right_frame = Frame(mainFrame, width=round(mainFrame.winfo_reqwidth()*0.5), height=round(mainFrame.winfo_reqheight()), bg='#CCEEFF')
-        right_frame.grid(row=0, column=1)
+        # right_frame = Frame(mainFrame, width=round(mainFrame.winfo_reqwidth()*0.5), height=round(mainFrame.winfo_reqheight()), bg='#CCEEFF')
+        # right_frame.grid(row=0, column=1)
 
-        # Buttons right_frame
-        createUser = Button(right_frame, text='Crear', command=lambda:createUserTk(userManagement))
-        createUser.grid()
+        # # Buttons right_frame
+        # createUser = Button(right_frame, text='Crear', command=lambda:createUserTk(userManagement))
+        # createUser.grid()
 
-        updateUser = Button(right_frame, text='Modificar/Actualizar', command=lambda:updateUserTk(userManagement))
-        updateUser.grid()
+        # updateUser = Button(right_frame, text='Modificar/Actualizar', command=lambda:updateUserTk(userManagement))
+        # updateUser.grid()
 
-        deleteUserButton = Button(right_frame, text='Bloquear/Eliminar', command=lambda:deleteUserTk(userManagement))
-        deleteUserButton.grid()
+        # deleteUserButton = Button(right_frame, text='Bloquear/Eliminar', command=lambda:deleteUserTk(userManagement))
+        # deleteUserButton.grid()
 
-        # ListBox
-        langs = {'Java': 1, 'C#': 2, 'C': 3, 'C++': 4, 'Python': 5, 'Go': 6, 'JavaScript': 7, 'PHP' : 8, 'Swift': 9}
-        listBox = Listbox(left_frame)
-        listBox.grid()
+        # # ListBox
+        # langs = {'Java': 1, 'C#': 2, 'C': 3, 'C++': 4, 'Python': 5, 'Go': 6, 'JavaScript': 7, 'PHP' : 8, 'Swift': 9}
+        # listBox = Listbox(left_frame)
+        # listBox.grid()
 
-        for key in langs:
-            listBox.insert(END, '{}: {}'.format(key, langs[key]))
+        # for key in langs:
+        #     listBox.insert(END, '{}: {}'.format(key, langs[key]))
 
 
-        exitButton = Button(right_frame, text="Cerrar Sesion", command=lambda:logout(user))
-        exitButton.grid()
+        # exitButton = Button(right_frame, text="Cerrar Sesion", command=lambda:logout(user))
+        # exitButton.grid()
 
     def openConfigurationTk(self, user, adminConfigTk):
         # Config tk
