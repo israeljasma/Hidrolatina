@@ -110,10 +110,10 @@ class WindowsTk:
         self.p0 = mp.Process(target=self.actiondet.proc_paral, args=(self.queue_anno, self.queue_action, self.flag_posec3d_init,))
         self.p0.start()
 
-        self.queue_audio=mp.Queue()
-        self.p1 = mp.Process(target=self.btaudio.playAudio, args=(self.btaudio.queue_audio, ))
+        # self.queue_audio=mp.Queue()
+        self.p1 = mp.Process(target=self.btaudio.playAudio, args=())
         self.p1.start()
-
+    
         
 
         self.ppedet.loadEfficientDet()
