@@ -866,6 +866,18 @@ class WindowsTk:
         userManagement.bg=bg
         canvas.create_image(userManagement.winfo_screenwidth()/2, userManagement.winfo_screenheight()/2, image=bg)
 
+        logo = Image.open('images/logo_hidrolatina.png')
+        logo = logo.resize((325, 97), Image.ANTIALIAS)
+        logo = ImageTk.PhotoImage(logo)
+        userManagement.logo=logo
+        canvas.create_image(userManagement.winfo_screenwidth()/2, logo.height(), image=logo, anchor='center')
+
+        adminImg = Image.open('images/adminPanel.png')
+        adminImg = adminImg.resize((325, 97), Image.ANTIALIAS)
+        adminImg = ImageTk.PhotoImage(adminImg)
+        userManagement.adminImg=adminImg
+        canvas.create_image(0, logo.height(), image=adminImg, anchor='w')
+
         # # def Windows tk
         # def createUserTk(userManagement):
         #     createUserWindows = Toplevel(userManagement)
