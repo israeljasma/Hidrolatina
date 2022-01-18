@@ -220,7 +220,7 @@ class ActionDetector:
         # cam = CameraStream('C:/Users/Hidrolatina/Downloads/Videos_dataset/2.mp4',delay=0.03).start()  #test
         # cam = CameraStream('C:/Users/Hidrolatina/Downloads/Videos_dataset/CAM02 acciones 60 ciclos 12-10-2021.wmv', delay=0.03).start()    #t
         # cam = CameraStream(0).start() 
-        except:
+        except AttributeError:
             self.cam=CameraStream(self.varCamera).start()
         while True:
             try:
