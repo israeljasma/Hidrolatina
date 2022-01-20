@@ -3,6 +3,7 @@ import time
 from datetime import datetime, timedelta
 from tkinter import *
 from tkinter import messagebox, filedialog, simpledialog, Listbox, ttk
+from urllib import request
 from PIL import ImageTk, Image
 from mmpose.core import camera
 import cv2
@@ -856,6 +857,34 @@ class WindowsTk:
         userManagement.geometry(f'{userManagement.winfo_screenwidth()}x{userManagement.winfo_screenheight()}')
         self.center_window(userManagement)
 
+        #Def
+        def userListTreeview(user, userTreeView):
+            userListApi = API_Services.userList(user.getToken())
+            for record in userListApi:
+                userTreeView.insert(parent='', index='end', iid=record['id'], text="Parent", values=(record['username'], record['name'], record['last_name'], record['email'], record['last_login']))
+        
+        def createNewUser():
+            print("Esto crea un usuario, fin!")
+
+        def updateOnButtonClick():
+            try:
+                print(userTreeView.selection()[0])
+            except:
+                print("Selecione un usuario a modificar")
+            # print("hola")
+
+        def deleteOnButtonClick(user):
+            try:
+                id= userTreeView.selection()[0]
+                requestUrl, statusCode = API_Services.userDelete(id, user.getToken())
+                if statusCode.status_code == 201:
+                    userTreeView.delete(id)
+                    messagebox.showinfo(message=requestUrl["message"], parent=userManagement)
+                else:
+                    messagebox.showerror(message=requestUrl["message"], parent=userManagement)
+            except:
+                messagebox.showerror(message="Selecione un usuario a eliminar", parent=userManagement)
+
         #Canvas
         canvas = Canvas(userManagement, borderwidth=0,highlightthickness=0)
         canvas.place(relx=.5, rely=.5, relwidth=1, relheight=1, anchor='center')
@@ -877,6 +906,40 @@ class WindowsTk:
         adminImg = ImageTk.PhotoImage(adminImg)
         userManagement.adminImg=adminImg
         canvas.create_image(0, logo.height(), image=adminImg, anchor='w')
+
+        #Buttons
+        createButton = Button(userManagement, text="Crear nuevo usuario", command=lambda:createNewUser())
+        createButton.place(relx=.65, rely=.35, anchor='center')
+
+        updateButton = Button(userManagement, text="Modificar usuario", command=lambda:updateOnButtonClick())
+        updateButton.place(relx=.65, rely=.45, anchor='center')
+
+        deleteButton = Button(userManagement, text="Eliminar usuario", command=lambda:deleteOnButtonClick(user))
+        deleteButton.place(relx=.65, rely=.55, anchor='center') 
+
+        #TreeView
+        userTreeView = ttk.Treeview(userManagement)
+        userTreeView['columns'] = ("Nombre de usuario", "Nombre", "Apellido", "E-mail", "Ultima conexión")
+
+        #Configurar columnas
+        userTreeView.column("#0", width=120, minwidth=25)
+        userTreeView.column("Nombre de usuario", anchor=W, width=120)
+        userTreeView.column("Nombre", anchor=W, width=120)
+        userTreeView.column("Apellido", anchor=W, width=120)
+        userTreeView.column("E-mail", anchor=W, width=160)
+        userTreeView.column("Ultima conexión", anchor=W, width=120)
+
+        #Crear Encabezados
+        userTreeView.heading("#0", text="Label", anchor=W)
+        userTreeView.heading("Nombre de usuario",text="Nombre de usuario", anchor=W)
+        userTreeView.heading("Nombre",text="Nombre", anchor=W)
+        userTreeView.heading("Apellido",text="Apellido", anchor=W)
+        userTreeView.heading("E-mail",text="E-mail", anchor=W)
+        userTreeView.heading("Ultima conexión",text="Ultima conexión", anchor=W)
+
+        userTreeView.place(relx=.25, rely=.45, relwidth=.4, anchor='center')
+
+        userListTreeview(user, userTreeView)
 
         # # def Windows tk
         # def createUserTk(userManagement):
