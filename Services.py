@@ -51,7 +51,7 @@ class API_Services():
         DATA  = {'id': id}
         request = requests.delete(url + 'users/' + str(id) + '/', data = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
-        return request_dictionary
+        return request_dictionary, request
 
     #PpeDetectin
     def ppeDetection(helmet, headphones, goggles, gloves, boots, token, refresh = None):
