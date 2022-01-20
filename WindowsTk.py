@@ -864,6 +864,7 @@ class WindowsTk:
                 userTreeView.insert(parent='', index='end', iid=record['id'], text="Parent", values=(record['username'], record['name'], record['last_name'], record['email'], record['last_login']))
         
         def createNewUser():
+            addUserManagementTk()
             print("Esto crea un usuario, fin!")
 
         def updateOnButtonClick():
@@ -884,6 +885,65 @@ class WindowsTk:
                     messagebox.showerror(message=requestUrl["message"], parent=userManagement)
             except:
                 messagebox.showerror(message="Selecione un usuario a eliminar", parent=userManagement)
+
+        #toplevels
+        def addUserManagementTk(id=None):
+            addUserManagement = Toplevel()
+            addUserManagement.title("Gestion de usuarios")
+            addUserManagement.resizable(False,False)
+            addUserManagement.config(background="#cceeff")
+            addUserManagement.geometry('600x600')
+            self.center_window(addUserManagement)
+
+            #Def
+            def addUser():
+                print(user.getToken())
+                request = API_Services.userCreate(usernameEntry.get(), "testpassword", emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
+                print(request)
+                userListTreeview(user, userTreeView)
+                # userTreeView.insert(parent='', index='end', iid=20, text="Parent", values=(usernameEntry.get(), nameEntry.get(), last_nameEntry.get(), emailEntry.get(), '-'))
+
+            def closeTk(user, userTreeView):
+                userTreeView.delete(*userTreeView.get_children())
+                userListTreeview(user, userTreeView)
+                addUserManagement.destroy()
+
+
+            #labels
+            usernameLb = Label(addUserManagement, text="Nombre usuario(rut)")
+            usernameLb.pack()
+
+            nameLb = Label(addUserManagement, text="Nombre")
+            nameLb.pack()
+
+            last_nameLb = Label(addUserManagement, text="Apellido")
+            last_nameLb.pack()
+
+            emailLb = Label(addUserManagement, text="E-mail")
+            emailLb.pack()
+
+            #Entries
+            usernameEntry = Entry(addUserManagement)
+            usernameEntry.pack()
+
+            nameEntry = Entry(addUserManagement)
+            nameEntry.pack()
+
+            last_nameEntry = Entry(addUserManagement)
+            last_nameEntry.pack()
+
+            emailEntry = Entry(addUserManagement)
+            emailEntry.pack()
+
+            #Buttons
+            addUserBt = Button(addUserManagement, text="Agregar usuario", command=lambda:addUser())
+            addUserBt.pack()
+
+            exitBt = Button(addUserManagement, text="Salir", command=lambda:closeTk(user, userTreeView))
+            exitBt.pack()
+
+            #userManagement.withdraw()
+
 
         #Canvas
         canvas = Canvas(userManagement, borderwidth=0,highlightthickness=0)
