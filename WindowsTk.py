@@ -869,11 +869,9 @@ class WindowsTk:
 
         def updateOnButtonClick():
             try:
-                print(userTreeView.selection()[0])
                 addUserManagementTk(userTreeView.selection()[0])
             except:
-                print("Selecione un usuario a modificar")
-            # print("hola")
+                messagebox.showerror(message="Selecione un usuario a modificar", parent=userManagement)
 
         def deleteOnButtonClick(user):
             try:
@@ -898,11 +896,19 @@ class WindowsTk:
 
             #Def
             def addUser():
-                print(user.getToken())
                 request = API_Services.userCreate(usernameEntry.get(), "testpassword", emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
                 print(request)
                 userListTreeview(user, userTreeView)
-                # userTreeView.insert(parent='', index='end', iid=20, text="Parent", values=(usernameEntry.get(), nameEntry.get(), last_nameEntry.get(), emailEntry.get(), '-'))
+
+            def updateUser():
+                requestUpdate = API_Services.userUpdate(id, usernameEntry.get(), emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
+                messagebox.showerror(message=requestUpdate['message'], parent=addUserManagement)
+                closeTk(user, userTreeView)
+                #if requestUpdate['message']:
+                #    messagebox.showerror(message=requestUpdate['message'], parent=addUserManagement)
+                #else:
+                #    messagebox.showinfo(message=requestUpdate['message'], parent=addUserManagement)
+                    #closeTk()
 
             def closeTk(user, userTreeView):
                 userTreeView.delete(*userTreeView.get_children())
@@ -911,46 +917,81 @@ class WindowsTk:
 
             #Update
             if id is not None:
-                print("Existe!!")
                 request = API_Services.userRetrieve(id, user.getToken())
-                print(request)
+
+                #labels
+                usernameLb = Label(addUserManagement, text="Nombre usuario(rut)")
+                usernameLb.pack()
+
+                nameLb = Label(addUserManagement, text="Nombre")
+                nameLb.pack()
+
+                last_nameLb = Label(addUserManagement, text="Apellido")
+                last_nameLb.pack()
+
+                emailLb = Label(addUserManagement, text="E-mail")
+                emailLb.pack()
+
+                #Entries
+                usernameEntry = Entry(addUserManagement)
+                usernameEntry.insert(0, request['username'])
+                usernameEntry.pack()
+
+                nameEntry = Entry(addUserManagement)
+                nameEntry.insert(0, request['name'])
+                nameEntry.pack()
+
+                last_nameEntry = Entry(addUserManagement)
+                last_nameEntry.insert(0, request['last_name'])
+                last_nameEntry.pack()
+
+                emailEntry = Entry(addUserManagement)
+                emailEntry.insert(0, request['email'])
+                emailEntry.pack()
+
+                #Buttons
+                updateUserBt = Button(addUserManagement, text="Actualizar usuario", command=lambda:updateUser())
+                updateUserBt.pack()
+
+                exitBt = Button(addUserManagement, text="Salir", command=lambda:closeTk(user, userTreeView))
+                exitBt.pack()
             
             #Create
             else:
-                print("No existe")
+                #labels
+                usernameLb = Label(addUserManagement, text="Nombre usuario(rut)")
+                usernameLb.pack()
+
+                nameLb = Label(addUserManagement, text="Nombre")
+                nameLb.pack()
+
+                last_nameLb = Label(addUserManagement, text="Apellido")
+                last_nameLb.pack()
+
+                emailLb = Label(addUserManagement, text="E-mail")
+                emailLb.pack()
+
+                #Entries
+                usernameEntry = Entry(addUserManagement)
+                usernameEntry.pack()
+
+                nameEntry = Entry(addUserManagement)
+                nameEntry.pack()
+
+                last_nameEntry = Entry(addUserManagement)
+                last_nameEntry.pack()
+
+                emailEntry = Entry(addUserManagement)
+                emailEntry.pack()
+
+                #Buttons
+                addUserBt = Button(addUserManagement, text="Agregar usuario", command=lambda:addUser())
+                addUserBt.pack()
+
+                exitBt = Button(addUserManagement, text="Salir", command=lambda:closeTk(user, userTreeView))
+                exitBt.pack()
             
-            #labels
-            usernameLb = Label(addUserManagement, text="Nombre usuario(rut)")
-            usernameLb.pack()
-
-            nameLb = Label(addUserManagement, text="Nombre")
-            nameLb.pack()
-
-            last_nameLb = Label(addUserManagement, text="Apellido")
-            last_nameLb.pack()
-
-            emailLb = Label(addUserManagement, text="E-mail")
-            emailLb.pack()
-
-            #Entries
-            usernameEntry = Entry(addUserManagement)
-            usernameEntry.pack()
-
-            nameEntry = Entry(addUserManagement)
-            nameEntry.pack()
-
-            last_nameEntry = Entry(addUserManagement)
-            last_nameEntry.pack()
-
-            emailEntry = Entry(addUserManagement)
-            emailEntry.pack()
-
-            #Buttons
-            addUserBt = Button(addUserManagement, text="Agregar usuario", command=lambda:addUser())
-            addUserBt.pack()
-
-            exitBt = Button(addUserManagement, text="Salir", command=lambda:closeTk(user, userTreeView))
-            exitBt.pack()
+            
 
             #userManagement.withdraw()
 
@@ -996,7 +1037,7 @@ class WindowsTk:
         userTreeViewScrollBar.pack(side=RIGHT, fill=Y)
 
         #TreeView
-        userTreeView = ttk.Treeview(userTreeViewFrame, yscrollcommand=userTreeViewScrollBar.set, selectmode="browse")
+        userTreeView = ttk.Treeview(userTreeViewFrame, yscrollcommand=userTreeViewScrollBar.set)
         #userTreeView.place(relx=.25, rely=.45, relwidth=.4, anchor='center')
         userTreeView.pack()
         userTreeView['columns'] = ("Nombre de usuario", "Nombre", "Apellido", "E-mail", "Ultima conexión")
