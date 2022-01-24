@@ -870,6 +870,7 @@ class WindowsTk:
         def updateOnButtonClick():
             try:
                 print(userTreeView.selection()[0])
+                addUserManagementTk(userTreeView.selection()[0])
             except:
                 print("Selecione un usuario a modificar")
             # print("hola")
@@ -908,7 +909,16 @@ class WindowsTk:
                 userListTreeview(user, userTreeView)
                 addUserManagement.destroy()
 
-
+            #Update
+            if id is not None:
+                print("Existe!!")
+                request = API_Services.userRetrieve(id, user.getToken())
+                print(request)
+            
+            #Create
+            else:
+                print("No existe")
+            
             #labels
             usernameLb = Label(addUserManagement, text="Nombre usuario(rut)")
             usernameLb.pack()
@@ -977,9 +987,22 @@ class WindowsTk:
         deleteButton = Button(userManagement, text="Eliminar usuario", command=lambda:deleteOnButtonClick(user))
         deleteButton.place(relx=.65, rely=.55, anchor='center') 
 
+        #TreeView Frame
+        userTreeViewFrame = Frame(userManagement)
+        userTreeViewFrame.place(relx=.25, rely=.45, relwidth=.4, anchor='center')
+
+        #TreeView Scrollbar
+        userTreeViewScrollBar = Scrollbar(userTreeViewFrame)
+        userTreeViewScrollBar.pack(side=RIGHT, fill=Y)
+
         #TreeView
-        userTreeView = ttk.Treeview(userManagement)
+        userTreeView = ttk.Treeview(userTreeViewFrame, yscrollcommand=userTreeViewScrollBar.set, selectmode="browse")
+        #userTreeView.place(relx=.25, rely=.45, relwidth=.4, anchor='center')
+        userTreeView.pack()
         userTreeView['columns'] = ("Nombre de usuario", "Nombre", "Apellido", "E-mail", "Ultima conexión")
+
+        #Config Scrollbar
+        userTreeViewScrollBar.configure(command=userTreeView.yview)
 
         #Configurar columnas
         userTreeView.column("#0", width=120, minwidth=25)
@@ -997,7 +1020,7 @@ class WindowsTk:
         userTreeView.heading("E-mail",text="E-mail", anchor=W)
         userTreeView.heading("Ultima conexión",text="Ultima conexión", anchor=W)
 
-        userTreeView.place(relx=.25, rely=.45, relwidth=.4, anchor='center')
+        #userTreeView.place(relx=.25, rely=.45, relwidth=.4, anchor='center')
 
         userListTreeview(user, userTreeView)
 
