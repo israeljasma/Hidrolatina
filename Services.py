@@ -53,6 +53,13 @@ class API_Services():
         request_dictionary = request.json()
         return request_dictionary, request
 
+    #UsersNfc
+    def userNFCCreate(username, password, email, name, last_name, token, nfc, refresh=None):
+        DATA  = {'password': password, 'username': username, 'email': email, 'name': name, 'last_name': last_name, 'nfc': [{'active': 1, 'NFC': nfc}]}
+        request = requests.post(url + 'users/usernfc/', json = DATA, headers={'Authorization': 'Bearer ' + token})
+        request_dictionary = request.json()
+        return request_dictionary
+
     #PpeDetectin
     def ppeDetection(helmet, headphones, goggles, gloves, boots, token, refresh = None):
         credentials = {'helmet':helmet, 'headphones':headphones, 'goggles':goggles, 'gloves':gloves, 'boots':boots}
