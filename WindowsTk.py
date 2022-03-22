@@ -19,7 +19,7 @@ from FileManagementClass import FileManagement
 from CameraStream import CameraStream
 from PpeDetector import PpeDetector
 from ActionDetector import ActionDetector
-from NFCClass import NFC
+from NFCClass import NFC, adminNFC
 from BTAudio import BTAudio
 
 
@@ -894,9 +894,12 @@ class WindowsTk:
             addUserManagement.geometry('600x600')
             self.center_window(addUserManagement)
 
+            nfcread = ''
+
             #Def
             def addUser():
-                request = API_Services.userCreate(usernameEntry.get(), "testpassword", emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
+                #request = API_Services.userCreate(usernameEntry.get(), "testpassword", emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
+                request = API_Services.userNFCCreate(usernameEntry.get(), passwordEntry.get(), emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
                 print(request)
                 userListTreeview(user, userTreeView)
 
@@ -909,6 +912,14 @@ class WindowsTk:
                 #else:
                 #    messagebox.showinfo(message=requestUpdate['message'], parent=addUserManagement)
                     #closeTk()
+
+            def readNFC():
+                readNfcManagement = Toplevel()
+                readNfcManagement.title("Gestion de usuarios")
+                readNfcManagement.resizable(False,False)
+                readNfcManagement.config(background="#cceeff")
+                readNfcManagement.geometry('300x200')
+                nfcread = 'testttsdaasfasccvsmnvb'
 
             def closeTk(user, userTreeView):
                 userTreeView.delete(*userTreeView.get_children())
@@ -959,7 +970,7 @@ class WindowsTk:
             #Create
             else:
                 #labels
-                usernameLb = Label(addUserManagement, text="Nombre usuario(rut)")
+                usernameLb = Label(addUserManagement, text="Rut")
                 usernameLb.pack()
 
                 nameLb = Label(addUserManagement, text="Nombre")
@@ -970,6 +981,9 @@ class WindowsTk:
 
                 emailLb = Label(addUserManagement, text="E-mail")
                 emailLb.pack()
+
+                passwordLb = Label(addUserManagement, text="Password")
+                passwordLb.pack()
 
                 #Entries
                 usernameEntry = Entry(addUserManagement)
@@ -984,7 +998,14 @@ class WindowsTk:
                 emailEntry = Entry(addUserManagement)
                 emailEntry.pack()
 
+                passwordEntry = Entry(addUserManagement, show='*')
+                passwordEntry.pack()
+
                 #Buttons
+                #nfcBt = Button(addUserManagement, text="Agregar nfc", command=lambda:adminNFC().readNFC())
+                nfcBt = Button(addUserManagement, text="Agregar nfc", command=lambda:readNFC())
+                nfcBt.pack()
+
                 addUserBt = Button(addUserManagement, text="Agregar usuario", command=lambda:addUser())
                 addUserBt.pack()
 
