@@ -25,31 +25,38 @@ class API_Services():
     #Users
     def userCreate(username, password, email, name, last_name, token, refresh=None):
         DATA  = {'password': password, 'username': username, 'email': email, 'name': name, 'last_name': last_name}
-        request = requests.post(url + 'users/', json = DATA, headers={'Authorization': 'Bearer ' + token})
+        request = requests.post(url + 'users/users/', json = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
 
     def userList(token, refresh=None):
         credentials = {'refresh': refresh}
-        request = requests.get(url + 'users/', data = credentials, headers={'Authorization': 'Bearer ' + token})
+        request = requests.get(url + 'users/users/', data = credentials, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
 
     def userRetrieve(id, token, refresh=None):
         credentials = {'refresh': refresh}
-        request = requests.get(url + 'users/' + str(id) + '/', data = credentials, headers={'Authorization': 'Bearer ' + token})
+        request = requests.get(url + 'users/users/' + str(id) + '/', data = credentials, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
 
     def userUpdate(id, username, email, name, last_name, token, refresh=None):
         DATA  = {'id': id, 'username': username, 'email': email, 'name': name, 'last_name': last_name}
-        request = requests.put(url + 'users/' + str(id) + '/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request = requests.put(url + 'users/users/' + str(id) + '/', data = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
 
     def userDelete(id, token, refresh=None):
         DATA  = {'id': id}
-        request = requests.delete(url + 'users/' + str(id) + '/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request = requests.delete(url + 'users/users/' + str(id) + '/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request_dictionary = request.json()
+        return request_dictionary, request
+
+    #UsersNfc
+    def userNFCCreate(username, password, email, name, last_name, token, nfc, refresh=None):
+        DATA  = {'password': password, 'username': username, 'email': email, 'name': name, 'last_name': last_name, 'nfc': [{'active': 1, 'NFC': nfc}]}
+        request = requests.post(url + 'users/usernfc/', json = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
 

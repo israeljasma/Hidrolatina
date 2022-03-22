@@ -3,6 +3,7 @@ import time
 from datetime import datetime, timedelta
 from tkinter import *
 from tkinter import messagebox, filedialog, simpledialog, Listbox, ttk
+from urllib import request
 from PIL import ImageTk, Image
 from mmpose.core import camera
 import cv2
@@ -18,7 +19,7 @@ from FileManagementClass import FileManagement
 from CameraStream import CameraStream
 from PpeDetector import PpeDetector
 from ActionDetector import ActionDetector
-from NFCClass import NFC
+from NFCClass import NFC, adminNFC
 from BTAudio import BTAudio
 
 
@@ -865,6 +866,166 @@ class WindowsTk:
         userManagement.geometry(f'{userManagement.winfo_screenwidth()}x{userManagement.winfo_screenheight()}')
         self.center_window(userManagement)
 
+        #Def
+        def userListTreeview(user, userTreeView):
+            userListApi = API_Services.userList(user.getToken())
+            for record in userListApi:
+                userTreeView.insert(parent='', index='end', iid=record['id'], text="Parent", values=(record['username'], record['name'], record['last_name'], record['email'], record['last_login']))
+        
+        def createNewUser():
+            addUserManagementTk()
+            print("Esto crea un usuario, fin!")
+
+        def updateOnButtonClick():
+            try:
+                addUserManagementTk(userTreeView.selection()[0])
+            except:
+                messagebox.showerror(message="Selecione un usuario a modificar", parent=userManagement)
+
+        def deleteOnButtonClick(user):
+            try:
+                id= userTreeView.selection()[0]
+                requestUrl, statusCode = API_Services.userDelete(id, user.getToken())
+                if statusCode.status_code == 201:
+                    userTreeView.delete(id)
+                    messagebox.showinfo(message=requestUrl["message"], parent=userManagement)
+                else:
+                    messagebox.showerror(message=requestUrl["message"], parent=userManagement)
+            except:
+                messagebox.showerror(message="Selecione un usuario a eliminar", parent=userManagement)
+
+        #toplevels
+        def addUserManagementTk(id=None):
+            addUserManagement = Toplevel()
+            addUserManagement.title("Gestion de usuarios")
+            addUserManagement.resizable(False,False)
+            addUserManagement.config(background="#cceeff")
+            addUserManagement.geometry('600x600')
+            self.center_window(addUserManagement)
+
+            nfcread = ''
+
+            #Def
+            def addUser():
+                #request = API_Services.userCreate(usernameEntry.get(), "testpassword", emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
+                request = API_Services.userNFCCreate(usernameEntry.get(), passwordEntry.get(), emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
+                print(request)
+                userListTreeview(user, userTreeView)
+
+            def updateUser():
+                requestUpdate = API_Services.userUpdate(id, usernameEntry.get(), emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
+                messagebox.showerror(message=requestUpdate['message'], parent=addUserManagement)
+                closeTk(user, userTreeView)
+                #if requestUpdate['message']:
+                #    messagebox.showerror(message=requestUpdate['message'], parent=addUserManagement)
+                #else:
+                #    messagebox.showinfo(message=requestUpdate['message'], parent=addUserManagement)
+                    #closeTk()
+
+            def readNFC():
+                readNfcManagement = Toplevel()
+                readNfcManagement.title("Gestion de usuarios")
+                readNfcManagement.resizable(False,False)
+                readNfcManagement.config(background="#cceeff")
+                readNfcManagement.geometry('300x200')
+                nfcread = 'testttsdaasfasccvsmnvb'
+
+            def closeTk(user, userTreeView):
+                userTreeView.delete(*userTreeView.get_children())
+                userListTreeview(user, userTreeView)
+                addUserManagement.destroy()
+
+            #Update
+            if id is not None:
+                request = API_Services.userRetrieve(id, user.getToken())
+
+                #labels
+                usernameLb = Label(addUserManagement, text="Nombre usuario(rut)")
+                usernameLb.pack()
+
+                nameLb = Label(addUserManagement, text="Nombre")
+                nameLb.pack()
+
+                last_nameLb = Label(addUserManagement, text="Apellido")
+                last_nameLb.pack()
+
+                emailLb = Label(addUserManagement, text="E-mail")
+                emailLb.pack()
+
+                #Entries
+                usernameEntry = Entry(addUserManagement)
+                usernameEntry.insert(0, request['username'])
+                usernameEntry.pack()
+
+                nameEntry = Entry(addUserManagement)
+                nameEntry.insert(0, request['name'])
+                nameEntry.pack()
+
+                last_nameEntry = Entry(addUserManagement)
+                last_nameEntry.insert(0, request['last_name'])
+                last_nameEntry.pack()
+
+                emailEntry = Entry(addUserManagement)
+                emailEntry.insert(0, request['email'])
+                emailEntry.pack()
+
+                #Buttons
+                updateUserBt = Button(addUserManagement, text="Actualizar usuario", command=lambda:updateUser())
+                updateUserBt.pack()
+
+                exitBt = Button(addUserManagement, text="Salir", command=lambda:closeTk(user, userTreeView))
+                exitBt.pack()
+            
+            #Create
+            else:
+                #labels
+                usernameLb = Label(addUserManagement, text="Rut")
+                usernameLb.pack()
+
+                nameLb = Label(addUserManagement, text="Nombre")
+                nameLb.pack()
+
+                last_nameLb = Label(addUserManagement, text="Apellido")
+                last_nameLb.pack()
+
+                emailLb = Label(addUserManagement, text="E-mail")
+                emailLb.pack()
+
+                passwordLb = Label(addUserManagement, text="Password")
+                passwordLb.pack()
+
+                #Entries
+                usernameEntry = Entry(addUserManagement)
+                usernameEntry.pack()
+
+                nameEntry = Entry(addUserManagement)
+                nameEntry.pack()
+
+                last_nameEntry = Entry(addUserManagement)
+                last_nameEntry.pack()
+
+                emailEntry = Entry(addUserManagement)
+                emailEntry.pack()
+
+                passwordEntry = Entry(addUserManagement, show='*')
+                passwordEntry.pack()
+
+                #Buttons
+                #nfcBt = Button(addUserManagement, text="Agregar nfc", command=lambda:adminNFC().readNFC())
+                nfcBt = Button(addUserManagement, text="Agregar nfc", command=lambda:readNFC())
+                nfcBt.pack()
+
+                addUserBt = Button(addUserManagement, text="Agregar usuario", command=lambda:addUser())
+                addUserBt.pack()
+
+                exitBt = Button(addUserManagement, text="Salir", command=lambda:closeTk(user, userTreeView))
+                exitBt.pack()
+            
+            
+
+            #userManagement.withdraw()
+
+
         #Canvas
         canvas = Canvas(userManagement, borderwidth=0,highlightthickness=0)
         canvas.place(relx=.5, rely=.5, relwidth=1, relheight=1, anchor='center')
@@ -874,6 +1035,65 @@ class WindowsTk:
         bg = ImageTk.PhotoImage(bg)
         userManagement.bg=bg
         canvas.create_image(userManagement.winfo_screenwidth()/2, userManagement.winfo_screenheight()/2, image=bg)
+
+        logo = Image.open('images/logo_hidrolatina.png')
+        logo = logo.resize((325, 97), Image.ANTIALIAS)
+        logo = ImageTk.PhotoImage(logo)
+        userManagement.logo=logo
+        canvas.create_image(userManagement.winfo_screenwidth()/2, logo.height(), image=logo, anchor='center')
+
+        adminImg = Image.open('images/adminPanel.png')
+        adminImg = adminImg.resize((325, 97), Image.ANTIALIAS)
+        adminImg = ImageTk.PhotoImage(adminImg)
+        userManagement.adminImg=adminImg
+        canvas.create_image(0, logo.height(), image=adminImg, anchor='w')
+
+        #Buttons
+        createButton = Button(userManagement, text="Crear nuevo usuario", command=lambda:createNewUser())
+        createButton.place(relx=.65, rely=.35, anchor='center')
+
+        updateButton = Button(userManagement, text="Modificar usuario", command=lambda:updateOnButtonClick())
+        updateButton.place(relx=.65, rely=.45, anchor='center')
+
+        deleteButton = Button(userManagement, text="Eliminar usuario", command=lambda:deleteOnButtonClick(user))
+        deleteButton.place(relx=.65, rely=.55, anchor='center') 
+
+        #TreeView Frame
+        userTreeViewFrame = Frame(userManagement)
+        userTreeViewFrame.place(relx=.25, rely=.45, relwidth=.4, anchor='center')
+
+        #TreeView Scrollbar
+        userTreeViewScrollBar = Scrollbar(userTreeViewFrame)
+        userTreeViewScrollBar.pack(side=RIGHT, fill=Y)
+
+        #TreeView
+        userTreeView = ttk.Treeview(userTreeViewFrame, yscrollcommand=userTreeViewScrollBar.set)
+        #userTreeView.place(relx=.25, rely=.45, relwidth=.4, anchor='center')
+        userTreeView.pack()
+        userTreeView['columns'] = ("Nombre de usuario", "Nombre", "Apellido", "E-mail", "Ultima conexión")
+
+        #Config Scrollbar
+        userTreeViewScrollBar.configure(command=userTreeView.yview)
+
+        #Configurar columnas
+        userTreeView.column("#0", width=120, minwidth=25)
+        userTreeView.column("Nombre de usuario", anchor=W, width=120)
+        userTreeView.column("Nombre", anchor=W, width=120)
+        userTreeView.column("Apellido", anchor=W, width=120)
+        userTreeView.column("E-mail", anchor=W, width=160)
+        userTreeView.column("Ultima conexión", anchor=W, width=120)
+
+        #Crear Encabezados
+        userTreeView.heading("#0", text="Label", anchor=W)
+        userTreeView.heading("Nombre de usuario",text="Nombre de usuario", anchor=W)
+        userTreeView.heading("Nombre",text="Nombre", anchor=W)
+        userTreeView.heading("Apellido",text="Apellido", anchor=W)
+        userTreeView.heading("E-mail",text="E-mail", anchor=W)
+        userTreeView.heading("Ultima conexión",text="Ultima conexión", anchor=W)
+
+        #userTreeView.place(relx=.25, rely=.45, relwidth=.4, anchor='center')
+
+        userListTreeview(user, userTreeView)
 
         # # def Windows tk
         # def createUserTk(userManagement):

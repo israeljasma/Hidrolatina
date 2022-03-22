@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import CENTER, END, Listbox, Tk, ttk
+from tkinter import CENTER, END, Button, Frame, Listbox, Tk, ttk
 import requests
 
 url = 'http://127.0.0.1:8000/'
@@ -9,6 +9,20 @@ def userList(token, refresh=None):
     request = requests.get(url + 'users/', data = credentials, headers={'Authorization': 'Bearer ' + token})
     request_dictionary = request.json()
     return request_dictionary
+
+def updateOnButtonClick():
+    try:
+        print(treeViewTest.selection()[0])
+    except:
+        print("Selecione un usuario a modificar")
+    # print("hola")
+
+def deleteOnButtonClick():
+    try:
+        print(treeViewTest.selection()[0])
+    except:
+        print("Selecione un usuario a eliminar")
+    # print("hola")
 
 
 root = Tk()
@@ -37,17 +51,26 @@ treeViewTest.heading("E-mail",text="E-mail", anchor=tk.W)
 treeViewTest.heading("Ultima conexión",text="Ultima conexión", anchor=tk.W)
 
 # Agregar datos
-userListTest = userList('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjQyMjEwOTU0LCJpYXQiOjE2NDIxNzg1NTQsImp0aSI6ImVhMWFhNTU4NTY5MDQ5ZGM5YTUxYWUwNzBkNzQyODczIiwidXNlcl9pZCI6MX0._6_RqXlXHGtyZtFvLzvBLTrOiAqnrNGVh9tZxZ09aLk')
+userListTest = userList('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjQyNDY5NjkzLCJpYXQiOjE2NDI0MzcyOTMsImp0aSI6IjIyMjZjZmU0NmE4MzRlODhiNWQ5OWVlNGIyNmUzMTZhIiwidXNlcl9pZCI6MX0.gSmxQFng3RTJx3x2Gf0xulNTj1-wawyMEHdz5AWHTuc')
 print(userListTest)
-count = 0
 for record in userListTest:
-    treeViewTest.insert(parent='', index='end', iid=count, text="Parent", values=(record['username'], record['name'], record['last_name'], record['email'], record['last_login']))
-    count += 1
-
-# treeViewTest.insert(parent='', index='end', iid=0, text="Parent", values=("username", "jhon", "malo", "emailmlao", "ultima conexcion"))
-# treeViewTest.insert(parent='', index='end', iid=1, text="Parent", values=("username", "test", "fdsf", "examaple@xpmna'lew", "ultima conexcion"))
+    treeViewTest.insert(parent='', index='end', iid=record['id'], text="Parent", values=(record['username'], record['name'], record['last_name'], record['email'], record['last_login']))
 
 treeViewTest.pack(pady=20)
+
+# treeViewTest.bind("<Double-1>", OnDoubleClick)
+# treeViewTest.bind("<Button-1>", OnButtonClick)
+
+frame = Frame(root)
+frame.pack(pady=20)
+
+updateButton = Button(root, text="Modificar", command=lambda:updateOnButtonClick())
+updateButton.pack()
+
+deleteButton = Button(root, text="Eliminar usuario", command=lambda:deleteOnButtonClick())
+deleteButton.pack()
+
+
 
 # # Lisbox
 # testListbox = Listbox(root)
@@ -69,18 +92,3 @@ treeViewTest.pack(pady=20)
 #     print(item['id'])
 
 root.mainloop()
-
-# import tkinter as tk
-# from tkinter import ttk
-# class Application(ttk.Frame):
-    
-#     def __init__(self, main_window):
-#         super().__init__(main_window)
-#         main_window.title("Lista en Tcl/Tk")
-        
-#         self.listbox = tk.Listbox(self)
-#         self.listbox.pack()
-#         self.pack()
-# main_window = tk.Tk()
-# app = Application(main_window)
-# app.mainloop()
