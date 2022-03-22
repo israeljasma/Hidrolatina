@@ -43,7 +43,7 @@ class NFC():
                 get_uid = util.toBytes("FF CA 00 00 00")
                 data, sw1, sw2 = conn.transmit(get_uid)
                 uid = util.toHexString(data)
-                print(uid)
+                # print(uid)
                 try:
                     loginNFC = API_Services.loginNFC(uid)
                 except:

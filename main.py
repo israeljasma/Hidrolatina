@@ -55,12 +55,10 @@ if __name__ == '__main__':
     def closeLogin():
         try:
             instanceWindowsTk.p0.terminate()
-            instanceWindowsTk.p0.join()
         except:
            pass
         try:
             instanceWindowsTk.p1.terminate()
-            instanceWindowsTk.p1.join()
         except:
            pass
         root.destroy()

@@ -185,8 +185,8 @@ class ActionDetector:
     #     print(self.df)
 
     def inferenceActionDetector(self, queue_anno, queue_action, labelVideo, showActions, tableview, btaudio):
-        just_bboxarea_track=True
-        track_flag=False
+        just_bboxarea_track=False
+        track_flag=True
         wait_for_operator=5
         operator_counter=wait_for_operator
 

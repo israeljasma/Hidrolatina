@@ -322,19 +322,24 @@ class WindowsTk:
         
         print('Camara de epp es esta: ', self.varCamera)  
 
-        try:
-            self.cap.stop()
-        except:
-            pass
-        try:
-            del self.cap
-        except:
-            pass
+        # try:
+        #     self.cap.stop()
+        # except:
+        #     pass
+        # try:
+        #     del self.cap
+        # except:
+        #     pass
 
         try:
-            self.cap = CameraStream(self.ppevideo_selected,delay=0.03).start()
-        except:
-            self.cap = CameraStream(self.varCamera).start()
+            self.ppeframe_selected
+        except AttributeError:
+            try:
+                self.cap = CameraStream(self.ppevideo_selected,delay=0.03).start()
+            except:
+                self.cap = CameraStream(self.varCamera).start()
+                print('COMENZO LA CAMARA')
+        
         # self.cap = cv2.VideoCapture(0)
 
         # camWidth = round(cameraFrame.winfo_reqwidth())
@@ -493,7 +498,11 @@ class WindowsTk:
         if hide:
             self.PytorchCameraTk.withdraw()
             self.PytorchCameraTk.after(3000,self.PytorchCameraTk.deiconify())
-        showFrame()
+        try:
+            showFrame()
+        except TypeError:
+            print('Error frame vacío')
+            pass
         self.PytorchCameraTk.focus_force()
         # self.PytorchCameraTk.withdraw()
         # self.PytorchCameraTk.after(2000,self.PytorchCameraTk.deiconify)
