@@ -123,7 +123,7 @@ class BTAudio():
                 print('Client: Connected to Socket')
                 break
 
-            except ConnectionRefusedError:
+            except (ConnectionRefusedError, TimeoutError):
                 # self.listen_bool=False
                 print('Client: Error de conexión, reconectando ...')
                 time.sleep(5)
@@ -294,11 +294,7 @@ class BTAudio():
                         self.play('pidiendo ayuda')
                         pywhatkit.send_mail("equipo.vandving@gmail.com", "Hidrolatina123", "Ayuda", "Una ayudita", "javier.esuazo.s@gmail.com")
                         pywhatkit.sendwhatmsg_instantly("+56994213132", "Ayuda",5, True, 2)
-                        
-
-
-
-                        
+                                      
             except TypeError:
                 print('No recognition')
 
