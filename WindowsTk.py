@@ -11,6 +11,8 @@ import pandas as pd
 from numpy import empty
 import torch.multiprocessing as mp
 import torch
+import secrets
+import string
 
 from Services import API_Services
 from UserClass import Person
@@ -21,6 +23,7 @@ from PpeDetector import PpeDetector
 from ActionDetector import ActionDetector
 from NFCClass import NFC, adminNFC
 from BTAudio import BTAudio
+
 
 
 
@@ -894,27 +897,73 @@ class WindowsTk:
             except:
                 messagebox.showerror(message="Selecione un usuario a eliminar", parent=userManagement)
 
+        def closeTk():
+            # adminConfigTk.focus_force()
+            # adminConfigTk.deiconify()
+            userManagement.destroy()
+
         #toplevels
         def addUserManagementTk(id=None):
             addUserManagement = Toplevel()
             addUserManagement.title("Gestion de usuarios")
             addUserManagement.resizable(False,False)
             addUserManagement.config(background="#cceeff")
-            addUserManagement.geometry('600x600')
+            addUserManagement.overrideredirect(True)
+            addUserManagement.geometry(f'{addUserManagement.winfo_screenwidth()}x{addUserManagement.winfo_screenheight()}')
             self.center_window(addUserManagement)
 
             nfcread = ''
+            flag = False
 
+            #Canvas
+            canvas = Canvas(addUserManagement, borderwidth=0,highlightthickness=0)
+            canvas.place(relx=.5, rely=.5, relwidth=1, relheight=1, anchor='center')
+
+            bg = Image.open('images/network_bg.png')
+            bg = bg.resize((addUserManagement.winfo_screenwidth(), addUserManagement.winfo_screenheight()), Image.ANTIALIAS)
+            bg = ImageTk.PhotoImage(bg)
+            addUserManagement.bg=bg
+            canvas.create_image(addUserManagement.winfo_screenwidth()/2, addUserManagement.winfo_screenheight()/2, image=bg)
+
+            logo = Image.open('images/logo_hidrolatina.png')
+            logo = logo.resize((325, 97), Image.ANTIALIAS)
+            logo = ImageTk.PhotoImage(logo)
+            addUserManagement.logo=logo
+            canvas.create_image(addUserManagement.winfo_screenwidth()/2, logo.height(), image=logo, anchor='center')
+
+            #Canvas/Button
+            exitImg = Image.open('images/backButton.png')
+            exitImg = exitImg.resize((int(addUserManagement.winfo_screenheight()*.05), int(addUserManagement.winfo_screenheight()*.05)), Image.ANTIALIAS)
+            exitImg = ImageTk.PhotoImage(exitImg)
+            addUserManagement.exitImg=exitImg
+
+            exitCanvas=canvas.create_image(addUserManagement.winfo_screenwidth()*.05, addUserManagement.winfo_screenheight()*.05, image=exitImg)
+            canvas.tag_bind(exitCanvas, "<Button-1>",  (lambda _:closeTk(user, userTreeView)))
+            
             #Def
             def addUser():
-                #request = API_Services.userCreate(usernameEntry.get(), "testpassword", emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
-                request = API_Services.userNFCCreate(usernameEntry.get(), passwordEntry.get(), emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
-                print(request)
-                userListTreeview(user, userTreeView)
+                if nfcread == '':
+                    if passwordEntry.get() == '' and passwordEntry["state"] == DISABLED:
+                        password = randomPassword()
+                        request = API_Services.userCreate(usernameEntry.get(), password, emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
+                        messagebox.showinfo(message=request['message'], parent=addUserManagement)
+                        userTreeView.delete(*userTreeView.get_children())
+                        userListTreeview(user, userTreeView)
+                    else:
+                        request = API_Services.userCreate(usernameEntry.get(), passwordEntry.get(), emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
+                        messagebox.showinfo(message=request['message'], parent=addUserManagement)
+                        userTreeView.delete(*userTreeView.get_children())
+                        userListTreeview(user, userTreeView)
+                else:
+                    request = API_Services.userNFCCreate(usernameEntry.get(), passwordEntry.get(), emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken(), nfcread)
+                    messagebox.showinfo(message=request['message'], parent=addUserManagement)
+                    userTreeView.delete(*userTreeView.get_children())
+                    userListTreeview(user, userTreeView)
+                    
 
             def updateUser():
                 requestUpdate = API_Services.userUpdate(id, usernameEntry.get(), emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
-                messagebox.showerror(message=requestUpdate['message'], parent=addUserManagement)
+                messagebox.showinfo(message=requestUpdate['message'], parent=addUserManagement)
                 closeTk(user, userTreeView)
                 #if requestUpdate['message']:
                 #    messagebox.showerror(message=requestUpdate['message'], parent=addUserManagement)
@@ -928,101 +977,119 @@ class WindowsTk:
                 readNfcManagement.resizable(False,False)
                 readNfcManagement.config(background="#cceeff")
                 readNfcManagement.geometry('300x200')
-                nfcread = 'testttsdaasfasccvsmnvb'
+                self.center_window(readNfcManagement)
+                global nfcread
+                nfcread = 'testfafdsaaaaa'
 
             def closeTk(user, userTreeView):
                 userTreeView.delete(*userTreeView.get_children())
                 userListTreeview(user, userTreeView)
                 addUserManagement.destroy()
 
+            def enableDisablePassword():
+                # emailEntry.place_forget()
+                # passwordEntry.config(state='disabled')
+                if passwordEntry["state"] == NORMAL:
+                    passwordEntry["state"] = DISABLED
+                    enableDisablePasswordBt["text"] = 'Habilitar contraseña'
+                else:
+                    passwordEntry["state"] = NORMAL
+                    enableDisablePasswordBt["text"] = 'Deshabilitar contraseña'
+
+            def randomPassword():
+                return ''.join((secrets.choice(string.ascii_letters + string.digits + string.punctuation) for i in range(50)))
+
             #Update
             if id is not None:
                 request = API_Services.userRetrieve(id, user.getToken())
 
                 #labels
-                usernameLb = Label(addUserManagement, text="Nombre usuario(rut)")
-                usernameLb.pack()
+                usernameLb = Label(addUserManagement, text="Rut")
+                usernameLb.place()
 
                 nameLb = Label(addUserManagement, text="Nombre")
-                nameLb.pack()
+                nameLb.place()
 
                 last_nameLb = Label(addUserManagement, text="Apellido")
-                last_nameLb.pack()
+                last_nameLb.place()
 
                 emailLb = Label(addUserManagement, text="E-mail")
-                emailLb.pack()
+                emailLb.place()
 
                 #Entries
                 usernameEntry = Entry(addUserManagement)
                 usernameEntry.insert(0, request['username'])
-                usernameEntry.pack()
+                usernameEntry.place()
 
                 nameEntry = Entry(addUserManagement)
                 nameEntry.insert(0, request['name'])
-                nameEntry.pack()
+                nameEntry.place()
 
                 last_nameEntry = Entry(addUserManagement)
                 last_nameEntry.insert(0, request['last_name'])
-                last_nameEntry.pack()
+                last_nameEntry.place()
 
                 emailEntry = Entry(addUserManagement)
                 emailEntry.insert(0, request['email'])
-                emailEntry.pack()
+                emailEntry.place()
 
                 #Buttons
                 updateUserBt = Button(addUserManagement, text="Actualizar usuario", command=lambda:updateUser())
-                updateUserBt.pack()
+                updateUserBt.place()
 
-                exitBt = Button(addUserManagement, text="Salir", command=lambda:closeTk(user, userTreeView))
-                exitBt.pack()
+                # exitBt = Button(addUserManagement, text="Salir", command=lambda:closeTk(user, userTreeView))
+                # exitBt.place()
             
             #Create
             else:
+
                 #labels
-                usernameLb = Label(addUserManagement, text="Rut")
-                usernameLb.pack()
+                usernameLb = Label(addUserManagement, text="Rut", bg='white')
+                usernameLb.place(relx=.43, rely=.25, anchor='center')
 
-                nameLb = Label(addUserManagement, text="Nombre")
-                nameLb.pack()
+                nameLb = Label(addUserManagement, text="Nombre", bg='white')
+                nameLb.place(relx=.43, rely=.35, anchor='center')
 
-                last_nameLb = Label(addUserManagement, text="Apellido")
-                last_nameLb.pack()
+                last_nameLb = Label(addUserManagement, text="Apellido", bg='white')
+                last_nameLb.place(relx=.43, rely=.45, anchor='center')
 
-                emailLb = Label(addUserManagement, text="E-mail")
-                emailLb.pack()
+                emailLb = Label(addUserManagement, text="E-mail", bg='white')
+                emailLb.place(relx=.43, rely=.55, anchor='center')
 
-                passwordLb = Label(addUserManagement, text="Password")
-                passwordLb.pack()
+                passwordLb = Label(addUserManagement, text="Password", bg='white')
+                passwordLb.place(relx=.43, rely=.65, anchor='center')
+
+                nfcLb = Label(addUserManagement, text="Dispositivo NFC", bg='white')
+                nfcLb.place(relx=.43, rely=.75, anchor='center')
 
                 #Entries
-                usernameEntry = Entry(addUserManagement)
-                usernameEntry.pack()
+                usernameEntry = Entry(addUserManagement, bg='white')
+                usernameEntry.place(relx=.53, rely=.25, anchor='center')
 
-                nameEntry = Entry(addUserManagement)
-                nameEntry.pack()
+                nameEntry = Entry(addUserManagement, bg='white')
+                nameEntry.place(relx=.53, rely=.35, anchor='center')
 
-                last_nameEntry = Entry(addUserManagement)
-                last_nameEntry.pack()
+                last_nameEntry = Entry(addUserManagement, bg='white')
+                last_nameEntry.place(relx=.53, rely=.45, anchor='center')
 
-                emailEntry = Entry(addUserManagement)
-                emailEntry.pack()
+                emailEntry = Entry(addUserManagement, bg='white')
+                emailEntry.place(relx=.53, rely=.55, anchor='center')
 
-                passwordEntry = Entry(addUserManagement, show='*')
-                passwordEntry.pack()
+                passwordEntry = Entry(addUserManagement, show='*', bg='white')
+                passwordEntry.place(relx=.53, rely=.65, anchor='center')
+
+                nfcLb = Label(addUserManagement, text="Sin dispositivo NFC vinculado", bg='white')
+                nfcLb.place(relx=.53, rely=.75, anchor='center')
 
                 #Buttons
-                #nfcBt = Button(addUserManagement, text="Agregar nfc", command=lambda:adminNFC().readNFC())
                 nfcBt = Button(addUserManagement, text="Agregar nfc", command=lambda:readNFC())
-                nfcBt.pack()
+                nfcBt.place(relx=.38, rely=.85, anchor='center')
 
                 addUserBt = Button(addUserManagement, text="Agregar usuario", command=lambda:addUser())
-                addUserBt.pack()
+                addUserBt.place(relx=.48, rely=.85, anchor='center')  
 
-                exitBt = Button(addUserManagement, text="Salir", command=lambda:closeTk(user, userTreeView))
-                exitBt.pack()
-            
-            
-
+                enableDisablePasswordBt = Button(addUserManagement, text="Deshabilitar contraseña", command=lambda:enableDisablePassword())
+                enableDisablePasswordBt.place(relx=.58, rely=.85, anchor='center') 
             #userManagement.withdraw()
 
 
@@ -1042,11 +1109,14 @@ class WindowsTk:
         userManagement.logo=logo
         canvas.create_image(userManagement.winfo_screenwidth()/2, logo.height(), image=logo, anchor='center')
 
-        adminImg = Image.open('images/adminPanel.png')
-        adminImg = adminImg.resize((325, 97), Image.ANTIALIAS)
-        adminImg = ImageTk.PhotoImage(adminImg)
-        userManagement.adminImg=adminImg
-        canvas.create_image(0, logo.height(), image=adminImg, anchor='w')
+        #Buttons
+        exitImg = Image.open('images/backButton.png')
+        exitImg = exitImg.resize((int(userManagement.winfo_screenheight()*.05), int(userManagement.winfo_screenheight()*.05)), Image.ANTIALIAS)
+        exitImg = ImageTk.PhotoImage(exitImg)
+        userManagement.exitImg=exitImg
+
+        exitCanvas=canvas.create_image(userManagement.winfo_screenwidth()*.05, userManagement.winfo_screenheight()*.05, image=exitImg)
+        canvas.tag_bind(exitCanvas, "<Button-1>",  (lambda _:closeTk()))
 
         #Buttons
         createButton = Button(userManagement, text="Crear nuevo usuario", command=lambda:createNewUser())
@@ -1076,7 +1146,6 @@ class WindowsTk:
         userTreeViewScrollBar.configure(command=userTreeView.yview)
 
         #Configurar columnas
-        userTreeView.column("#0", width=120, minwidth=25)
         userTreeView.column("Nombre de usuario", anchor=W, width=120)
         userTreeView.column("Nombre", anchor=W, width=120)
         userTreeView.column("Apellido", anchor=W, width=120)
@@ -1084,7 +1153,6 @@ class WindowsTk:
         userTreeView.column("Ultima conexión", anchor=W, width=120)
 
         #Crear Encabezados
-        userTreeView.heading("#0", text="Label", anchor=W)
         userTreeView.heading("Nombre de usuario",text="Nombre de usuario", anchor=W)
         userTreeView.heading("Nombre",text="Nombre", anchor=W)
         userTreeView.heading("Apellido",text="Apellido", anchor=W)
