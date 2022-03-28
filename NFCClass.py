@@ -92,20 +92,21 @@ class NFC():
             pass
 
 class adminNFC():
-    def __init__(self):
+    # def __init__(self):
+    #     # pass
+    # # #     self.thread = Thread(target=self.readNFC, args=(), daemon=True)
+    # # #     self.thread.start()
 
-    #     self.thread = Thread(target=self.readNFC, args=(), daemon=True)
-    #     self.thread.start()
+
+    #     with concurrent.futures.ThreadPoolExecutor() as executor:
+    #         future = executor.submit(self.readNFC)
+    #         self.return_value = future.result()
+    #         print(self.return_value)
 
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(self.readNFC)
-            return_value = future.result()
-            print(return_value)
-
-    def readNFC(self):
+    def readNFC(nfcread):
         uid = None
-        WAIT_FOR_SECONDS = 60
+        WAIT_FOR_SECONDS = 15
         # respond to the insertion of any type of smart card
         card_type = AnyCardType()
 
@@ -120,7 +121,6 @@ class adminNFC():
             except CardRequestTimeoutException:
                 print("Tarjeta no detectada")
                 # could add "exit(-1)" to make code terminate
-
             # when a card is attached, open a connection
             try:
                 conn = service.connection
@@ -130,9 +130,9 @@ class adminNFC():
                 get_uid = util.toBytes("FF CA 00 00 00")
                 data, sw1, sw2 = conn.transmit(get_uid)
                 uid = util.toHexString(data)
+                nfcread.append(uid)
                 break
             except:
-
                 pass
 
         return uid

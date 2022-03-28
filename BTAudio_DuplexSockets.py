@@ -23,6 +23,7 @@ class BTAudio():
             # print('proceso')
             self.queue_audio_out=mp.Queue()
             self.queue_audio_in=mp.Queue()
+            self.flag_instructivo=False
     
     def Load(self):
         self.thread_out= Thread(target=self.playAudio, args=())
@@ -294,6 +295,14 @@ class BTAudio():
                         self.play('pidiendo ayuda')
                         pywhatkit.send_mail("equipo.vandving@gmail.com", "Hidrolatina123", "Ayuda", "Una ayudita", "javier.esuazo.s@gmail.com")
                         pywhatkit.sendwhatmsg_instantly("+56994213132", "Ayuda",5, True, 2)
+                    if 'instructivo' in commands:
+                        print('SOLICITANDO INSTRUCTIVO')
+                        self.flag_instructivo=True
+                        self.play('¿Que numero deseas escuchar?\n uno\n  verificación\n dos\n acondicionamiento\n tres\n operación \n cuatro \n vaciado ')
+                if self.flag_instructivo is True:
+                    if 'uno' or 'ayuda' in commands:
+                        self.play('has dicho uno')
+                        self.flag_instructivo=False   
                                       
             except TypeError:
                 print('No recognition')

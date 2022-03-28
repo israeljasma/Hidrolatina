@@ -1,8 +1,10 @@
 import queue
+from threading import Thread
 import time
 from datetime import datetime, timedelta
 from tkinter import *
 from tkinter import messagebox, filedialog, simpledialog, Listbox, ttk
+from traceback import print_tb
 from urllib import request
 from PIL import ImageTk, Image
 from mmpose.core import camera
@@ -24,6 +26,11 @@ from ActionDetector import ActionDetector
 from NFCClass import NFC, adminNFC
 from BTAudio import BTAudio
 
+
+from smartcard.CardRequest import CardRequest
+from smartcard.Exceptions import CardRequestTimeoutException
+from smartcard.CardType import AnyCardType
+from smartcard import util
 
 
 
@@ -873,7 +880,7 @@ class WindowsTk:
         def userListTreeview(user, userTreeView):
             userListApi = API_Services.userList(user.getToken())
             for record in userListApi:
-                userTreeView.insert(parent='', index='end', iid=record['id'], text="Parent", values=(record['username'], record['name'], record['last_name'], record['email'], record['last_login']))
+                userTreeView.insert('', 'end', iid=record['id'], values=(record['username'], record['name'], record['last_name'], record['email'], record['last_login']))
         
         def createNewUser():
             addUserManagementTk()
@@ -912,8 +919,7 @@ class WindowsTk:
             addUserManagement.geometry(f'{addUserManagement.winfo_screenwidth()}x{addUserManagement.winfo_screenheight()}')
             self.center_window(addUserManagement)
 
-            nfcread = ''
-            flag = False
+            nfcread = []
 
             #Canvas
             canvas = Canvas(addUserManagement, borderwidth=0,highlightthickness=0)
@@ -955,7 +961,7 @@ class WindowsTk:
                         userTreeView.delete(*userTreeView.get_children())
                         userListTreeview(user, userTreeView)
                 else:
-                    request = API_Services.userNFCCreate(usernameEntry.get(), passwordEntry.get(), emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken(), nfcread)
+                    request = API_Services.userNFCCreate(usernameEntry.get(), passwordEntry.get(), emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken(), nfcread[0])
                     messagebox.showinfo(message=request['message'], parent=addUserManagement)
                     userTreeView.delete(*userTreeView.get_children())
                     userListTreeview(user, userTreeView)
@@ -971,15 +977,85 @@ class WindowsTk:
                 #    messagebox.showinfo(message=requestUpdate['message'], parent=addUserManagement)
                     #closeTk()
 
-            def readNFC():
+            def readNFC(nfcread):
                 readNfcManagement = Toplevel()
-                readNfcManagement.title("Gestion de usuarios")
+                # readNfcManagement.title("Gestion de usuarios")
                 readNfcManagement.resizable(False,False)
                 readNfcManagement.config(background="#cceeff")
                 readNfcManagement.geometry('300x200')
+                readNfcManagement.overrideredirect(True)
                 self.center_window(readNfcManagement)
-                global nfcread
-                nfcread = 'testfafdsaaaaa'
+
+                varText = StringVar()
+                varText.set("Esperando dispositivo NFC")
+                print(varText)
+
+                #Labels Tk
+                labelText = Label(readNfcManagement, text='Esperando dispositivo NFC', pady=100)
+                labelText.pack()
+
+                def timeCheck(nfcThread):
+                    readNfcManagement.after(1000, checkIfDone, nfcThread)
+
+                def checkIfDone(nfcThread):
+                    if not nfcThread.is_alive():
+                        if nfcread != []:
+                            labelText['text'] = "Dispositivo NFC vinculado"
+                            print(labelText)
+                            nfcLb['text'] = "Dispositivo NFC vinculado"
+                            time.sleep(2)
+                            readNfcManagement.destroy()
+                        else:
+                            labelText['text'] = "Dispositivo NFC no detectato"
+                            nfcLb['text'] = "Sin dispositivo NFC vinculado"
+                            time.sleep(2)
+                            readNfcManagement.destroy()
+                    else:
+                        timeCheck(nfcThread)
+
+                def startThread():
+                    nfcThread = Thread(target=read , args=[nfcread])
+                    nfcThread.start()
+
+                    timeCheck(nfcThread)
+
+                def read(nfcread):
+                    WAIT_FOR_SECONDS = 10
+                    # respond to the insertion of any type of smart card
+                    card_type = AnyCardType()
+
+                    # create the request. Wait for up to x seconds for a card to be attached
+                    request = CardRequest(timeout=WAIT_FOR_SECONDS, cardType=card_type)
+
+                    while True:
+                        # listen for the card
+                        service = None
+                        
+                        try:
+                            service = request.waitforcard()
+                        except CardRequestTimeoutException:
+                            print("Tarjeta no detectada")
+                            # could add "exit(-1)" to make code terminate
+
+                        # when a card is attached, open a connection
+                        try:
+                            conn = service.connection
+                            conn.connect()
+
+                            # get the ATR and UID of the card
+                            get_uid = util.toBytes("FF CA 00 00 00")
+                            data, sw1, sw2 = conn.transmit(get_uid)
+                            uid = util.toHexString(data)
+                            status = util.toHexString([sw1, sw2])
+                            if uid != "":
+                                nfcread.append(uid)
+                                break
+                        except:
+                            pass
+                    # varText.set('Dispositivo NFC reconocido')
+                    # time.sleep(2)
+
+                readNfcManagement.after(1000, startThread)
 
             def closeTk(user, userTreeView):
                 userTreeView.delete(*userTreeView.get_children())
@@ -987,8 +1063,6 @@ class WindowsTk:
                 addUserManagement.destroy()
 
             def enableDisablePassword():
-                # emailEntry.place_forget()
-                # passwordEntry.config(state='disabled')
                 if passwordEntry["state"] == NORMAL:
                     passwordEntry["state"] = DISABLED
                     enableDisablePasswordBt["text"] = 'Habilitar contraseña'
@@ -1005,37 +1079,37 @@ class WindowsTk:
 
                 #labels
                 usernameLb = Label(addUserManagement, text="Rut")
-                usernameLb.place()
+                usernameLb.place(relx=.43, rely=.25, anchor='center')
 
                 nameLb = Label(addUserManagement, text="Nombre")
-                nameLb.place()
+                nameLb.place(relx=.43, rely=.35, anchor='center')
 
                 last_nameLb = Label(addUserManagement, text="Apellido")
-                last_nameLb.place()
+                last_nameLb.place(relx=.43, rely=.45, anchor='center')
 
                 emailLb = Label(addUserManagement, text="E-mail")
-                emailLb.place()
+                emailLb.place(relx=.43, rely=.55, anchor='center')
 
                 #Entries
                 usernameEntry = Entry(addUserManagement)
                 usernameEntry.insert(0, request['username'])
-                usernameEntry.place()
+                usernameEntry.place(relx=.53, rely=.25, anchor='center')
 
                 nameEntry = Entry(addUserManagement)
                 nameEntry.insert(0, request['name'])
-                nameEntry.place()
+                nameEntry.place(relx=.53, rely=.35, anchor='center')
 
                 last_nameEntry = Entry(addUserManagement)
                 last_nameEntry.insert(0, request['last_name'])
-                last_nameEntry.place()
+                last_nameEntry.place(relx=.53, rely=.45, anchor='center')
 
                 emailEntry = Entry(addUserManagement)
                 emailEntry.insert(0, request['email'])
-                emailEntry.place()
+                emailEntry.place(relx=.53, rely=.55, anchor='center')
 
                 #Buttons
                 updateUserBt = Button(addUserManagement, text="Actualizar usuario", command=lambda:updateUser())
-                updateUserBt.place()
+                updateUserBt.place(relx=.48, rely=.85, anchor='center')
 
                 # exitBt = Button(addUserManagement, text="Salir", command=lambda:closeTk(user, userTreeView))
                 # exitBt.place()
@@ -1082,8 +1156,8 @@ class WindowsTk:
                 nfcLb.place(relx=.53, rely=.75, anchor='center')
 
                 #Buttons
-                nfcBt = Button(addUserManagement, text="Agregar nfc", command=lambda:readNFC())
-                nfcBt.place(relx=.38, rely=.85, anchor='center')
+                addNfcBt = Button(addUserManagement, text="Agregar nfc", command=lambda:readNFC(nfcread))
+                addNfcBt.place(relx=.38, rely=.85, anchor='center')
 
                 addUserBt = Button(addUserManagement, text="Agregar usuario", command=lambda:addUser())
                 addUserBt.place(relx=.48, rely=.85, anchor='center')  
@@ -1140,7 +1214,7 @@ class WindowsTk:
         userTreeView = ttk.Treeview(userTreeViewFrame, yscrollcommand=userTreeViewScrollBar.set)
         #userTreeView.place(relx=.25, rely=.45, relwidth=.4, anchor='center')
         userTreeView.pack()
-        userTreeView['columns'] = ("Nombre de usuario", "Nombre", "Apellido", "E-mail", "Ultima conexión")
+        userTreeView['column'] = ("Nombre de usuario", "Nombre", "Apellido", "E-mail", "Ultima conexión")
 
         #Config Scrollbar
         userTreeViewScrollBar.configure(command=userTreeView.yview)
@@ -1150,7 +1224,7 @@ class WindowsTk:
         userTreeView.column("Nombre", anchor=W, width=120)
         userTreeView.column("Apellido", anchor=W, width=120)
         userTreeView.column("E-mail", anchor=W, width=160)
-        userTreeView.column("Ultima conexión", anchor=W, width=120)
+        userTreeView.column("Ultima conexión", anchor=W, width=250)
 
         #Crear Encabezados
         userTreeView.heading("Nombre de usuario",text="Nombre de usuario", anchor=W)
@@ -1158,6 +1232,13 @@ class WindowsTk:
         userTreeView.heading("Apellido",text="Apellido", anchor=W)
         userTreeView.heading("E-mail",text="E-mail", anchor=W)
         userTreeView.heading("Ultima conexión",text="Ultima conexión", anchor=W)
+
+        userTreeView["show"] = "headings"
+        for column in userTreeView["columns"]:
+            userTreeView.heading(column, text=column)
+            userTreeView.column(column, minwidth=0, width=150, stretch=YES)
+
+
 
         #userTreeView.place(relx=.25, rely=.45, relwidth=.4, anchor='center')
 
