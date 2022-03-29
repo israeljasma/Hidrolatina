@@ -232,7 +232,10 @@ class BTAudio():
                 elif (started is True):
                     #print "Finished"
                     # The limit was reached, finish capture and deliver.
-                    filename = save_speech(list(prev_audio) + audio2send)
+                    try:
+                        filename = save_speech(list(prev_audio) + audio2send)
+                    except TypeError:
+                        listen_for_speech()
                     # Send file to Google and get response
                     r = recognition_speech(filename) 
                     if num_phrases == -1:
