@@ -21,13 +21,13 @@ import pywhatkit
 class BTAudio():
     def __init__(self):
             # print('proceso')
-            self.queue_audio_out=mp.Queue()
+            # self.queue_audio_out=mp.Queue()
             self.queue_audio_in=mp.Queue()
             self.flag_instructivo=False
     
     def Load(self):
-        self.thread_out= Thread(target=self.playAudio, args=())
-        self.thread_out.start()
+        # self.thread_out= Thread(target=self.playAudio, args=())
+        # self.thread_out.start()
         self.thread_server= Thread(target=self.writeServer, args=())
         self.thread_server.start()
 
@@ -36,7 +36,7 @@ class BTAudio():
         self.thread_in.start()
      
 
-    def playAudio(self):
+    def playAudio(self, audioOut):
         """VOICE"""
         engine= pyttsx3.init()
 
@@ -46,20 +46,25 @@ class BTAudio():
         engine.setProperty('rate', 190)    # setting up new voice rate
         voices = engine.getProperty('voices')       #getting details of current voice
         engine.setProperty('voice', voices[0].id)   
-        while True:
-            if not self.queue_audio_out.empty():
-                audioOut=self.queue_audio_out.get()
-                if audioOut==0:              #EXIT
-                    break
-                if type(audioOut)==str:
-                    engine.say(audioOut)
-                    engine.runAndWait()
-                    engine.stop()
-                else:
-                    print('Porfavor ingrese String a reproducir')
+        # while True:
+        #     if not self.queue_audio_out.empty():
+        #         audioOut=self.queue_audio_out.get()
+        #         if audioOut==0:              #EXIT
+        #             break
+        if type(audioOut)==str:
+            engine.say(audioOut)
+            engine.runAndWait()
+            engine.stop()
+        else:
+            print('Porfavor ingrese String a reproducir')
 
     def play(self, text):
-        self.queue_audio_out.put(text)
+        # self.queue_audio_out.put(text)
+        self.procAu=mp.Process(target=self.playAudio, args=(text,))
+        self.procAu.start()
+    def stopPlay(self):
+        if self.procAu.is_alive():
+            self.procAu.terminate()
 
     def initServer(self):
         FORMAT = pyaudio.paInt16
@@ -360,16 +365,19 @@ if __name__ == '__main__':
     p1.start()
     audio.listen()
     time.sleep(10)
-    audio.play('chao')
-    print("diciendo chao")
-    while True:
-        try:
-
-            pass
-        except KeyboardInterrupt:
-            print('Exit Audio')
-            p1.terminate()
-            break
+    audio.play('esta deberia ser la frase de un zorro o lo que tu quieras, pero seguire esperando hasta que me detenga, o sino explotare')
+    time.sleep(2)   
+    audio.stopPlay()
+    time.sleep(2) 
+    audio.play('chao ')
+    print("diciendo chao") 
+    # while True:
+    #     try:
+    #         pass
+    #     except KeyboardInterrupt:
+    #         print('Exit Audio')
+    #         p1.terminate()
+    #         break
     # audio.play(0)
     
     
