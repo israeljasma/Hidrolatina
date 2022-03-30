@@ -21,13 +21,13 @@ import pywhatkit
 class BTAudio():
     def __init__(self):
             # print('proceso')
-            # self.queue_audio_out=mp.Queue()
+            self.queue_audio_out=mp.Queue()
             self.queue_audio_in=mp.Queue()
             self.flag_instructivo=False
     
     def Load(self):
-        # self.thread_out= Thread(target=self.playAudio, args=())
-        # self.thread_out.start()
+        self.thread_out= Thread(target=self.playAudio, args=())
+        self.thread_out.start()
         self.thread_server= Thread(target=self.writeServer, args=())
         self.thread_server.start()
 
@@ -36,35 +36,43 @@ class BTAudio():
         self.thread_in.start()
      
 
-    def playAudio(self, audioOut):
-        """VOICE"""
-        engine= pyttsx3.init()
+    def playAudio(self):
+        def onWord(name, location, length):
+            if not self.queue_audio_out.empty():
+                self.flagPlay=self.queue_audio_out.get()
+                if self.flagPlay==0:
+                    print('Reproducción Interrumpida')
+                    engine.stop()
+                else:
+                    self.queue_audio_out.put(self.flagPlay)
+        while True:
+            if not self.queue_audio_out.empty():
+                audioOut=self.queue_audio_out.get()
+                if type(audioOut)==str:
+                    try:
+                        del engine
+                    except NameError:
+                        pass
+                    engine= pyttsx3.init()
+                    engine.setProperty('rate', 190)    # setting up new voice rate
+                    voices = engine.getProperty('voices')       #getting details of current voice
+                    engine.setProperty('voice', voices[0].id)
+                    engine.connect('started-word', onWord)
+                    engine.say(audioOut)
+                    engine.runAndWait()
+                    engine.stop()
 
-        """ self.RATE"""
-        # rate = engine.getProperty('rate')   # getting details of current speaking rate
-        # print (rate)                        #printing current voice rate
-        engine.setProperty('rate', 190)    # setting up new voice rate
-        voices = engine.getProperty('voices')       #getting details of current voice
-        engine.setProperty('voice', voices[0].id)   
-        # while True:
-        #     if not self.queue_audio_out.empty():
-        #         audioOut=self.queue_audio_out.get()
-        #         if audioOut==0:              #EXIT
-        #             break
-        if type(audioOut)==str:
-            engine.say(audioOut)
-            engine.runAndWait()
-            engine.stop()
-        else:
-            print('Porfavor ingrese String a reproducir')
+                if  audioOut==0:
+
+                    self.flagPlay=0  
+                else:
+                    # print('Porfavor ingrese String a reproducir, ingresaste: ',audioOut )
+                    pass
 
     def play(self, text):
-        # self.queue_audio_out.put(text)
-        self.procAu=mp.Process(target=self.playAudio, args=(text,))
-        self.procAu.start()
-    def stopPlay(self):
-        if self.procAu.is_alive():
-            self.procAu.terminate()
+        self.queue_audio_out.put(text)
+    def stop_play(self):
+        self.queue_audio_out.put(0)
 
     def initServer(self):
         FORMAT = pyaudio.paInt16
@@ -120,6 +128,7 @@ class BTAudio():
                         self.read_list.remove(s)
                         pass
 
+
     def initClient(self):
         print('Client: Connecting ...')
         while True:
@@ -154,8 +163,9 @@ class BTAudio():
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
         self.RATE = 8000
-        self.THRESHOLD = 650 
-        self.SILENCE_LIMIT = 1.5  
+        self.THRESHOLD = 550
+        self.SILENCE_LIMIT = 2.5
+
         self.PREV_AUDIO = 1
 
         self.s=self.initClient()
@@ -283,10 +293,25 @@ class BTAudio():
             return text
         def action_speech(speech):
             commands=''
+            
             try:
                 for alt in enumerate(speech[0]['alternative']):
+                    # print('DIJISTE: ', alt[1]['transcript'])
                     if 'Sony ' in alt[1]['transcript']:
                         commands=alt[1]['transcript']
+                    if self.flag_instructivo is True:
+                        if '1' in alt[1]['transcript']:
+                            self.stop_play()
+                            self.play('Los pasos de verificación son los siguientes   \n')
+                            self.play('Area de trabajo limpia y despejada\n ponte tus epepé\n protecciones de seguridad en buen estado\n ten tus herramientas necesarias\n Verifica parada de emergencias accionada.\n Las correas de las bombas de alta presión tensadas y en correcto estado.\nEstado del aceite de las bombas P-01 y P-03.\n Bomba de recirculación P-05 conectada a la energía.\n Asegura que el sistema de líquido refrigerante esté funcionando.\n Asegura que los flexibles de alimentación a los grupos de bombeo se encuentren conectados a TK-02.\n Manten las válvulas de descarga VM-01, VM-02, junto con válvula de desagüe VM-28 de estanque TK-01 cerradas y las válvulas de descarga VM-02 y VM-04 de TK-02 abiertas.\nEstanques TK-01 y TK-02 deben tener por lo menos ¾ de agua de alimentación. De lo contrario abrir válvula de alimentación de agua hasta llegar al nivel requerido.\nVerifica que las válvulas VM-05 y VM-07 del sistema de certificación de membranas estén abiertas, y las válvulas VM-06 y VM-08 del sistema de certificación de vasijas cerradas.\n Selecciona la o las membranas para medir')
+                            self.flag_instructivo=False 
+                        if '4' in alt[1]['transcript']:
+                            print('VACIADO')
+                            self.stop_play()
+                            self.play('has dicho cuatro')
+                            self.flag_instructivo=False    
+                        print('INSTRUCTIVO ACTIVADO') 
+                    
                         # print(commands)
                 # print(commands)
                 commands= commands.lower()
@@ -307,11 +332,10 @@ class BTAudio():
                         print('SOLICITANDO INSTRUCTIVO')
                         self.flag_instructivo=True
                         self.play('¿Que numero deseas escuchar?\n uno\n  verificación\n dos\n acondicionamiento\n tres\n operación \n cuatro \n vaciado ')
-                if self.flag_instructivo is True:
-                    if 'uno' or 'ayuda' in commands:
-                        self.play('has dicho uno')
-                        self.flag_instructivo=False   
-                                      
+                    if 'para' in commands:
+                        print('Parando')
+                        self.stop_play()
+
             except TypeError:
                 print('No recognition')
 
@@ -364,20 +388,27 @@ if __name__ == '__main__':
     p1 = mp.Process(target=audio.Load, args=())
     p1.start()
     audio.listen()
-    time.sleep(10)
-    audio.play('esta deberia ser la frase de un zorro o lo que tu quieras, pero seguire esperando hasta que me detenga, o sino explotare')
-    time.sleep(2)   
-    audio.stopPlay()
-    time.sleep(2) 
-    audio.play('chao ')
-    print("diciendo chao") 
-    # while True:
-    #     try:
-    #         pass
-    #     except KeyboardInterrupt:
-    #         print('Exit Audio')
-    #         p1.terminate()
-    #         break
+    time.sleep(5)
+    audio.play('primera Este es un test de audio que nose que dice pero deberia durar mas de dos segundos, o sino nose que onda')
+    # print("diciendo texto")
+    time.sleep(3)
+    audio.stop_play()
+    # print('debio parar')
+    # time.sleep(3)
+    audio.play('segunda Este no es un test de audio que nose que dice pero deberia durar mas de dos segundos, o sino nose que onda')
+    time.sleep(3)
+    audio.stop_play()
+
+    audio.play('tercera Este no es un test de audio que nose que dice pero deberia durar mas de dos segundos, o sino nose que onda')
+    time.sleep(3)
+    audio.stop_play()
+    while True:
+        try:
+            pass
+        except KeyboardInterrupt:
+            print('Exit Audio')
+            p1.terminate()
+            break
     # audio.play(0)
     
     
