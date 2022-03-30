@@ -24,7 +24,7 @@ from CameraStream import CameraStream
 from PpeDetector import PpeDetector
 from ActionDetector import ActionDetector
 from NFCClass import NFC, adminNFC
-from BTAudio import BTAudio
+from BTAudio_DuplexSockets import BTAudio
 
 
 from smartcard.CardRequest import CardRequest
@@ -122,7 +122,7 @@ class WindowsTk:
         self.p0.start()
 
         # self.queue_audio=mp.Queue()
-        self.p1 = mp.Process(target=self.btaudio.playAudio, args=())
+        self.p1 = mp.Process(target=self.btaudio.Load, args=())
         self.p1.start()
     
         
