@@ -62,7 +62,6 @@ class API_Services():
 
     #PpeDetectin
     def ppeDetection(helmet, headphones, goggles, mask, gloves, boots, token, refresh = None):
-        print(helmet)
         credentials = {'helmet':helmet, 'headphones':headphones, 'goggles':goggles, 'mask':mask, 'gloves':gloves, 'boots':boots}
         request = requests.post(url + 'ppes/ppe/',data = credentials, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
