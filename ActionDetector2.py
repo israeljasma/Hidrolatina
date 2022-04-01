@@ -15,6 +15,7 @@ from torch._C import Block
 from torch.nn.functional import threshold
 from xtcocotools.coco import COCO
 from effdet.utils.inference import init_effdet_model, inference_effdet_model
+from zmq import device
 from CameraStream import CameraStream
 import tkinter
 from tkinter import filedialog
@@ -60,7 +61,7 @@ class DominantColors:
         #returning after converting to integer from float
         return self.COLORS.astype(int)
 
-class ActionDetector:
+class ActionDetector2:
     def __init__(self):
         self.effdet_weight='https://github.com/zylo117/Yet-Another-Efficient-Pytorch/releases/download/1.0/efficientdet-d4.pth'
         self.obj_list= ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
@@ -87,15 +88,15 @@ class ActionDetector:
 
     def load_effdet(self):
         #initialize effdet model
-        self.effdet_model= init_effdet_model(self.effdet_weight,self.obj_list, coef=4)
+        self.effdet_model= init_effdet_model(self.effdet_weight,self.obj_list, coef=4, device=1)
 
     def load_pose(self):
         # initialize pose model
-        self.pose_model = init_pose_model(self.pose_config, self.pose_checkpoint)
+        self.pose_model = init_pose_model(self.pose_config, self.pose_checkpoint, device='cuda:1')
 
     def load_action(self):
         # initialize detector
-        self.posec3d_model=init_recognizer(self.posec3d_config,self.posec3d_checkpoint, 'cuda:0')
+        self.posec3d_model=init_recognizer(self.posec3d_config,self.posec3d_checkpoint, 'cuda:1')
 
     def load_zone(self):
         x_cabinet=np.array(list(range(1170,1280)))
@@ -146,7 +147,7 @@ class ActionDetector:
 
     def proc_paral(self, queue_anno,queue_action, flag_posec3d_init): 
 
-        posec3d_model=init_recognizer(self.posec3d_config, self.posec3d_checkpoint, 'cuda:0')
+        posec3d_model=init_recognizer(self.posec3d_config, self.posec3d_checkpoint, 'cuda:1')
         # # model.to('cuda:0')
         fake_anno={'frame_dir': '', 'label': -1, 'img_shape': (10, 10), 'original_shape': (10, 10), 'start_index': 0, 'modality': 'Pose', 'total_frames': 1, 'keypoint': np.zeros((0, 1, 17, 2), dtype=np.float16), 'keypoint_score': np.zeros((0, 1, 17), dtype=np.float16)}
         actions=inference_recognizer(posec3d_model,fake_anno)
@@ -220,7 +221,6 @@ class ActionDetector:
         risk='No'
         
         torch.cuda.empty_cache()
-        # self.close_loop=False
         print('Camara de planta es esta: ', self.varCamera) 
         try:
             self.cam = CameraStream(self.actionvideo_selected,delay=0.03).start()    #test
@@ -229,9 +229,7 @@ class ActionDetector:
         # cam = CameraStream(0).start() 
         except AttributeError:
             self.cam=CameraStream(self.varCamera).start()
-
         while True:
-            
             try:
                 img = self.cam.read()
                     # img=cv2.imread('C:/Users/Hidrolatina/Downloads/Dataset/Pose_blue2.png')
@@ -247,7 +245,7 @@ class ActionDetector:
 
         
             #EfficientDET person detection
-            out=inference_effdet_model(self.effdet_model,img, coef=4, threshold=0.4)  
+            out=inference_effdet_model(self.effdet_model,img, coef=4, threshold=0.4, device=1)  
 
             p_det=[]
             for j in range(len(out['bbox'])):
@@ -651,12 +649,10 @@ class ActionDetector:
             ########################################################################################################################3
             if not self.queue_stop.empty():
                 self.queue_stop.get()
-                print('Cerrando Inferencia ActionDet1')
+                print('Cerrando Inferencia ActionDet2')
                 break
 
-
             cv2image = cv2.cvtColor(cv2.resize(self.vis_result, (int(labelVideo.winfo_width()), int(labelVideo.winfo_height()))), cv2.COLOR_BGR2RGBA)
-            # print(int(labelVideo.winfo_width()), int(labelVideo.winfo_height()))
             img = Image.fromarray(cv2image)
             imgtk = ImageTk.PhotoImage(image=img)
             labelVideo.imgtk = imgtk

@@ -65,7 +65,7 @@ class PpeDetector:
             temp = pathlib.PosixPath
             pathlib.PosixPath = pathlib.WindowsPath
             model, postprocessor = torch.hub.load('ashkamath/mdetr:main', 'mdetr_efficientnetB5', pretrained=True, return_postprocessor=True)
-            self.model = model.cuda()
+            self.model = model.cuda(1)
             self.model.eval();
 
             self.transform = T.Compose([
@@ -107,7 +107,7 @@ class PpeDetector:
 
         def plot_inference(self, im, caption):
         # mean-std normalize the input image (batch-size: 1)
-            img = self.transform(im).unsqueeze(0).cuda()
+            img = self.transform(im).unsqueeze(0).cuda(1)
 
             # propagate through the model
             memory_cache = self.model(img, [caption], encode_and_save=True)
@@ -155,6 +155,7 @@ class PpeDetector:
         # return self.model_effdet
 
     def MDETR(self, im):
+        im.save(r'C:/Users/Hidrolatina/Desktop/prueba.jpg')        
         bboxes_body = self.importMdetr.plot_inference( im, "a hand")
         # plot_inference(im, "a hand")
         im_hand=im.crop(bboxes_body)

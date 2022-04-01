@@ -7,6 +7,7 @@ from tkinter import messagebox, filedialog, simpledialog, Listbox, ttk
 from traceback import print_tb
 from urllib import request
 from PIL import ImageTk, Image
+from grpc import services
 from mmpose.core import camera
 import cv2
 import pandas as pd
@@ -23,8 +24,9 @@ from FileManagementClass import FileManagement
 from CameraStream import CameraStream
 from PpeDetector import PpeDetector
 from ActionDetector import ActionDetector
+from ActionDetector2 import ActionDetector2
 from NFCClass import NFC, adminNFC
-from BTAudio import BTAudio
+from BTAudio_DuplexSockets import BTAudio
 
 
 from smartcard.CardRequest import CardRequest
@@ -41,6 +43,7 @@ class WindowsTk:
         self.root=root
         self.ppedet = PpeDetector()
         self.actiondet = ActionDetector()
+        self.actiondet2= ActionDetector2()
         self.btaudio=BTAudio()
         # rtsp://admin:nvrHidrolatina@192.168.1.91:554/Streaming/channels/101
         # rtsp://admin:nvrHidrolatina@192.168.100.234:554/Streaming/channels/401
@@ -49,6 +52,8 @@ class WindowsTk:
         self.detlimit=25
         self.varCamera='rtsp://admin:nvrHidrolatina@192.168.100.234:554/Streaming/channels/501'
         self.actiondet.varCamera='rtsp://admin:nvrHidrolatina@192.168.100.234:554/Streaming/channels/401'
+        self.actiondet2.varCamera='rtsp://admin:nvrHidrolatina@192.168.100.234:554/Streaming/channels/401'
+
     def center_window(self, window):
         window.update_idletasks()
         # get screen width and height
@@ -118,13 +123,19 @@ class WindowsTk:
         self.queue_anno = mp.Queue()
         self.queue_action = mp.Queue()
         self.flag_posec3d_init=mp.Queue()
+        self.queue_anno2 = mp.Queue()
+        self.queue_action2 = mp.Queue()
+        self.flag_posec3d_init2=mp.Queue()
         self.p0 = mp.Process(target=self.actiondet.proc_paral, args=(self.queue_anno, self.queue_action, self.flag_posec3d_init,))
         self.p0.start()
 
+        self.p0_1 = mp.Process(target=self.actiondet2.proc_paral, args=(self.queue_anno2, self.queue_action2, self.flag_posec3d_init2,))
+        self.p0_1.start()
+
         # self.queue_audio=mp.Queue()
-        self.p1 = mp.Process(target=self.btaudio.playAudio, args=())
+        self.p1 = mp.Process(target=self.btaudio.Load, args=())
         self.p1.start()
-    
+
         
 
         self.ppedet.loadEfficientDet()
@@ -146,16 +157,19 @@ class WindowsTk:
         LoadTk.update()
 
         self.actiondet.load_effdet()
+        self.actiondet2.load_effdet()
         progress_bar['value']=60
         stringbar.set('Cargando 60%')
         LoadTk.update_idletasks()
         LoadTk.update()
         self.actiondet.load_pose()
+        self.actiondet2.load_pose()
         progress_bar['value']=70
         stringbar.set('Cargando 70%')
         LoadTk.update_idletasks()
         LoadTk.update()
         self.actiondet.load_zone()
+        self.actiondet2.load_zone()
         progress_bar['value']=85
         stringbar.set('Cargando 85%')
         LoadTk.update_idletasks()
@@ -221,6 +235,15 @@ class WindowsTk:
         else:
             del self.actiondet.actionvideo_selected
             self.actionvideoLabel.config(text='No')
+    def folderactionvideoSelect2(self):
+        # global ppeframe_selected
+        self.actiondet2.actionvideo_selected = filedialog.askopenfilename()
+        if not self.actiondet2.actionvideo_selected=='':
+            print('Action Image: ', self.actiondet2.actionvideo_selected)
+            self.actionvideoLabel2.config(text='{}'.format(self.actiondet2.actionvideo_selected ))
+        else:
+            del self.actiondet2.actionvideo_selected
+            self.actionvideoLabel2.config(text='No')
     ###################Def Windows's###################
 
     def showPytorchCameraTk(self, user, hide=False):
@@ -423,7 +446,7 @@ class WindowsTk:
                     for bodypart in mdetr_list.keys(): 
                         self.listImagenClip.append(imageClip(self.ppedet.names_ppe[bodypart], ImageTk.PhotoImage(mdetr_list[bodypart].resize((int(mainFrame.winfo_height()*.2),int(mainFrame.winfo_height()*.2)))), self.ppedet.clip(bodypart, mdetr_list)))
                     
-                    updateLabel()
+                    updateLabel(user)
                     # return self
             
             if self.det<self.detlimit:
@@ -442,51 +465,65 @@ class WindowsTk:
                 print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
                 self.PytorchCameraTk.after(5000, counterPopUp, endTime, booleanAnswerlist)
 
-        def updateLabel():
+        def updateLabel(user):
             # self.PytorchCameraTk.update_idletasks()
+
+            ppeListServices = {}
 
             #Head Frame
             headImg.config(image=(self.listImagenClip[0].getImage()))
             helmetLabel.config(text=(self.listImagenClip[0].getAnswer()[0]))
             if self.listImagenClip[0].getAnswer()[0]=='Ok':
                 helmetLabel.config(bg='lime')
+                ppeListServices["helmet"] = 'true'
             else:
                 helmetLabel.config(bg='#ff4040')
+                ppeListServices["helmet"] = 'false'
             headphonesLabel.config(text=(self.listImagenClip[0].getAnswer()[1]))
             if self.listImagenClip[0].getAnswer()[1]=='Ok':
                 headphonesLabel.config(bg='lime')
+                ppeListServices["headphones"] = 'true'
             else:
                 headphonesLabel.config(bg='#ff4040')
+                ppeListServices["headphones"] = 'false'
 
             gogglesLabel.config(text=(self.listImagenClip[0].getAnswer()[2]))
             if self.listImagenClip[0].getAnswer()[2]=='Ok':
                 gogglesLabel.config(bg='lime')
+                ppeListServices["goggles"] = 'true'
             else:
                 gogglesLabel.config(bg='#ff4040')
+                ppeListServices["goggles"] = 'false'
 
             maskLabel.config(text=(self.listImagenClip[0].getAnswer()[3]))
             if self.listImagenClip[0].getAnswer()[3]=='Ok':
                 maskLabel.config(bg='lime')
+                ppeListServices["mask"] = 'true'
             else:
                 maskLabel.config(bg='#ff4040')
+                ppeListServices["mask"] = 'false'
             #Hand Frame
             handImg.config(image=(self.listImagenClip[1].getImage()))      
             glovesLabel.config(text=(self.listImagenClip[1].getAnswer()[0]))
             if self.listImagenClip[1].getAnswer()[0]=='Ok':
                 glovesLabel.config(bg='lime')
+                ppeListServices["gloves"] = 'true'
             else:
                 glovesLabel.config(bg='#ff4040')
+                ppeListServices["gloves"] = 'false'
 
             #Boot Frame
             bootImg.config(image=(self.listImagenClip[2].getImage()))
             bootsLabel.config(text=(self.listImagenClip[2].getAnswer()[0]))
             if self.listImagenClip[2].getAnswer()[0]=='Ok':
                 bootsLabel.config(bg='lime')
+                ppeListServices["boots"] = 'true'
             else:
                 bootsLabel.config(bg='#ff4040')
+                ppeListServices["boots"] = 'false'
 
             # self.cap.stop()
-
+            API_Services.ppeDetection(ppeListServices['helmet'], ppeListServices['headphones'], ppeListServices['goggles'], ppeListServices['mask'], ppeListServices['gloves'], ppeListServices['boots'], user.getToken())
             booleanAnswer = None
             booleanAnswerlist=[]
             for list in self.listImagenClip:
@@ -537,12 +574,17 @@ class WindowsTk:
         showActions.lift()
         showActions.attributes('-topmost', True)
         showActions.after_idle(showActions.attributes,'-topmost',False)
-
         #Def into tk
         def closeTk():
             try:
                 self.actiondet.cam.stop()
+                self.actiondet2.cam.stop()
             except:
+                pass
+            try:
+                self.actiondet.close_inference()
+            except:
+                print('No es posible cerrar Thread_ActionDet1')
                 pass
             showActions.destroy()
             # root.deiconify()
@@ -578,8 +620,8 @@ class WindowsTk:
 
 
         #Buttons
-        downloadWindow= Button(mainFrame, text="Descargar Historial", command=DownloadpdTk)
-        downloadWindow.place(relx=.75, rely=.75)
+        # downloadWindow= Button(mainFrame, text="Descargar Historial", command=DownloadpdTk)
+        # downloadWindow.place(relx=.75, rely=.75)
 
 
         exitImg = Image.open('images/backButton.png')
@@ -592,7 +634,10 @@ class WindowsTk:
 
         #Capture video frames
         labelVideo = Label(mainFrame, relief='sunken', borderwidth=3)
-        labelVideo.place(relx=.55, rely=0.175,relwidth=.4, relheight=.4)
+        labelVideo.place(relx=.6, rely=0.15,relwidth=.3, relheight=.3)
+
+        labelVideo2 = Label(mainFrame, relief='sunken', borderwidth=3)
+        labelVideo2.place(relx=.6, rely=0.5,relwidth=.3, relheight=.3)
 
 
         labelData = LabelFrame(mainFrame)
@@ -614,7 +659,16 @@ class WindowsTk:
         showActions.lift()
         showActions.attributes('-topmost', True)
         showActions.after_idle(showActions.attributes,'-topmost',False)
-        self.actiondet.inferenceActionDetector(self.queue_anno, self.queue_action, labelVideo, showActions, tv1, self.btaudio)
+
+        thread_a=Thread(target=self.actiondet.inferenceActionDetector, args=(self.queue_anno, self.queue_action, labelVideo, showActions, tv1, self.btaudio,))
+        thread_a.start()
+
+        thread_a=Thread(target=self.actiondet2.inferenceActionDetector, args=(self.queue_anno2, self.queue_action2, labelVideo2, showActions, tv1, self.btaudio,))
+        thread_a.start()
+
+        # self.actiondet.inferenceActionDetector(self.queue_anno, self.queue_action, labelVideo, showActions, tv1, self.btaudio)
+
+        # self.actiondet2.inferenceActionDetector(self.queue_anno2, self.queue_action2, labelVideo2, showActions, tv1, self.btaudio)
         
     
         
@@ -630,21 +684,33 @@ class WindowsTk:
                 varCamera=int(varCamera)
             print('Camara EPP: ',self.varCamera)
             self.varCamera=varCamera
-            self.cameraLabel.config(text='Camara PPE: {}           Camara Planta: {}'.format(self.varCamera, self.actiondet.varCamera))
+            self.cameraLabel.config(text='Camara PPE: {}       Camara Planta1: {}       Camara Planta2: {}'.format(self.varCamera, self.actiondet.varCamera, self.actiondet2.varCamera)) 
     def configCameraActionTk(self):
         # Config tk
       
         varCamera = simpledialog.askstring(title="Camara", prompt="Ingrese ID o URL de Camara Planta:")
         if varCamera == '' or varCamera==None:
             # self.varCamera = 0
-            print('Camara Planta: ', self.actiondet.varCamera)
+            print('Camara Planta1: ', self.actiondet.varCamera)
         else:
             if varCamera.isdigit():
                 varCamera=int(varCamera)
-            print('Camara Planta: ', self.actiondet.varCamera)
+            print('Camara Planta1: ', self.actiondet.varCamera)
             self.actiondet.varCamera=varCamera
-            self.cameraLabel.config(text='Camara PPE: {}           Camara Planta: {}'.format(self.varCamera, self.actiondet.varCamera))
-
+            self.cameraLabel.config(text='Camara PPE: {}       Camara Planta1: {}       Camara Planta2: {}'.format(self.varCamera, self.actiondet.varCamera, self.actiondet2.varCamera))
+    def configCameraActionTk2(self):
+        # Config tk
+      
+        varCamera = simpledialog.askstring(title="Camara", prompt="Ingrese ID o URL de Camara Planta:")
+        if varCamera == '' or varCamera==None:
+            # self.varCamera = 0
+            print('Camara Planta2: ', self.actiondet2.varCamera)
+        else:
+            if varCamera.isdigit():
+                varCamera=int(varCamera)
+            print('Camara Planta: ', self.actiondet2.varCamera)
+            self.actiondet2.varCamera=varCamera
+            self.cameraLabel.config(text='Camara PPE: {}       Camara Planta1: {}       Camara Planta2: {}'.format(self.varCamera, self.actiondet.varCamera, self.actiondet2.varCamera))
  
     def nfc_identifyTk(self):
         # import concurrent.futures
@@ -1424,6 +1490,11 @@ class WindowsTk:
                 return self.actiondet.actionvideo_selected
             except:
                 return 'No'
+        def actionvideotext2():
+            try:
+                return self.actiondet2.actionvideo_selected
+            except:
+                return 'No'
         #Hide Root Window
         # root.withdraw()
 
@@ -1458,7 +1529,7 @@ class WindowsTk:
 
         ##Detlimit
         detlimitFrame=LabelFrame(self.configurationTk, text='Detecciones de Espera EPP',bg='white')
-        detlimitFrame.place(relx=.3, rely=.2, relwidth=.4, relheight=.1, )
+        detlimitFrame.place(relx=.1, rely=.2, relwidth=.8, relheight=.1, )
 
         detlimitButton = Button(detlimitFrame, text="Cambiar limite de capturas", command=lambda:changeDetLimit(),bg='#CCEEFF')
         detlimitButton.place(relx=.5, rely=.8, anchor='center')
@@ -1469,7 +1540,7 @@ class WindowsTk:
         ##Camera
 
         cameraFrame=LabelFrame(self.configurationTk, text='Seleccionar Camara',bg='white')
-        cameraFrame.place(relx=.3, rely=.35, relwidth=.4, relheight=.1)
+        cameraFrame.place(relx=.1, rely=.35, relwidth=.8, relheight=.1)
 
         cameraPPEButton = Button(cameraFrame, text="Configurar Camara PPE", command=lambda:self.configCameraPPETk(),bg='#CCEEFF')
         cameraPPEButton.place(relx=.4, rely=.8, anchor='center')
@@ -1477,13 +1548,13 @@ class WindowsTk:
         cameraActionButton = Button(cameraFrame, text="Configurar Camara Planta", command=lambda:self.configCameraActionTk(),bg='#CCEEFF')
         cameraActionButton.place(relx=.6, rely=.8, anchor='center')
 
-        self.cameraLabel=Label(cameraFrame, text='Camara PPE: {}                  Camara Planta: {}'.format(self.varCamera, self.actiondet.varCamera), bg='white')
+        self.cameraLabel=Label(cameraFrame, text='Camara PPE: {}       Camara Planta1: {}       Camara Planta2: {}'.format(self.varCamera, self.actiondet.varCamera, self.actiondet2.varCamera), bg='white')
         self.cameraLabel.place(relx=.5, rely=.4, anchor='center')
 
         ##PPE Image Test
 
         ppeimageFrame=LabelFrame(self.configurationTk, text='Test Imagen EPP',bg='white')
-        ppeimageFrame.place(relx=.3, rely=.5, relwidth=.4, relheight=.1)
+        ppeimageFrame.place(relx=.1, rely=.45, relwidth=.8, relheight=.1)
 
         ppeimageButton = Button(ppeimageFrame, text="Seleccionar Imagen para Test EPP", command=lambda:self.folderPpeframeSelect(),bg='#CCEEFF')
         ppeimageButton.place(relx=.5, rely=.8, anchor='center')
@@ -1494,7 +1565,7 @@ class WindowsTk:
         ##PPE Video Test
 
         ppevideoFrame=LabelFrame(self.configurationTk, text='Test Video EPP',bg='white')
-        ppevideoFrame.place(relx=.3, rely=.65, relwidth=.4, relheight=.1)
+        ppevideoFrame.place(relx=.1, rely=.55, relwidth=.8, relheight=.1)
 
         ppevideoButton = Button(ppevideoFrame, text="Seleccionar Video para Test EPP", command=lambda:self.folderPpevideoSelect(),bg='#CCEEFF')
         ppevideoButton.place(relx=.5, rely=.8, anchor='center')
@@ -1502,16 +1573,28 @@ class WindowsTk:
         self.ppevideoLabel=Label(ppevideoFrame, text='{}'.format(ppevideotext()), bg='white')
         self.ppevideoLabel.place(relx=.5, rely=.4, anchor='center')    
 
-        ##Action Video Test
+        ##Action Video Test 1
 
         actionvideoFrame=LabelFrame(self.configurationTk, text='Test Video Action',bg='white')
-        actionvideoFrame.place(relx=.3, rely=.8, relwidth=.4, relheight=.1)
+        actionvideoFrame.place(relx=.1, rely=.65, relwidth=.8, relheight=.1)
 
         actionvideoButton = Button(actionvideoFrame, text="Seleccionar Video para Test Action", command=lambda:self.folderactionvideoSelect(),bg='#CCEEFF')
         actionvideoButton.place(relx=.5, rely=.8, anchor='center')
 
         self.actionvideoLabel=Label(actionvideoFrame, text='{}'.format(actionvideotext()), bg='white')
-        self.actionvideoLabel.place(relx=.5, rely=.4, anchor='center')  
+        self.actionvideoLabel.place(relx=.5, rely=.4, anchor='center') 
+
+        ##Action Video Test 2
+
+        actionvideoFrame2=LabelFrame(self.configurationTk, text='Test Video Action 2',bg='white')
+        actionvideoFrame2.place(relx=.1, rely=.75, relwidth=.8, relheight=.1)
+
+        actionvideoButton2 = Button(actionvideoFrame2, text="Seleccionar Video para Test Action 2", command=lambda:self.folderactionvideoSelect2(),bg='#CCEEFF')
+        actionvideoButton2.place(relx=.5, rely=.8, anchor='center')
+
+        self.actionvideoLabel2=Label(actionvideoFrame2, text='{}'.format(actionvideotext2()), bg='white')
+        self.actionvideoLabel2.place(relx=.5, rely=.4, anchor='center') 
+        
 
 
         
