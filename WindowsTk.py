@@ -27,6 +27,7 @@ from ActionDetector import ActionDetector
 from ActionDetector2 import ActionDetector2
 from NFCClass import NFC, adminNFC
 from BTAudio_DuplexSockets import BTAudio
+from sensors import Sensors
 
 
 from smartcard.CardRequest import CardRequest
@@ -45,6 +46,8 @@ class WindowsTk:
         self.actiondet = ActionDetector()
         self.actiondet2= ActionDetector2()
         self.btaudio=BTAudio()
+        self.sensors = Sensors(self.btaudio)
+
         # rtsp://admin:nvrHidrolatina@192.168.1.91:554/Streaming/channels/101
         # rtsp://admin:nvrHidrolatina@192.168.100.234:554/Streaming/channels/401
         # rtsp://admin:nvrHidrolatina@192.168.100.234:554/Streaming/channels/501
@@ -135,6 +138,9 @@ class WindowsTk:
         # self.queue_audio=mp.Queue()
         self.p1 = mp.Process(target=self.btaudio.Load, args=())
         self.p1.start()
+
+        self.p2 = mp.Process(target=self.sensors.Load, args=())
+        self.p2.start()
 
         
 
@@ -458,7 +464,7 @@ class WindowsTk:
                 print(datetime.now().strftime('%H:%M:%S'), endTime.strftime('%H:%M:%S'))
                 print('funciona')
                 self.PytorchCameraTk.after(1500, closeTk)
-                self.popupIdentificationTk(booleanAnswerlist)
+                self.popupIdentificationTk(booleanAnswerlist, user)
                 
             else:
                 print('no')
@@ -558,7 +564,7 @@ class WindowsTk:
         self.PytorchCameraTk.attributes('-topmost', True)
         self.PytorchCameraTk.after_idle(self.PytorchCameraTk.attributes,'-topmost',False)
 
-    def showActionsTk(self):
+    def showActionsTk(self, user):
         showActions = Toplevel()
         # showActions.update() 
         showActions.resizable(False,False)
@@ -586,6 +592,12 @@ class WindowsTk:
             except:
                 print('No es posible cerrar Thread_ActionDet1')
                 pass
+            try:
+                self.actiondet2.close_inference()
+            except:
+                print('No es posible cerrar Thread_ActionDet2')
+                pass
+            self.sensors.stopSensors()
             showActions.destroy()
             # root.deiconify()
         def DownloadpdTk():
@@ -660,11 +672,17 @@ class WindowsTk:
         showActions.attributes('-topmost', True)
         showActions.after_idle(showActions.attributes,'-topmost',False)
 
+        self.actiondet.token=user.getToken()
+        self.actiondet2.token=user.getToken()
+
+        self.sensors.token=user.getToken()
+        self.sensors.startSensors()
+
         thread_a=Thread(target=self.actiondet.inferenceActionDetector, args=(self.queue_anno, self.queue_action, labelVideo, showActions, tv1, self.btaudio,))
         thread_a.start()
 
-        thread_a=Thread(target=self.actiondet2.inferenceActionDetector, args=(self.queue_anno2, self.queue_action2, labelVideo2, showActions, tv1, self.btaudio,))
-        thread_a.start()
+        thread_b=Thread(target=self.actiondet2.inferenceActionDetector, args=(self.queue_anno2, self.queue_action2, labelVideo2, showActions, tv1, self.btaudio,))
+        thread_b.start()
 
         # self.actiondet.inferenceActionDetector(self.queue_anno, self.queue_action, labelVideo, showActions, tv1, self.btaudio)
 
@@ -813,7 +831,7 @@ class WindowsTk:
 
         return self.NFC_Tk
 
-    def popupIdentificationTk(self, booleanAnswerlist):
+    def popupIdentificationTk(self, booleanAnswerlist, user):
         # Config tk
         popupIdentificationTk = Toplevel()
         popupIdentificationTk.resizable(False,False)
@@ -866,7 +884,7 @@ class WindowsTk:
             imageLabel.pack()
             # popupIdentificationTk.after(4000, self.PytorchCameraTk.destroy)
             # popupIdentificationTk.after(4000, closeTk)
-            popupIdentificationTk.after(3000, self.showActionsTk)
+            popupIdentificationTk.after(3000, self.showActionsTk(user))
 
 
         else:
@@ -1709,7 +1727,7 @@ class WindowsTk:
         adminConfigTk.actImg=actImg
 
         eppCanvas=canvas.create_image(adminConfigTk.winfo_screenwidth()*.6, adminConfigTk.winfo_screenheight()*.6, image=actImg)
-        canvas.tag_bind(eppCanvas, "<Button-1>",  (lambda _:self.showActionsTk()))
+        canvas.tag_bind(eppCanvas, "<Button-1>",  (lambda _:self.showActionsTk(user)))
   
         
         adminConfigTk.focus_force()

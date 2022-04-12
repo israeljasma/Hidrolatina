@@ -134,7 +134,7 @@ class BTAudio():
         while True:
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.connect(('192.168.1.107', 4444))
+                s.connect(('192.168.1.129', 4444))
                 print('Client: Connected to Socket')
                 break
 
@@ -335,7 +335,7 @@ class BTAudio():
                     if 'ayuda' in commands:
 
                         print('PIDE AYUDA')
-                        self.play('pidiendo ayuda')
+                        self.play('solicitando ayuda')
                         pywhatkit.send_mail("equipo.vandving@gmail.com", "Hidrolatina123", "Ayuda", "Una ayudita", "javier.esuazo.s@gmail.com")
                         pywhatkit.sendwhatmsg_instantly("+56994213132", "Ayuda",5, True, 2)
                     if 'instructivo' in commands:

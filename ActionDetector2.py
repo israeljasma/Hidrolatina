@@ -81,6 +81,8 @@ class ActionDetector2:
         self.posec3d_config='C:/Hidrolatina/mmaction2/configs/skeleton/posec3d/5HL_4.py'
         self.posec3d_checkpoint='C:/Hidrolatina/mmaction2/Train/work_dirs/posec3d/5HL_4/latest.pth'
 
+        self.token=''
+
         self.queue_stop=mp.Queue()
 
     def close_inference(self):

@@ -18,6 +18,7 @@ from effdet.utils.inference import init_effdet_model, inference_effdet_model
 from CameraStream import CameraStream
 import tkinter
 from tkinter import filedialog
+from Services import API_Services
 
 
 
@@ -30,6 +31,27 @@ from sklearn.cluster import KMeans
 # effdet_weight= 'C:/hidrolatina/EfficientDetVandV/effdet/logs/person_coco/efficientdet-d2_58_8260_best.pth'
 # effdet_weight='https://github.com/EquipoVandV/EfficientDetVandV/blob/main/effdet/logs/person_coco/efficientdet-d2_58_8260_best.pth'
 # obj_list = ['person']
+
+# Dict riesgos
+riskData = {
+    "No" : 1,
+    "Presion en membranas" : 2,
+    "Electrificación" : 3
+}
+
+# Dict acciones
+actionData = {
+    "No" : 1,
+    "Rejilla cerrada" : 2,
+    "Accion aleatoria": 3,
+    "Rejilla abierta" : 4,
+    "Bombas activadas" : 5,
+    "Gabinete abierto" : 6,
+    "poner tapa" : 7,
+    "poner anillo" : 8,
+    "manipulación de valvula de alivio" : 9
+}
+
 OMP_NUM_THREADS=1
 class DominantColors:
 
@@ -80,7 +102,10 @@ class ActionDetector:
         self.posec3d_config='C:/Hidrolatina/mmaction2/configs/skeleton/posec3d/5HL_4.py'
         self.posec3d_checkpoint='C:/Hidrolatina/mmaction2/Train/work_dirs/posec3d/5HL_4/latest.pth'
 
+        self.token=''
+
         self.queue_stop=mp.Queue()
+
 
     def close_inference(self):
         self.queue_stop.put('apagate')
@@ -625,14 +650,22 @@ class ActionDetector:
             ################################################Data Frame###########################################################
             if len(pose_results_final)>0:
                 op_present='Si'
+                operator='true'
             else:
                 op_present='No'
+                operator='false'
 
 
             if old_op_present!=op_present or actual_action['name']!='No':
                 
                 self.df=self.df.append(pd.DataFrame({'Op. Presente':[op_present], 'Accion':[actual_action['name']], 'Riesgo': [risk],'Hora':[datetime.today().time().isoformat('seconds')], 'Fecha':[datetime.today().date()]}))
                 self.WriteFrame(tableview, self.df)
+
+                actionRequest = actionData[actual_action['name']]
+                riskRequest = riskData[risk]
+                API_Services.action(operator, actionRequest, riskRequest, self.token)
+
+
 
 
             old_op_present=op_present

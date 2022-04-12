@@ -58,7 +58,15 @@ if __name__ == '__main__':
         except:
            pass
         try:
+            instanceWindowsTk.p0_1.terminate()
+        except:
+           pass
+        try:
             instanceWindowsTk.p1.terminate()
+        except:
+           pass
+        try:
+            instanceWindowsTk.p2.terminate()
         except:
            pass
         root.destroy()
