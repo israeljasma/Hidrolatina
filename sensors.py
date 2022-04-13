@@ -37,6 +37,7 @@ class Sensors(object):
         print("Connected with result code ") 
         topics=[("iot-2/type/MT8102iE/id/HMI-F7F9/evt/topic 1/fmt/json",0)]
         client.subscribe(topics)
+        self.flag_MEM_CaudalRech=self.flag_MEM_CaudalPerm=self.flag_MEM_Cond_Perm=self.flag_CondAlimen=self.flag_MEM_PresAlimen=self.flag_MEM_PresRecha=self.flag_TempAlimen=False
 
     def msg_pres(self, client, userdata, msg):
         payload= json.loads(msg.payload.decode("utf-8"))
@@ -53,44 +54,70 @@ class Sensors(object):
         API_Services.feedTemperature(payload['TempAlimen'][0], payload['ts'], self.token)
         API_Services.conductivityPermeateMembranes(payload['MEM_Cond_Perm'][0], payload['ts'], self.token)
         API_Services.registerMembranes(payload['GuardaMem'][0], payload['ts'], self.token)
-
-        if payload['MEM_CaudalRech'][0]>100.0:
+        print('FLAG CAUDAL DE RECHAZO: ', self.flag_MEM_CaudalRech)
+        if payload['MEM_CaudalRech'][0]>100.0 and not self.flag_MEM_CaudalRech:
             self.btAudio.play("Peligro: valor alto de conductividad de alimentacion")
-        if payload['MEM_CaudalRech'][0]<25.0:
+            self.flag_MEM_CaudalRech=True
+        if payload['MEM_CaudalRech'][0]<25.0 and not self.flag_MEM_CaudalRech:
             self.btAudio.play("Peligro: valor bajo de conductividad de alimentacion")
-
+            self.flag_MEM_CaudalRech=True
+        else:
+            self.flag_MEM_CaudalRech=False
             
-        if payload['MEM_CaudalPerm'][0]>100.0:
+        if payload['MEM_CaudalPerm'][0]>100.0 and not self.flag_MEM_CaudalPerm:
             self.btAudio.play('Peligro: valor alto de caudal de permeado')
-        if payload['MEM_CaudalPerm'][0]<25.0:
+            self.flag_MEM_CaudalPerm=True
+        if payload['MEM_CaudalPerm'][0]<25.0 and not self.flag_MEM_CaudalPerm:
             self.btAudio.play('Peligro: valor bajo de caudal de permeado')
+            self.flag_MEM_CaudalPerm=True
+        else:
+            self.flag_MEM_CaudalPerm=False
             
-        if payload['MEM_Cond_Perm'][0]>1000.0:
+        if payload['MEM_Cond_Perm'][0]>1000.0 and not self.flag_MEM_Cond_Perm:
             self.btAudio.play('Peligro: valor alto de conductividad de permeado')
-        if payload['MEM_Cond_Perm'][0]<100.0:
+            self.flag_MEM_Cond_Perm=True
+        if payload['MEM_Cond_Perm'][0]<100.0 and not self.flag_MEM_Cond_Perm:
             self.btAudio.play('Peligro: valor bajo de conductividad de permeado')
-   
+            self.flag_MEM_Cond_Perm=True
+        else:
+            self.flag_MEM_Cond_Perm=False
             
-        if payload['CondAlimen'][0]>56.0:
+        if payload['CondAlimen'][0]>56.0 and not self.flag_CondAlimen:
             self.btAudio.play('Peligro: valor alto de conductividad de alimentacion')
-        if payload['CondAlimen'][0]<50.0:
+            self.flag_CondAlimen=True
+        if payload['CondAlimen'][0]<50.0 and not self.flag_CondAlimen:
             self.btAudio.play('Peligro: valor bajo de conductividad de alimentacion')
+            self.flag_CondAlimen=True
+        else:
+            self.flag_CondAlimen=False
 
-        if payload['MEM_PresAlimen'][0]>65.0:
+        if payload['MEM_PresAlimen'][0]>65.0 and not self.flag_MEM_PresAlimen:
             self.btAudio.play('Peligro: valor alto de presion de alimentacion')
-        if payload['MEM_PresAlimen'][0]<60.0:
+            self.flag_MEM_PresAlimen=True
+        if payload['MEM_PresAlimen'][0]<60.0 and not self.flag_MEM_PresAlimen:
             self.btAudio.play('Peligro: valor bajo de presion de alimentacion')
+            self.flag_MEM_PresAlimen=True
+        else:
+            self.flag_MEM_PresAlimen=False
             
         
-        if payload['MEM_PresRecha'][0]>63.0:
+        if payload['MEM_PresRecha'][0]>63.0 and not self.flag_MEM_PresRecha:
             self.btAudio.play('Peligro: valor alto de presion de rechazo')
-        if payload['MEM_PresRecha'][0]<58.0:
+            self.flag_MEM_PresRecha=True
+        if payload['MEM_PresRecha'][0]<58.0 and not self.flag_MEM_PresRecha:
             self.btAudio.play('Peligro: valor bajo de presion de rechazo')
+            self.flag_MEM_PresRecha=True
+        else:
+            self.flag_MEM_PresRecha=False
             
-        if payload['TempAlimen'][0]>25.0:
+        if payload['TempAlimen'][0]>25.0 and not self.flag_TempAlimen:
             self.btAudio.play('Peligro: valor alto de temperatura de alimentacion')
-        if payload['TempAlimen'][0]<10.0:
+            self.flag_TempAlimen=True
+        if payload['TempAlimen'][0]<10.0 and not self.flag_TempAlimen:
             self.btAudio.play('Peligro: valor bajo de temperatura de alimentacion')
+            self.flag_TempAlimen=True
+        else:
+            self.flag_TempAlimen=False
 
         self.loop = True
 
@@ -110,24 +137,24 @@ class Sensors(object):
         self.queue.put(0)
 
 
-# if __name__== '__main__':
-#     from BTAudio_DuplexSockets import BTAudio    
-#     btaudio=BTAudio()
-#     sensors=Sensors(btaudio)      
-#     p1 = mp.Process(target=btaudio.Load, args=())
-#     p1.start()
+if __name__== '__main__':
+    from BTAudio_DuplexSockets import BTAudio    
+    btaudio=BTAudio()
+    sensors=Sensors(btaudio)      
+    p1 = mp.Process(target=btaudio.Load, args=())
+    p1.start()
 
-#     p0 = mp.Process(target=sensors.Load, args=())
-#     p0.start()
+    p0 = mp.Process(target=sensors.Load, args=())
+    p0.start()
 
-# while True:
-#     try:
-#         Sensors()
+    while True:
+        try:
+            Sensors(btaudio)
 
-#     except socket.timeout:
-#         print('Error de Conexión, Reintentando')
-#         time.sleep(10)
-#         pass
-#     except KeyboardInterrupt:
-#         print('---------------------------STOPPED---------------------------')
-#         break
+        except socket.timeout:
+            print('Error de Conexión, Reintentando')
+            time.sleep(10)
+            pass
+        except KeyboardInterrupt:
+            print('---------------------------STOPPED---------------------------')
+            break
