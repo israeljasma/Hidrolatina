@@ -51,6 +51,8 @@ class Sensors(object):
         API_Services.membraneFeedPressure(payload['MEM_PresAlimen'][0], payload['ts'], self.token)
         API_Services.membraneRejectionPressure(payload['MEM_PresRecha'][0], payload['ts'], self.token)
         API_Services.feedTemperature(payload['TempAlimen'][0], payload['ts'], self.token)
+        API_Services.conductivityPermeateMembranes(payload['MEM_Cond_Perm'][0], payload['ts'], self.token)
+        API_Services.registerMembranes(payload['GuardaMem'][0], payload['ts'], self.token)
 
         if payload['MEM_CaudalRech'][0]>100.0:
             self.btAudio.play("Peligro: valor alto de conductividad de alimentacion")
