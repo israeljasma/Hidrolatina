@@ -115,84 +115,84 @@ class API_Services():
     #Sensors
     def feedConductivity(number, time, token, refresh=None):
         DATA = {'number': number,'time': time,'refhesh': refresh}
-        request = requests.get(url + 'sensors/feedconductivity/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request = requests.post(url + 'sensors/feedconductivity/', data = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
 
     def feedTemperature(number, time, token, refresh=None):
         DATA = {'number': number,'time': time,'refhesh': refresh}
-        request = requests.get(url + 'sensors/feedtemperature/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request = requests.post(url + 'sensors/feedtemperature/', data = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
 
     def membranePermeate(number, time, token, refresh=None):
         DATA = {'number': number,'time': time,'refhesh': refresh}
-        request = requests.get(url + 'sensors/membranepermeate/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request = requests.post(url + 'sensors/membranepermeate/', data = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
 
     def membraneRejectionFlow(number, time, token, refresh=None):
         DATA = {'number': number,'time': time,'refhesh': refresh}
-        request = requests.get(url + 'sensors/membranerejectionflow/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request = requests.post(url + 'sensors/membranerejectionflow/', data = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
 
     def membraneFeedPressure(number, time, token, refresh=None):
         DATA = {'number': number,'time': time,'refhesh': refresh}
-        request = requests.get(url + 'sensors/membranefeedpressure/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request = requests.post(url + 'sensors/membranefeedpressure/', data = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
 
     def membraneRejectionPressure(number, time, token, refresh=None):
         DATA = {'number': number,'time': time,'refhesh': refresh}
-        request = requests.get(url + 'sensors/membranerejectionpressure/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request = requests.post(url + 'sensors/membranerejectionpressure/', data = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
 
     def conductivityPermeateMembranes(number, time, token, refresh=None):
         DATA = {'number': number,'time': time,'refhesh': refresh}
-        request = requests.get(url + 'sensors/conductivitypermeatemembranes/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request = requests.post(url + 'sensors/conductivitypermeatemembranes/', data = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
 
     def vesselsPermeateFlow(number, time, token, refresh=None):
         DATA = {'number': number,'time': time,'refhesh': refresh}
-        request = requests.get(url + 'sensors/vesselspermeateflow/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request = requests.post(url + 'sensors/vesselspermeateflow/', data = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
 
     def vesselsFeedingFlow(number, time, token, refresh=None):
         DATA = {'number': number,'time': time,'refhesh': refresh}
-        request = requests.get(url + 'sensors/vesselsfeedingflow/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request = requests.post(url + 'sensors/vesselsfeedingflow/', data = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
     
     def feedPressureVessels(number, time, token, refresh=None):
         DATA = {'number': number,'time': time,'refhesh': refresh}
-        request = requests.get(url + 'sensors/feedpressurevessels/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request = requests.post(url + 'sensors/feedpressurevessels/', data = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
 
     def rejectPressureVessels(number, time, token, refresh=None):
         DATA = {'number': number,'time': time,'refhesh': refresh}
-        request = requests.get(url + 'sensors/rejectpressurevessels/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request = requests.post(url + 'sensors/rejectpressurevessels/', data = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
 
     def conductivityPermeateVessels(number, time, token, refresh=None):
         DATA = {'number': number,'time': time,'refhesh': refresh}
-        request = requests.get(url + 'sensors/conductivitypermeatevessels/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request = requests.post(url + 'sensors/conductivitypermeatevessels/', data = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
 
     def registerMembranes(number, time, token, refresh=None):
         DATA = {'number': number,'time': time,'refhesh': refresh}
-        request = requests.get(url + 'sensors/registermembranes/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request = requests.post(url + 'sensors/registermembranes/', data = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
 
     def registerVessels(number, time, token, refresh=None):
         DATA = {'number': number,'time': time,'refhesh': refresh}
-        request = requests.get(url + 'sensors/registervessels/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request = requests.post(url + 'sensors/registervessels/', data = DATA, headers={'Authorization': 'Bearer ' + token})
         request_dictionary = request.json()
         return request_dictionary
