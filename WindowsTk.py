@@ -675,8 +675,9 @@ class WindowsTk:
         self.actiondet.token=user.getToken()
         self.actiondet2.token=user.getToken()
 
-        self.sensors.token=user.getToken()
+        self.sensors.sendToken(user.getToken())        
         self.sensors.startSensors()
+        
 
         thread_a=Thread(target=self.actiondet.inferenceActionDetector, args=(self.queue_anno, self.queue_action, labelVideo, showActions, tv1, self.btaudio,))
         thread_a.start()

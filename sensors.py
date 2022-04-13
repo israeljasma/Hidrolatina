@@ -14,6 +14,8 @@ class Sensors(object):
     def __init__(self, btAudio):
         self.btAudio=btAudio
         self.queue=mp.Queue()
+        self.queue_token=mp.Queue()
+
         self.token=''
         
     # The callback for when the client receives a CONNACK response from the server.
@@ -23,6 +25,8 @@ class Sensors(object):
             if not self.queue.empty():
                 var = self.queue.get()
                 if var == 1:
+                    if not self.queue_token.empty():
+                        self.token=self.queue_token.get()
                     self.client_pres = mqtt.Client()
                     self.client_pres.on_connect = self.connect_pres
                     self.client_pres.on_message = self.msg_pres
@@ -39,6 +43,7 @@ class Sensors(object):
         # value=payload['MEM_PresAlimen'][0]
         # print(payload)
         # time.sleep(1)  #Tiempo de muestreo
+
         API_Services.membraneRejectionFlow(payload['MEM_CaudalRech'][0], payload['ts'], self.token)
         API_Services.membranePermeate(payload['MEM_CaudalPerm'][0], payload['ts'], self.token)
         API_Services.conductivityPermeateMembranes(payload['MEM_Cond_Perm'][0], payload['ts'], self.token)
@@ -95,20 +100,23 @@ class Sensors(object):
 
     def startSensors(self):
         self.queue.put(1)
+    
+    def sendToken(self, token):
+        self.queue_token.put(token)
 
     def stopSensors(self):
         self.queue.put(0)
 
 
-if __name__== '__main__':
-    from BTAudio_DuplexSockets import BTAudio    
-    btaudio=BTAudio()
-    sensors=Sensors(btaudio)      
-    p1 = mp.Process(target=btaudio.Load, args=())
-    p1.start()
+# if __name__== '__main__':
+#     from BTAudio_DuplexSockets import BTAudio    
+#     btaudio=BTAudio()
+#     sensors=Sensors(btaudio)      
+#     p1 = mp.Process(target=btaudio.Load, args=())
+#     p1.start()
 
-    p0 = mp.Process(target=sensors.Load, args=())
-    p0.start()
+#     p0 = mp.Process(target=sensors.Load, args=())
+#     p0.start()
 
 # while True:
 #     try:
