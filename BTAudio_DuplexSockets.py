@@ -134,7 +134,7 @@ class BTAudio():
         while True:
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.connect(('192.168.1.129', 4444))
+                s.connect(('192.168.100.124', 4444))
                 print('Client: Connected to Socket')
                 break
 
@@ -297,7 +297,7 @@ class BTAudio():
             try:
                 for alt in enumerate(speech[0]['alternative']):
                     # print('DIJISTE: ', alt[1]['transcript'])
-                    if 'Sony ' in alt[1]['transcript']:
+                    if 'Sony ' in alt[1]['transcript'] or 'sony' in alt[1]['transcript']:
                         commands=alt[1]['transcript']
                     if self.flag_instructivo is True:
                         if '1' in alt[1]['transcript']:
@@ -323,7 +323,7 @@ class BTAudio():
                         print('INSTRUCTIVO ACTIVADO')
 
                         # print(commands)
-                # print(commands)
+                print('comannds: ',commands)
                 commands= commands.lower()
                 if 'sony' in commands:
                     ## Comandos
@@ -390,36 +390,37 @@ class BTAudio():
     def exit(self):
         self.s.close()
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
 
 
-#     audio=BTAudio()
-#     # queue_audio_out=mp.Queue()
-#     p1 = mp.Process(target=audio.Load, args=())
-#     p1.start()
-#     audio.listen()
-#     time.sleep(5)
-#     audio.play('primera Este es un test de audio que nose que dice pero deberia durar mas de dos segundos, o sino nose que onda')
-#     # print("diciendo texto")
-#     time.sleep(3)
-#     audio.stop_play()
-#     # print('debio parar')
-#     # time.sleep(3)
-#     audio.play('segunda Este no es un test de audio que nose que dice pero deberia durar mas de dos segundos, o sino nose que onda')
-#     time.sleep(3)
-#     audio.stop_play()
+    audio=BTAudio()
+    # queue_audio_out=mp.Queue()
+    p1 = mp.Process(target=audio.Load, args=())
+    p1.start()
+    audio.listen()
+    time.sleep(10)
+    audio.play('primera Este es un test de audio que nose que dice pero deberia durar mas de dos segundos, o sino nose que onda')
+    # print("diciendo texto")
+    time.sleep(3)
+    # audio.stop_play()
+    # print('debio parar')
+    # time.sleep(3)
+    audio.play('segunda Este no es un test de audio que nose que dice pero deberia durar mas de dos segundos, o sino nose que onda')
+    time.sleep(3)
+    audio.stop_play()
 
-#     audio.play('tercera Este no es un test de audio que nose que dice pero deberia durar mas de dos segundos, o sino nose que onda')
-#     time.sleep(3)
-#     audio.stop_play()
-#     while True:
-#         try:
-#             pass
-#         except KeyboardInterrupt:
-#             print('Exit Audio')
-#             p1.terminate()
-#             break
-    # audio.play(0)
+    audio.play('tercera Este no es un test de audio que nose que dice pero deberia durar mas de dos segundos, o sino nose que onda')
+    time.sleep(3)
+    audio.stop_play()
+    while True:
+        try:
+            pass
+        except KeyboardInterrupt:
+            print('Exit Audio')
+            p1.terminate()
+            break
+    audio.play(0)
+
     
     
     # time.sleep(5)
