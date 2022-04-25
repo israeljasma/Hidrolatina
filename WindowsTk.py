@@ -1,3 +1,4 @@
+from os import kill
 import queue
 from threading import Thread
 import time
@@ -423,15 +424,26 @@ class WindowsTk:
             labelVideo.configure(image=imgtk)
 
             print(self.det)
-            if len(out['class_ids']) == 0 or len(out['class_ids'])>1:
-                self.det = 0 
-            if len(out['class_ids']) == 1:
+            if len(out['class_ids']) == 0:
+                self.det = 0
+            if len(out['class_ids']) > 0:
+            
                 self.det += 1
                 if self.det==self.detlimit:
 
                     print("Reset")
-                    for i in range((out['scores']).size):
-                        detected_boxes= out['bbox'][i]
+
+                    area=0                            
+
+                    for k in range((out['scores']).size):
+                        if (out['bbox'][k][2]-out['bbox'][k][0])*(out['bbox'][k][3]-out['bbox'][k][1])>area:
+                                area=(out['bbox'][k][2]-out['bbox'][k][0])*(out['bbox'][k][3]-out['bbox'][k][1])
+                                # out['bbox'][k]
+                                i_max=k             
+                    detected_boxes= out['bbox'][i_max]
+
+                    
+
 
                     # Crop and save detedtec bounding box image
 
@@ -555,7 +567,7 @@ class WindowsTk:
         try:
             showFrame()
         except TypeError:
-            print('Error frame vacío')
+            print('Error frame vacío, probable error de lectura de códec de video')
             pass
         self.PytorchCameraTk.focus_force()
         # self.PytorchCameraTk.withdraw()
@@ -598,6 +610,7 @@ class WindowsTk:
                 print('No es posible cerrar Thread_ActionDet2')
                 pass
             self.sensors.stopSensors()
+            self.btaudio.stop_listen()
             showActions.destroy()
             # root.deiconify()
         def DownloadpdTk():
@@ -623,12 +636,12 @@ class WindowsTk:
         showActions.bg=bg
         canvas.create_image(showActions.winfo_screenwidth()/2, showActions.winfo_screenheight()/2, image=bg)
 
-        #Logo
-        logo_icon= Image.open('images/logo_hidrolatina_h.png')
-        logo_icon= logo_icon.resize((int(mainFrame.winfo_screenheight()*.05), int(mainFrame.winfo_screenheight()*.05)), Image.ANTIALIAS)
-        logo_icon= ImageTk.PhotoImage(logo_icon)
-        showActions.logo_icon=logo_icon
-        canvas.create_image(int(mainFrame.winfo_screenwidth()*.95), int(mainFrame.winfo_screenheight()*.05), image=logo_icon)
+        # #Logo
+        # logo_icon= Image.open('images/logo_hidrolatina_h.png')
+        # logo_icon= logo_icon.resize((int(mainFrame.winfo_screenheight()*.05), int(mainFrame.winfo_screenheight()*.05)), Image.ANTIALIAS)
+        # logo_icon= ImageTk.PhotoImage(logo_icon)
+        # showActions.logo_icon=logo_icon
+        # canvas.create_image(int(mainFrame.winfo_screenwidth()*.95), int(mainFrame.winfo_screenheight()*.05), image=logo_icon)
 
 
         #Buttons
@@ -671,6 +684,8 @@ class WindowsTk:
         showActions.lift()
         showActions.attributes('-topmost', True)
         showActions.after_idle(showActions.attributes,'-topmost',False)
+
+        self.btaudio.listen()
 
         self.actiondet.token=user.getToken()
         self.actiondet2.token=user.getToken()
@@ -1033,7 +1048,9 @@ class WindowsTk:
             
             #Def
             def addUser():
-                if nfcread == '':
+                print(len(nfcread))
+                if len(nfcread) >= 1:
+                    print("Con NFC")
                     if passwordEntry.get() == '' and passwordEntry["state"] == DISABLED:
                         password = randomPassword()
                         request = API_Services.userCreate(usernameEntry.get(), password, emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
@@ -1046,10 +1063,20 @@ class WindowsTk:
                         userTreeView.delete(*userTreeView.get_children())
                         userListTreeview(user, userTreeView)
                 else:
-                    request = API_Services.userNFCCreate(usernameEntry.get(), passwordEntry.get(), emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken(), nfcread[0])
-                    messagebox.showinfo(message=request['message'], parent=addUserManagement)
-                    userTreeView.delete(*userTreeView.get_children())
-                    userListTreeview(user, userTreeView)
+                    print("Sin NFC")
+                    if passwordEntry.get() == '' and passwordEntry["state"] == DISABLED:
+                        print("Sin Password")
+                        request = API_Services.userCreate(usernameEntry.get(), password, emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
+                        messagebox.showinfo(message=request['message'], parent=addUserManagement)
+                        userTreeView.delete(*userTreeView.get_children())
+                        userListTreeview(user, userTreeView)
+                    else:
+                        print("Con Password")
+                        request = API_Services.userCreate(usernameEntry.get(), passwordEntry.get(), emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
+                        messagebox.showinfo(message=request['message'], parent=addUserManagement)
+                        userTreeView.delete(*userTreeView.get_children())
+                        userListTreeview(user, userTreeView)
+
                     
 
             def updateUser():
@@ -1089,11 +1116,15 @@ class WindowsTk:
                             print(labelText)
                             nfcLb['text'] = "Dispositivo NFC vinculado"
                             time.sleep(2)
+                            try: nfcThread.join()
+                            except: pass
                             readNfcManagement.destroy()
                         else:
                             labelText['text'] = "Dispositivo NFC no detectato"
                             nfcLb['text'] = "Sin dispositivo NFC vinculado"
                             time.sleep(2)
+                            try: nfcThread.join()
+                            except: pass
                             readNfcManagement.destroy()
                     else:
                         timeCheck(nfcThread)
@@ -1133,6 +1164,7 @@ class WindowsTk:
                             uid = util.toHexString(data)
                             status = util.toHexString([sw1, sw2])
                             if uid != "":
+                                print(uid)
                                 nfcread.append(uid)
                                 break
                         except:

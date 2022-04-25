@@ -99,8 +99,10 @@ class ActionDetector:
         self.pose_config = 'C:/Users/Hidrolatina/Downloads/mmpose/configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w32_coco_384x288_udp.py'
         self.pose_checkpoint = 'https://download.openmmlab.com/mmpose/top_down/udp/hrnet_w32_coco_384x288_udp-e97c1a0f_20210223.pth'
 
-        self.posec3d_config='C:/Hidrolatina/mmaction2/configs/skeleton/posec3d/5HL_4.py'
-        self.posec3d_checkpoint='C:/Hidrolatina/mmaction2/Train/work_dirs/posec3d/5HL_4/latest.pth'
+        # self.posec3d_config='C:/Hidrolatina/mmaction2/configs/skeleton/posec3d/5HL_4.py'
+        # self.posec3d_checkpoint='C:/Hidrolatina/mmaction2/Train/work_dirs/posec3d/5HL_4/latest.pth'
+        self.posec3d_config='C:/Hidrolatina/mmaction2/Train/work_dirs/posec3d/5HL_CAM4/5HL_CAM4.py'
+        self.posec3d_checkpoint='C:/Hidrolatina/mmaction2/Train/work_dirs/posec3d/5HL_CAM4/epoch_180.pth'
 
         self.token=''
 
@@ -216,12 +218,16 @@ class ActionDetector:
     #     print(self.df)
 
     def inferenceActionDetector(self, queue_anno, queue_action, labelVideo, showActions, tableview, btaudio):
-        just_bboxarea_track=False
-        track_flag=True
+        just_bboxarea_track=True
+        track_flag=False
         wait_for_operator=5
+
+
+
+        #Initialize Values
         operator_counter=wait_for_operator
 
-
+        
         next_id =next_id_last= 2
 
         pose_results=pose_results_last = pose_results_list= pose_frames=[]
@@ -661,9 +667,9 @@ class ActionDetector:
                 self.df=self.df.append(pd.DataFrame({'Op. Presente':[op_present], 'Accion':[actual_action['name']], 'Riesgo': [risk],'Hora':[datetime.today().time().isoformat('seconds')], 'Fecha':[datetime.today().date()]}))
                 self.WriteFrame(tableview, self.df)
 
-                actionRequest = actionData[actual_action['name']]
-                riskRequest = riskData[risk]
-                API_Services.action(operator, actionRequest, riskRequest, self.token)
+                # actionRequest = actionData[actual_action['name']]
+                # riskRequest = riskData[risk]
+                # # API_Services.action(operator, actionRequest, riskRequest, self.token)
 
 
 

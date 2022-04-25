@@ -155,7 +155,7 @@ class PpeDetector:
         # return self.model_effdet
 
     def MDETR(self, im):
-        im.save(r'C:/Users/Hidrolatina/Desktop/prueba.jpg')        
+        # im.save(r'C:/Users/Hidrolatina/Desktop/prueba.jpg')        
         bboxes_body = self.importMdetr.plot_inference( im, "a hand")
         # plot_inference(im, "a hand")
         im_hand=im.crop(bboxes_body)

@@ -78,8 +78,8 @@ class ActionDetector2:
         self.pose_config = 'C:/Users/Hidrolatina/Downloads/mmpose/configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w32_coco_384x288_udp.py'
         self.pose_checkpoint = 'https://download.openmmlab.com/mmpose/top_down/udp/hrnet_w32_coco_384x288_udp-e97c1a0f_20210223.pth'
 
-        self.posec3d_config='C:/Hidrolatina/mmaction2/configs/skeleton/posec3d/5HL_4.py'
-        self.posec3d_checkpoint='C:/Hidrolatina/mmaction2/Train/work_dirs/posec3d/5HL_4/latest.pth'
+        self.posec3d_config='C:/Hidrolatina/mmaction2/Train/work_dirs/posec3d/5HL_CAM2/5HL_CAM2.py'
+        self.posec3d_checkpoint='C:/Hidrolatina/mmaction2/Train/work_dirs/posec3d/5HL_CAM2/latest.pth'
 
         self.token=''
 
@@ -101,51 +101,80 @@ class ActionDetector2:
         self.posec3d_model=init_recognizer(self.posec3d_config,self.posec3d_checkpoint, 'cuda:1')
 
     def load_zone(self):
-        x_cabinet=np.array(list(range(1170,1280)))
-        x_grating1=np.array(list(range(1020,1240)))
-        x_grating2=np.array(list(range(1115,1260)))
-        x_ground= np.array(list(range(900,1300)))
-        y_ground_grat=np.array(list(range(100,200)))
-        y_ground_grat=np.flip(y_ground_grat)
-        y_ground_gab=np.array(list(range(100,200)))
-        y_ground_gab=np.flip(y_ground_gab)
-        #Generate y coordinates
-        ramp_cabinet= lambda t: round(-0.95*t + 1470)
-        ramp_grating1= lambda t: round(-0.93*t + 1510)
-        ramp_grating2= lambda t: round(-1.2825*t + 2280)
-        ramp_ground= lambda t: round(0.3906*t + 345.0539)
-        ramp_ground_y_grat= lambda t: round((t- 2450)/-1.25)
-        ramp_ground_2_grat= lambda t: round(0.12*t + 650)
-        ramp_ground_y_gab= lambda t: round((t- 2680)/-1.6)
-        ramp_ground_2_gab= lambda t: round(0.05*t + 440)
 
-        def create_zone(ramp, x,largo=10):
-            y = np.array([ramp(xi) for xi in x])
+        #Puntos en sentido reloj
+        vector_gab2_ground=((600,865),(800,760),(1030,920),(830,1070))
+        vector_gab2=((910,460),(1090,550),(1090,640),(910,540))
+        vector_gab=((540,290),(680,350),(683,400),(550,340))
+        vector_gab_ground=((535,550),(650,640),(490,730),(400,615))
+        vector_rejilla_ground=((300,432),(427,600),(270,680),(170,490))
+        vector_rejilla_up=((290,208),(370,260),(375,294),(297,240))
+        vector_rejilla_down=((315,370),(394,436),(396,480),(320,416))
+
+        def gen_ramp(x1,x2,y1,y2):
+            points=  [(x1,y1),(x2,y2)]
+            x_coords, y_coords = zip(*points)
+            A = np.vstack([x_coords,np.ones(len(x_coords))]).T
+            m, c = np.linalg.lstsq(A, y_coords,rcond=None)[0]
+            # print(m,c)
+            ramp= lambda t: round(m*t + c)
+            return ramp
+
+        def create_side(ramp, x, y):
             x_copy=y_copy= np.array([]).astype(int)
-            for i in range(largo):
-                x_copy=np.append(x_copy,x)
-                y_copy=np.append(y_copy,y+i)
-            return np.column_stack((x_copy, y_copy))
+            if len(x)==1:
+                y_copy = y
+                large=abs(y[-1]-y[0])
+                x_copy=np.repeat(x[0], large+1)
+            else:
+                y = np.array([ramp(xi) for xi in x])
+                large=abs(y[1]-y[0])
+                if large==0: large=1
+                for i in range(large):
+                    x_copy=np.append(x_copy,x)
+                    y_copy=np.append(y_copy,y+i)
+            zone=np.column_stack((x_copy, y_copy))
+            rem=[]
+            for point in enumerate(zone):
+                if point[1][1]>max(y):
+                    rem.append(point[0])
+            zone=np.delete(zone,rem, axis=0)
+            return zone
 
-        def create_zone2(ramp, y,ramp2,ancho=100, largo=500):
-            x_copy=y_copy=x_x_copy=y_y_copy=np.array([]).astype(int)
-            for i in range(ancho):
-                if i==0:
-                    x = np.array([ramp(xi) for xi in y])     
-                    x_copy=np.append(x_copy,x+i)
-                    y_copy=np.append(y_copy,y)
+        def fill_zone(zonas):
+            full_zonas=zonas.copy()
+            for k in np.array(list(range(np.amin(zonas,axis=(0))[1],np.amax(zonas,axis=(0))[1]+1))):
+                y_ax=k
+                mm=[]
+                for i in (np.where((np.where(zonas == y_ax))[1] == 1)[0]):
+                    mm.append(np.array(zonas[np.where(zonas == y_ax)[0][i]]))  
+                mm=np.array(mm)    
+                for j in range(np.amax(mm,axis=(0))[0]-np.amin(mm,axis=(0))[0]):     
+                    full_zonas=np.concatenate((full_zonas,np.array([[np.amin(mm,axis=(0))[0]+j,y_ax]])),axis=0)
+            return full_zonas
 
-                if i>0:
-                    xlim=x_copy[-1]
-                    y=np.array(list(range(ramp2(xlim), largo+ramp2(i)) ))
-                    x = np.array([ramp(xi) for xi in y])
-                    x_copy=np.append(x_copy,x+i)
-                    y_copy=np.append(y_copy,y )
-            return np.column_stack((x_copy, y_copy))
+        def create_zone(points):
+            vectors=([points[0],points[1]],[points[1],points[2]],[points[2],points[3]],[points[3],points[0]])
+            zones=np.empty((0, 2), int)
+            for vector in vectors:
+                if vector[0][0]>vector[1][0] or (vector[0][1]>vector[1][1] and vector[0][0]==vector[1][0]) :
+                    [x1,x2,y1,y2]=[vector[1][0],vector[0][0],vector[1][1],vector[0][1]]
+                else:
+                    [x1,x2,y1,y2]=[vector[0][0],vector[1][0],vector[0][1],vector[1][1]]
+                # print(x1,x2,y1,y2)
+                x_range=np.array(list(range(x1,x2+1)))
+                y_range=np.array(list(range(y1,y2+1)))
+                ramp=gen_ramp(x1,x2,y1,y2)
+                zone=create_side(ramp,x_range,y_range)
+                zones=np.concatenate((zone,zones),axis=0,out=None)
+            full_zones=fill_zone(zones)
+            return full_zones
 
-        self.zona={ 'rejilla_up': create_zone(ramp_grating1, x_grating1, 60), 'rejilla_down': create_zone(ramp_grating2, x_grating2, 90), 'primer_gabinete': create_zone(ramp_cabinet,x_cabinet,60),
-                    'suelo_rejilla':create_zone2(ramp_ground_y_grat,y_ground_grat, ramp_ground_2_grat,400, 480),
-                    'suelo_gabinete':create_zone2(ramp_ground_y_gab,y_ground_gab, ramp_ground_2_gab,200, 220)}
+        self.zona={ 'rejilla_up': create_zone(vector_rejilla_up), 
+                    'rejilla_down': create_zone(vector_rejilla_down),
+                    'primer_gabinete': create_zone(vector_gab),
+                    'suelo_rejilla':create_zone(vector_rejilla_ground),
+                    'suelo_gabinete':create_zone(vector_gab_ground)}
 
     def proc_paral(self, queue_anno,queue_action, flag_posec3d_init): 
 
@@ -194,9 +223,12 @@ class ActionDetector2:
     #     print(self.df)
 
     def inferenceActionDetector(self, queue_anno, queue_action, labelVideo, showActions, tableview, btaudio):
-        just_bboxarea_track=False
-        track_flag=True
+        just_bboxarea_track=True
+        track_flag=False
         wait_for_operator=5
+
+
+        #Initialize Values
         operator_counter=wait_for_operator
 
 
@@ -218,7 +250,7 @@ class ActionDetector2:
         df_data={'Op. Presente':['No'], 'Accion':['No'], 'Riesgo':['No'], 'Hora':[datetime.today().time().isoformat('seconds')], 'Fecha':[datetime.today().date()]}
         self.df = pd.DataFrame(df_data)
         self.WriteFrame(tableview, self.df)
-        old_action= old_op_present= op_present ='No'
+        old_op_present= op_present ='No'
         actual_action={'name':'No', 'score': ''}
         risk='No'
         
@@ -632,7 +664,7 @@ class ActionDetector2:
             if old_op_present!=op_present or actual_action['name']!='No':
                 
                 self.df=self.df.append(pd.DataFrame({'Op. Presente':[op_present], 'Accion':[actual_action['name']], 'Riesgo': [risk],'Hora':[datetime.today().time().isoformat('seconds')], 'Fecha':[datetime.today().date()]}))
-                self.WriteFrame(tableview, self.df)
+                # self.WriteFrame(tableview, self.df)
 
 
             old_op_present=op_present
