@@ -1050,7 +1050,6 @@ class WindowsTk:
             def addUser():
                 print(len(nfcread))
                 if len(nfcread) >= 1:
-                    print("Con NFC")
                     if passwordEntry.get() == '' and passwordEntry["state"] == DISABLED:
                         password = randomPassword()
                         request = API_Services.userCreate(usernameEntry.get(), password, emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
@@ -1063,15 +1062,12 @@ class WindowsTk:
                         userTreeView.delete(*userTreeView.get_children())
                         userListTreeview(user, userTreeView)
                 else:
-                    print("Sin NFC")
                     if passwordEntry.get() == '' and passwordEntry["state"] == DISABLED:
-                        print("Sin Password")
                         request = API_Services.userCreate(usernameEntry.get(), password, emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
                         messagebox.showinfo(message=request['message'], parent=addUserManagement)
                         userTreeView.delete(*userTreeView.get_children())
                         userListTreeview(user, userTreeView)
                     else:
-                        print("Con Password")
                         request = API_Services.userCreate(usernameEntry.get(), passwordEntry.get(), emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
                         messagebox.showinfo(message=request['message'], parent=addUserManagement)
                         userTreeView.delete(*userTreeView.get_children())
