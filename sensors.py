@@ -67,9 +67,9 @@ class Sensors(object):
                 sum = self.now_press_alim - self.last_press_alim
                 vel_press = sum/2
                 if vel_press > 1:
-                    self.btAudio('Peligro: Presurizar mas lentamente a solo 1 bar por segundo')
+                    self.btAudio.play('Peligro: Presurizar mas lentamente a solo 1 bar por segundo')
                 if vel_press < -1:
-                    self.btAudio('Peligro: Despresurizar mas lentamente a solo 1 bar por segundo')
+                    self.btAudio.play('Peligro: Despresurizar mas lentamente a solo 1 bar por segundo')
             except AttributeError:
                 self.last_press_alim = self.now_press_alim
             
