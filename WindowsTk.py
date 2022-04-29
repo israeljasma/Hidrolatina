@@ -5,6 +5,7 @@ import time
 from datetime import datetime, timedelta
 from tkinter import *
 from tkinter import messagebox, filedialog, simpledialog, Listbox, ttk
+
 from traceback import print_tb
 from urllib import request
 from PIL import ImageTk, Image
@@ -56,7 +57,7 @@ class WindowsTk:
         self.detlimit=25
         self.varCamera='rtsp://admin:nvrHidrolatina@192.168.100.234:554/Streaming/channels/501'
         self.actiondet.varCamera='rtsp://admin:nvrHidrolatina@192.168.100.234:554/Streaming/channels/401'
-        self.actiondet2.varCamera='rtsp://admin:nvrHidrolatina@192.168.100.234:554/Streaming/channels/401'
+        self.actiondet2.varCamera='rtsp://admin:nvrHidrolatina@192.168.100.234:554/Streaming/channels/201'
 
     def center_window(self, window):
         window.update_idletasks()
@@ -123,7 +124,7 @@ class WindowsTk:
         # except AttributeError:
         #     self.ppedet = PpeDetector()
         #     self.actiondet = ActionDetector()
-        
+        self.queue_frameAction = mp.Queue()
         self.queue_anno = mp.Queue()
         self.queue_action = mp.Queue()
         self.flag_posec3d_init=mp.Queue()
@@ -692,19 +693,79 @@ class WindowsTk:
 
         self.sensors.sendToken(user.getToken())        
         self.sensors.startSensors()
+
+        def FrameUpdate(tv1, queue_frameAction):
+            def WriteFrame(tableview, df_origin):
+                df=df_origin.iloc[::-1]
+                tableview["column"] = list(df.columns)
+                tableview["show"] = "headings"
+                for column in tableview["columns"]:
+                    tableview.heading(column, text=column)
+                    tableview.column(column, minwidth=0, width=150, stretch=NO)
+
+                tableview.delete(*tableview.get_children())
+                df_rows = df.to_numpy().tolist() # turns the dataframe into a list of lists
+                for row in df_rows:
+                    tableview.insert("", "end", values=row)
+                
+            actions=[]
+            df_data={'Op. Presente':['No'], 'Accion':['No'], 'Riesgo':['No'], 'Hora':[datetime.today().time().isoformat('seconds')], 'Fecha':[datetime.today().date()]}
+            df = pd.DataFrame(df_data)
+            WriteFrame(tv1, df)
+            init_time=0.0
+            while True:
+                if not queue_frameAction.empty():
+                    if len(actions)==0:
+                        init_time=time.time()
+                    actions.append(queue_frameAction.get())
+                    print(actions[-1])
+                end_time=time.time()-init_time
+                if end_time>2.0:
+                    max_score=[0,None]
+                    for action in enumerate(actions):
+
+                        if action[1]['Score'][0]>=max_score[0]:
+                            if  action[1]['Accion'][0]=='No':
+                                if action[1]['Op. Presente'][0]=='Si':
+                                    max_score=[action[1]['Score'][0], action[1]]
+                                if max_score[1]==None and action[1]['Op. Presente'][0]=='No':
+                                    if action[0]+1==len(actions):
+                                        max_score=[action[1]['Score'][0], action[1]]
+                                pass
+                            if  action[1]['Accion'][0]=='Accion aleatoria':
+                                    pass
+                            if  action[1]['Accion'][0]!='Accion aleatoria' and action[1]['Accion'][0]!='No':
+                                max_score=[action[1]['Score'][0], action[1]]
+                    if max_score[1]==None:
+                        pass
+                    else:
+                        print(max_score[1])
+                        del max_score[1]['Score']
+                        df=df.append(pd.DataFrame(max_score[1]))
+                        WriteFrame(tv1,df)
+                    init_time=0.0
+                    actions=[]
+                
+
+
+
+
         
 
-        thread_a=Thread(target=self.actiondet.inferenceActionDetector, args=(self.queue_anno, self.queue_action, labelVideo, showActions, tv1, self.btaudio,))
+        thread_writeFrame=Thread(target=FrameUpdate, args=(tv1, self.queue_frameAction,))
+        thread_writeFrame.start()
+
+        thread_a=Thread(target=self.actiondet.inferenceActionDetector, args=(self.queue_anno, self.queue_action, self.queue_frameAction ,labelVideo, showActions, tv1, self.btaudio,))
         thread_a.start()
 
-        thread_b=Thread(target=self.actiondet2.inferenceActionDetector, args=(self.queue_anno2, self.queue_action2, labelVideo2, showActions, tv1, self.btaudio,))
+        thread_b=Thread(target=self.actiondet2.inferenceActionDetector, args=(self.queue_anno2, self.queue_action2, self.queue_frameAction ,labelVideo2, showActions, tv1, self.btaudio,))
         thread_b.start()
 
         # self.actiondet.inferenceActionDetector(self.queue_anno, self.queue_action, labelVideo, showActions, tv1, self.btaudio)
 
         # self.actiondet2.inferenceActionDetector(self.queue_anno2, self.queue_action2, labelVideo2, showActions, tv1, self.btaudio)
         
-    
+                                                                                                                                
         
     def configCameraPPETk(self):
         # Config tk
@@ -1048,7 +1109,6 @@ class WindowsTk:
             
             #Def
             def addUser():
-                print(len(nfcread))
                 if len(nfcread) >= 1:
                     if passwordEntry.get() == '' and passwordEntry["state"] == DISABLED:
                         password = randomPassword()
@@ -1076,14 +1136,23 @@ class WindowsTk:
                     
 
             def updateUser():
-                requestUpdate = API_Services.userUpdate(id, usernameEntry.get(), emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
-                messagebox.showinfo(message=requestUpdate['message'], parent=addUserManagement)
-                closeTk(user, userTreeView)
+                if len(nfcread) >= 1:
+                    requestUpdate = API_Services.userWithNfcUpdate(id, usernameEntry.get(), emailEntry.get(), nameEntry.get(), last_nameEntry.get(), nfcread[0], user.getToken())
+                    messagebox.showinfo(message=requestUpdate['message'], parent=addUserManagement)
+                    closeTk(user, userTreeView)
+                else:
+                    requestUpdate = API_Services.userUpdate(id, usernameEntry.get(), emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
+                    messagebox.showinfo(message=requestUpdate['message'], parent=addUserManagement)
+                    closeTk(user, userTreeView)
                 #if requestUpdate['message']:
                 #    messagebox.showerror(message=requestUpdate['message'], parent=addUserManagement)
                 #else:
                 #    messagebox.showinfo(message=requestUpdate['message'], parent=addUserManagement)
                     #closeTk()
+
+            def addNfcToBlacklist():
+                API_Services.nfcDelete(request['nfc'], user.getToken())
+
 
             def readNFC(nfcread):
                 readNfcManagement = Toplevel()
@@ -1203,6 +1272,9 @@ class WindowsTk:
                 emailLb = Label(addUserManagement, text="E-mail")
                 emailLb.place(relx=.43, rely=.55, anchor='center')
 
+                nfcLb = Label(addUserManagement, text="Dispositivo NFC", bg='white')
+                nfcLb.place(relx=.43, rely=.65, anchor='center')
+
                 #Entries
                 usernameEntry = Entry(addUserManagement)
                 usernameEntry.insert(0, request['username'])
@@ -1220,9 +1292,29 @@ class WindowsTk:
                 emailEntry.insert(0, request['email'])
                 emailEntry.place(relx=.53, rely=.55, anchor='center')
 
+                if request['nfc'] == None:
+                    print("Sin NFC Vinculado")
+                    vartext="Sin dispositivo NFC vinculado"
+                else:
+                    print("NFC Vinculado")
+                    vartext="NFC vinculado"
+
+                nfcLb = Label(addUserManagement, text=vartext, bg='white')
+                nfcLb.place(relx=.53, rely=.65, anchor='center')
+
                 #Buttons
+                if request['nfc'] == None:
+                    addNfcBt = Button(addUserManagement, text="Agregar nfc", command=lambda:readNFC(nfcread))
+                    addNfcBt.place(relx=.38, rely=.75, anchor='center')
+                else:
+                    addNfcBt = Button(addUserManagement, text="Bloquear NFC", command=lambda:addNfcToBlacklist())
+                    addNfcBt.place(relx=.38, rely=.75, anchor='center')
+
                 updateUserBt = Button(addUserManagement, text="Actualizar usuario", command=lambda:updateUser())
-                updateUserBt.place(relx=.48, rely=.85, anchor='center')
+                updateUserBt.place(relx=.48, rely=.75, anchor='center')
+
+                enableDisablePasswordBt = Button(addUserManagement, text="Deshabilitar contraseña", command=lambda:enableDisablePassword())
+                enableDisablePasswordBt.place(relx=.58, rely=.75, anchor='center')
 
                 # exitBt = Button(addUserManagement, text="Salir", command=lambda:closeTk(user, userTreeView))
                 # exitBt.place()
