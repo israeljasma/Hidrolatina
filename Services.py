@@ -47,6 +47,12 @@ class API_Services():
         request_dictionary = request.json()
         return request_dictionary
 
+    def userWithNfcUpdate(id, username, email, name, last_name, nfc, token, refresh=None):
+        DATA  = {'id': id, 'username': username, 'email': email, 'name': name, 'last_name': last_name, 'nfc': nfc}
+        request = requests.put(url + 'users/users/' + str(id) + '/', data = DATA, headers={'Authorization': 'Bearer ' + token})
+        request_dictionary = request.json()
+        return request_dictionary
+
     def userDelete(id, token, refresh=None):
         DATA  = {'id': id}
         request = requests.delete(url + 'users/users/' + str(id) + '/', data = DATA, headers={'Authorization': 'Bearer ' + token})
