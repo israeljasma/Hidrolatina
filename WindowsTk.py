@@ -14,6 +14,7 @@ from mmpose.core import camera
 import cv2
 import pandas as pd
 from numpy import empty
+
 import torch.multiprocessing as mp
 import torch
 import secrets
@@ -1081,6 +1082,7 @@ class WindowsTk:
             self.center_window(addUserManagement)
 
             nfcread = []
+            nfcreadCreate = []
 
             #Canvas
             canvas = Canvas(addUserManagement, borderwidth=0,highlightthickness=0)
@@ -1137,8 +1139,9 @@ class WindowsTk:
 
             def updateUser():
                 if len(nfcread) >= 1:
-                    requestUpdate = API_Services.userWithNfcUpdate(id, usernameEntry.get(), emailEntry.get(), nameEntry.get(), last_nameEntry.get(), nfcread[0], user.getToken())
+                    requestUpdate = API_Services.userWithNfcUpdate(id, usernameEntry.get(), emailEntry.get(), nameEntry.get(), last_nameEntry.get(), nfcreadCreate[0], user.getToken())
                     messagebox.showinfo(message=requestUpdate['message'], parent=addUserManagement)
+                    del nfcread[:]
                     closeTk(user, userTreeView)
                 else:
                     requestUpdate = API_Services.userUpdate(id, usernameEntry.get(), emailEntry.get(), nameEntry.get(), last_nameEntry.get(), user.getToken())
@@ -1152,7 +1155,37 @@ class WindowsTk:
 
             def addNfcToBlacklist():
                 API_Services.nfcDelete(request['nfc'], user.getToken())
+                API_Services.userWithNfcUpdate(id, usernameEntry.get(), emailEntry.get(), nameEntry.get(), last_nameEntry.get(), '', user.getToken())
+                nfcLb['text']="Sin dispositivo NFC vinculado"
+                addNfcBt['text'] = "Agregar NFC"
+                addNfcBt['command'] = lambda:createNfc()
 
+            def createNfc():
+                readNFC(nfcread)
+                Thread(target=vincularNfc).start()
+                # requestNfc = API_Services.nfcCreate('test', 2, user.getToken())
+                # print(requestNfc['data']['id'])
+                # nfcread.append(requestNfc['data']['id'])
+                # print(nfcread[0])
+                # nfcLb['text'] = 'Dispositivo NFC vinculado'
+
+            def vincularNfc():
+                while true:
+                    if nfcread:
+                        print(nfcread[0])
+                        addNfcBt['text'] = "Bloquear NFC"
+                        addNfcBt['command'] = lambda:deleteNFCNoVinculado()
+                        crearNfcBD()
+                        break
+
+            def crearNfcBD():
+                request = API_Services.nfcCreate(nfcread[0], 2, user.getToken())
+                print(request)
+                print(request['data']['id'])
+                nfcreadCreate.append(request['data']['id'])
+
+            def deleteNFCNoVinculado():
+                API_Services.nfcDelete(7,user.getToken())
 
             def readNFC(nfcread):
                 readNfcManagement = Toplevel()
@@ -1181,16 +1214,22 @@ class WindowsTk:
                             print(labelText)
                             nfcLb['text'] = "Dispositivo NFC vinculado"
                             time.sleep(2)
-                            try: nfcThread.join()
+                            try: 
+                                nfcThread.join()
+                                print('Cerro Thread NFC')
                             except: pass
-                            readNfcManagement.destroy()
+                            if not nfcThread.is_alive():
+                                readNfcManagement.destroy()
                         else:
                             labelText['text'] = "Dispositivo NFC no detectato"
                             nfcLb['text'] = "Sin dispositivo NFC vinculado"
                             time.sleep(2)
-                            try: nfcThread.join()
+                            try: 
+                                nfcThread.join()
+                                print('Cerro Thread NFC')
                             except: pass
-                            readNfcManagement.destroy()
+                            if not nfcThread.is_alive():
+                                readNfcManagement.destroy()
                     else:
                         timeCheck(nfcThread)
 
@@ -1304,17 +1343,17 @@ class WindowsTk:
 
                 #Buttons
                 if request['nfc'] == None:
-                    addNfcBt = Button(addUserManagement, text="Agregar nfc", command=lambda:readNFC(nfcread))
+                    addNfcBt = Button(addUserManagement, text="Agregar nfc", command=lambda:createNfc())
                     addNfcBt.place(relx=.38, rely=.75, anchor='center')
                 else:
                     addNfcBt = Button(addUserManagement, text="Bloquear NFC", command=lambda:addNfcToBlacklist())
                     addNfcBt.place(relx=.38, rely=.75, anchor='center')
 
-                updateUserBt = Button(addUserManagement, text="Actualizar usuario", command=lambda:updateUser())
+                updateUserBt = Button(addUserManagement, text="Actualizar información", command=lambda:updateUser())
                 updateUserBt.place(relx=.48, rely=.75, anchor='center')
 
-                enableDisablePasswordBt = Button(addUserManagement, text="Deshabilitar contraseña", command=lambda:enableDisablePassword())
-                enableDisablePasswordBt.place(relx=.58, rely=.75, anchor='center')
+                # enableDisablePasswordBt = Button(addUserManagement, text="Deshabilitar contraseña", command=lambda:enableDisablePassword())
+                # enableDisablePasswordBt.place(relx=.58, rely=.75, anchor='center')
 
                 # exitBt = Button(addUserManagement, text="Salir", command=lambda:closeTk(user, userTreeView))
                 # exitBt.place()
