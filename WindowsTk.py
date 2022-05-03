@@ -1170,7 +1170,7 @@ class WindowsTk:
                 # nfcLb['text'] = 'Dispositivo NFC vinculado'
 
             def vincularNfc():
-                while true:
+                while True:
                     if nfcread:
                         print(nfcread[0])
                         addNfcBt['text'] = "Bloquear NFC"
@@ -1315,7 +1315,7 @@ class WindowsTk:
                 nfcLb.place(relx=.43, rely=.65, anchor='center')
 
                 #Entries
-                usernameEntry = Entry(addUserManagement)
+                usernameEntry = Entry(addUserManagement, state="readonly")
                 usernameEntry.insert(0, request['username'])
                 usernameEntry.place(relx=.53, rely=.25, anchor='center')
 
