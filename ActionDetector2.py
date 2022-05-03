@@ -222,7 +222,7 @@ class ActionDetector2:
     #     self.df.to_excel(out, index=False)
     #     print(self.df)
 
-    def inferenceActionDetector(self, queue_anno, queue_action, labelVideo, showActions, tableview, btaudio):
+    def inferenceActionDetector(self, queue_anno, queue_action,queue_frameAction,  labelVideo, showActions, tableview, btaudio):
         just_bboxarea_track=True
         track_flag=False
         wait_for_operator=5
@@ -247,11 +247,11 @@ class ActionDetector2:
         result_actions=[0,0,0]
         
         
-        df_data={'Op. Presente':['No'], 'Accion':['No'], 'Riesgo':['No'], 'Hora':[datetime.today().time().isoformat('seconds')], 'Fecha':[datetime.today().date()]}
-        self.df = pd.DataFrame(df_data)
-        self.WriteFrame(tableview, self.df)
+        # df_data={'Op. Presente':['No'], 'Accion':['No'], 'Riesgo':['No'], 'Hora':[datetime.today().time().isoformat('seconds')], 'Fecha':[datetime.today().date()]}
+        # self.df = pd.DataFrame(df_data)
+        # self.WriteFrame(tableview, self.df)
         old_op_present= op_present ='No'
-        actual_action={'name':'No', 'score': ''}
+        actual_action={'name':'No', 'score': 0}
         risk='No'
         
         torch.cuda.empty_cache()
@@ -652,7 +652,7 @@ class ActionDetector2:
                 if action[0][0]==4:
                     risk='Electrificación'
                     btaudio.play('Riesgo de electrificación, porfavor cerrar gabinete')
-                  
+
             
             ################################################Data Frame###########################################################
             if len(pose_results_final)>0:
@@ -662,13 +662,14 @@ class ActionDetector2:
 
 
             if old_op_present!=op_present or actual_action['name']!='No':
-                
-                self.df=self.df.append(pd.DataFrame({'Op. Presente':[op_present], 'Accion':[actual_action['name']], 'Riesgo': [risk],'Hora':[datetime.today().time().isoformat('seconds')], 'Fecha':[datetime.today().date()]}))
+                queue_frameAction.put({'Op. Presente':[op_present], 'Accion':[actual_action['name']], 'Riesgo': [risk],'Hora':[datetime.today().time().isoformat('seconds')], 'Fecha':[datetime.today().date()], 'Score' :[actual_action['score']]})
+                # self.df=self.df.append(pd.DataFrame())
                 # self.WriteFrame(tableview, self.df)
 
 
             old_op_present=op_present
             old_action=actual_action['name']=risk='No'
+            actual_action['score']=0
             
 
 
