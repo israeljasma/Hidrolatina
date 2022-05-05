@@ -98,6 +98,17 @@ if __name__ == '__main__':
         boolCounter = False
         NFC(instanceWindowsTk.nfc_identifyTk, instanceWindowsTk.showPytorchCameraTk)
 
+    def on_focus_in(entry):
+        if entry.cget('state') == 'disabled':
+            entry.configure(state='normal')
+            entry.delete(0, 'end')
+
+
+    def on_focus_out(entry, placeholder):
+        if entry.get() == "":
+            entry.insert(0, placeholder)
+            entry.configure(state='disabled')
+
     # Var
     startTime = datetime.now()
     endTime = datetime.now() + timedelta(seconds=120)
@@ -122,14 +133,24 @@ if __name__ == '__main__':
 
     
 
-    userLabel = Label(root, text='Usuario', bg='white').pack(pady=(200,0))
+    userLabel = Label(root, text='Rut', bg='white').pack(pady=(200,0))
     userEntry = Entry(root)
     userEntry.bind("<1>", handle_click)
     userEntry.pack()
+    userEntry.insert(0, "11.111.111-1")
+    userEntry.configure(state='disabled')
 
     passwordLabel = Label(root, text='Contraseña', bg='white').pack()
     passwordEntry = Entry(root, show='*')
     passwordEntry.pack()
+    passwordEntry.insert(0, "Contraseña")
+    passwordEntry.configure(state='disabled')
+
+    x_focus_in = userEntry.bind('<Button-1>', lambda x: on_focus_in(userEntry))
+    x_focus_out = userEntry.bind('<FocusOut>', lambda x: on_focus_out(userEntry, '11.111.111-1'))
+
+    y_focus_in = passwordEntry.bind('<Button-1>', lambda x: on_focus_in(passwordEntry))
+    y_focus_out = passwordEntry.bind('<FocusOut>', lambda x: on_focus_out(passwordEntry, 'Contraseña'))
 
     loginButton = Button(root, command=lambda:verification(), text='Iniciar Sesión', bg='#c2eaff').pack(pady=(50,0))
     # identificationButton = Button(root, command=lambda:nfc_identifyTk(), text='Iniciar Identificación', bg='#c2eaff').pack()
